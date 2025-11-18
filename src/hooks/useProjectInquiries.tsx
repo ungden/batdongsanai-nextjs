@@ -73,7 +73,7 @@ export const useProjectInquiries = () => {
 
       // Insert inquiry
       const { data: inquiry, error: inquiryError } = await supabase
-        .from('project_inquiries')
+        .from('project_inquiries' as any)
         .insert({
           project_id: projectId,
           user_id: user?.id || null,
@@ -102,10 +102,12 @@ export const useProjectInquiries = () => {
 
       if (inquiryError) throw inquiryError;
 
+      const inquiryData = (inquiry as any) as ProjectInquiry;
+
       // Auto-assign to agent
       try {
-        await supabase.rpc('assign_inquiry_to_agent', {
-          inquiry_uuid: inquiry.id,
+        await supabase.rpc('assign_inquiry_to_agent' as any, {
+          inquiry_uuid: inquiryData.id,
         });
       } catch (assignError) {
         console.error('Error auto-assigning inquiry:', assignError);
@@ -113,7 +115,7 @@ export const useProjectInquiries = () => {
       }
 
       toast.success('Đã gửi thông tin thành công! Chúng tôi sẽ liên hệ bạn sớm nhất.');
-      return { success: true, inquiryId: inquiry.id };
+      return { success: true, inquiryId: inquiryData.id };
     } catch (error) {
       console.error('Error submitting inquiry:', error);
       toast.error('Có lỗi xảy ra, vui lòng thử lại');
@@ -138,7 +140,7 @@ export const useProjectAgents = (projectId: string) => {
       setLoading(true);
 
       const { data, error } = await supabase
-        .from('project_agents')
+        .from('project_agents' as any)
         .select(`
           role,
           priority,
@@ -167,8 +169,8 @@ export const useProjectAgents = (projectId: string) => {
 
       // Flatten the nested structure
       const formattedAgents = (data || [])
-        .filter(item => item.agents) // Filter out null agents
-        .map(item => ({
+        .filter((item: any) => item.agents) // Filter out null agents
+        .map((item: any) => ({
           ...(item.agents as any),
           role: item.role,
           priority: item.priority,
@@ -214,14 +216,14 @@ export const useMyInquiries = () => {
       }
 
       const { data, error } = await supabase
-        .from('project_inquiries')
+        .from('project_inquiries' as any)
         .select('*')
         .eq('user_id', user.id)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
 
-      setInquiries(data || []);
+      setInquiries(((data as any) as ProjectInquiry[]) || []);
     } catch (error) {
       console.error('Error fetching my inquiries:', error);
       toast.error('Không thể tải danh sách yêu cầu tư vấn');

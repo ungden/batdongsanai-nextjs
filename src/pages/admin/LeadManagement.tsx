@@ -40,7 +40,7 @@ import {
   CheckCircle2,
   Clock,
 } from 'lucide-react';
-import { formatCurrency } from '@/lib/utils';
+import { formatCurrency } from '@/utils/formatCurrency';
 
 export default function LeadManagement() {
   const [filters, setFilters] = useState<LeadFilters>({
@@ -272,7 +272,7 @@ function LeadCard({ lead, onAssign, onUpdateNotes, onUpdateStatus }: LeadCardPro
   const quality = qualityConfig[lead.lead_quality] || qualityConfig.unqualified;
 
   return (
-    <Card className="hover:shadow-md transition-shadow">
+    <Card className="hover-shadow-md transition-shadow">
       <CardContent className="p-6">
         <div className="flex items-start gap-4">
           {/* Score Badge */}
@@ -413,7 +413,7 @@ function LeadCard({ lead, onAssign, onUpdateNotes, onUpdateStatus }: LeadCardPro
                   <SelectItem value="new">Mới</SelectItem>
                   <SelectItem value="contacted">Đã liên hệ</SelectItem>
                   <SelectItem value="viewing_scheduled">Đã hẹn xem</SelectItem>
-                  <SelectItem value="negotiating">Đang đàm phán</SelectItem>
+                  <SelectItem value="negotiating">Đàm phán</SelectItem>
                   <SelectItem value="closed_won">Chốt thành công</SelectItem>
                   <SelectItem value="closed_lost">Không thành công</SelectItem>
                 </SelectContent>

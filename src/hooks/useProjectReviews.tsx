@@ -64,7 +64,7 @@ export const useProjectReviews = (projectId: string) => {
 
       // Fetch reviews
       const { data: reviewsData, error: reviewsError } = await supabase
-        .from('project_reviews')
+        .from('project_reviews' as any)
         .select('*')
         .eq('project_id', projectId)
         .eq('status', 'approved')
@@ -74,32 +74,32 @@ export const useProjectReviews = (projectId: string) => {
 
       // Fetch images for each review
       const reviewsWithImages = await Promise.all(
-        (reviewsData || []).map(async (review) => {
+        (reviewsData || []).map(async (review: any) => {
           const { data: images } = await supabase
-            .from('review_images')
+            .from('review_images' as any)
             .select('*')
             .eq('review_id', review.id);
 
           return {
             ...review,
-            images: images || [],
+            images: (images as ReviewImage[]) || [],
           };
         })
       );
 
-      setReviews(reviewsWithImages);
+      setReviews(reviewsWithImages as ProjectReview[]);
 
       // Calculate stats
       if (reviewsData && reviewsData.length > 0) {
         const totalReviews = reviewsData.length;
-        const sumRating = reviewsData.reduce((sum, r) => sum + r.rating, 0);
-        const sumLocation = reviewsData.reduce((sum, r) => sum + (r.location_rating || 0), 0);
-        const sumQuality = reviewsData.reduce((sum, r) => sum + (r.quality_rating || 0), 0);
-        const sumAmenities = reviewsData.reduce((sum, r) => sum + (r.amenities_rating || 0), 0);
-        const sumDeveloper = reviewsData.reduce((sum, r) => sum + (r.developer_rating || 0), 0);
+        const sumRating = reviewsData.reduce((sum: number, r: any) => sum + r.rating, 0);
+        const sumLocation = reviewsData.reduce((sum: number, r: any) => sum + (r.location_rating || 0), 0);
+        const sumQuality = reviewsData.reduce((sum: number, r: any) => sum + (r.quality_rating || 0), 0);
+        const sumAmenities = reviewsData.reduce((sum: number, r: any) => sum + (r.amenities_rating || 0), 0);
+        const sumDeveloper = reviewsData.reduce((sum: number, r: any) => sum + (r.developer_rating || 0), 0);
 
         const distribution = { 5: 0, 4: 0, 3: 0, 2: 0, 1: 0 };
-        reviewsData.forEach((r) => {
+        reviewsData.forEach((r: any) => {
           distribution[r.rating as keyof typeof distribution]++;
         });
 
@@ -140,7 +140,7 @@ export const useProjectReviews = (projectId: string) => {
       }
 
       const { error } = await supabase
-        .from('review_helpful_votes')
+        .from('review_helpful_votes' as any)
         .insert({ review_id: reviewId, user_id: user.id });
 
       if (error) {

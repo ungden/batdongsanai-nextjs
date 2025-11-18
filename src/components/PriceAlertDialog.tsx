@@ -56,7 +56,7 @@ export const PriceAlertDialog = ({
 
     try {
       const { data, error } = await supabase
-        .from('price_alerts')
+        .from('price_alerts' as any)
         .insert({
           user_id: user.id,
           project_id: projectId,

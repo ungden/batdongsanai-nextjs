@@ -5,8 +5,6 @@ import { supabase } from '@/integrations/supabase/client';
 import {
   BarChart,
   Bar,
-  LineChart,
-  Line,
   PieChart,
   Pie,
   Cell,
@@ -21,14 +19,12 @@ import {
 } from 'recharts';
 import {
   TrendingUp,
-  TrendingDown,
   Database,
   Activity,
   DollarSign,
   Home,
   Zap,
-  Building2,
-  Users
+  Building2
 } from 'lucide-react';
 import { formatCurrency } from '@/utils/formatCurrency';
 
@@ -42,7 +38,7 @@ interface DataStats {
   regulations: number;
 }
 
-interface PriceT Trend {
+interface PriceTrend {
   date: string;
   avgPrice: number;
   count: number;
@@ -89,13 +85,13 @@ const AnalyticsDashboard = () => {
         { count: salesCount },
         { count: regulationsCount },
       ] = await Promise.all([
-        supabase.from('market_catalysts').select('*', { count: 'exact', head: true }),
-        supabase.from('project_pricing_history').select('*', { count: 'exact', head: true }),
-        supabase.from('rental_market_data').select('*', { count: 'exact', head: true }),
-        supabase.from('payment_policies').select('*', { count: 'exact', head: true }),
-        supabase.from('infrastructure_developments').select('*', { count: 'exact', head: true }),
-        supabase.from('comparable_sales').select('*', { count: 'exact', head: true }),
-        supabase.from('market_regulations').select('*', { count: 'exact', head: true }),
+        supabase.from('market_catalysts' as any).select('*', { count: 'exact', head: true }),
+        supabase.from('project_pricing_history' as any).select('*', { count: 'exact', head: true }),
+        supabase.from('rental_market_data' as any).select('*', { count: 'exact', head: true }),
+        supabase.from('payment_policies' as any).select('*', { count: 'exact', head: true }),
+        supabase.from('infrastructure_developments' as any).select('*', { count: 'exact', head: true }),
+        supabase.from('comparable_sales' as any).select('*', { count: 'exact', head: true }),
+        supabase.from('market_regulations' as any).select('*', { count: 'exact', head: true }),
       ]);
 
       setStats({
@@ -110,13 +106,13 @@ const AnalyticsDashboard = () => {
 
       // Fetch price trends
       const { data: pricingData } = await supabase
-        .from('project_pricing_history')
+        .from('project_pricing_history' as any)
         .select('price_date, price_per_sqm')
         .order('price_date', { ascending: true })
         .limit(50);
 
       if (pricingData) {
-        const trends = pricingData.reduce((acc: any, item) => {
+        const trends = pricingData.reduce((acc: any, item: any) => {
           const month = item.price_date.substring(0, 7); // YYYY-MM
           if (!acc[month]) {
             acc[month] = { date: month, total: 0, count: 0 };
@@ -137,11 +133,11 @@ const AnalyticsDashboard = () => {
 
       // Fetch catalyst impact by type
       const { data: catalystsData } = await supabase
-        .from('market_catalysts')
+        .from('market_catalysts' as any)
         .select('catalyst_type, impact_level, estimated_price_impact_percent');
 
       if (catalystsData) {
-        const byType = catalystsData.reduce((acc: any, item) => {
+        const byType = catalystsData.reduce((acc: any, item: any) => {
           if (!acc[item.catalyst_type]) {
             acc[item.catalyst_type] = { type: item.catalyst_type, count: 0, totalImpact: 0 };
           }
@@ -153,7 +149,7 @@ const AnalyticsDashboard = () => {
         const impactData = Object.values(byType).map((t: any) => ({
           type: t.type,
           count: t.count,
-          avgImpact: t.count > 0 ? (t.totalImpact / t.count).toFixed(2) : 0,
+          avgImpact: t.count > 0 ? parseFloat((t.totalImpact / t.count).toFixed(2)) : 0,
         }));
 
         setCatalystData(impactData);

@@ -45,14 +45,14 @@ export const usePortfolio = () => {
 
     try {
       const { data, error } = await supabase
-        .from('user_portfolios')
+        .from('user_portfolios' as any)
         .select('*')
         .eq('user_id', user.id)
         .order('purchase_date', { ascending: false });
 
       if (error) throw error;
 
-      const items = data || [];
+      const items = ((data as any) as PortfolioItem[]) || [];
       setPortfolio(items);
       calculateStats(items);
     } catch (error) {
@@ -70,7 +70,7 @@ export const usePortfolio = () => {
 
     try {
       const { data, error } = await supabase
-        .from('user_portfolios')
+        .from('user_portfolios' as any)
         .insert({
           user_id: user.id,
           ...item
@@ -80,11 +80,12 @@ export const usePortfolio = () => {
 
       if (error) throw error;
 
-      const updatedPortfolio = [data, ...portfolio];
+      const newItem = (data as any) as PortfolioItem;
+      const updatedPortfolio = [newItem, ...portfolio];
       setPortfolio(updatedPortfolio);
       calculateStats(updatedPortfolio);
       toast.success('Đã thêm vào danh mục đầu tư');
-      return data;
+      return newItem;
     } catch (error) {
       console.error('Error adding to portfolio:', error);
       toast.error('Không thể thêm vào danh mục');
@@ -97,7 +98,7 @@ export const usePortfolio = () => {
 
     try {
       const { data, error } = await supabase
-        .from('user_portfolios')
+        .from('user_portfolios' as any)
         .update(updates)
         .eq('id', id)
         .eq('user_id', user.id)
@@ -106,11 +107,12 @@ export const usePortfolio = () => {
 
       if (error) throw error;
 
-      const updatedPortfolio = portfolio.map(item => item.id === id ? data : item);
+      const updatedItem = (data as any) as PortfolioItem;
+      const updatedPortfolio = portfolio.map(item => item.id === id ? updatedItem : item);
       setPortfolio(updatedPortfolio);
       calculateStats(updatedPortfolio);
       toast.success('Đã cập nhật');
-      return data;
+      return updatedItem;
     } catch (error) {
       console.error('Error updating portfolio item:', error);
       toast.error('Không thể cập nhật');
@@ -123,7 +125,7 @@ export const usePortfolio = () => {
 
     try {
       const { error } = await supabase
-        .from('user_portfolios')
+        .from('user_portfolios' as any)
         .delete()
         .eq('id', id)
         .eq('user_id', user.id);

@@ -1,18 +1,14 @@
-import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Button } from '@/components/ui/button';
 import { Slider } from '@/components/ui/slider';
-import { Badge } from '@/components/ui/badge';
 import {
   Calculator,
   TrendingUp,
   Home,
   Wallet,
   DollarSign,
-  PiggyBank,
   ArrowUpCircle,
   ArrowDownCircle,
   Info,
@@ -20,8 +16,6 @@ import {
 } from 'lucide-react';
 import { formatCurrency } from '@/utils/formatCurrency';
 import {
-  LineChart,
-  Line,
   BarChart,
   Bar,
   XAxis,
@@ -33,76 +27,15 @@ import {
   Area,
   AreaChart
 } from 'recharts';
-import SEO from '@/components/seo/SEO';
+import SEOHead from '@/components/seo/SEOHead';
+import { useInvestmentCalculator } from '@/hooks/useInvestmentCalculator';
 
 const AdvancedCalculator = () => {
-  // Input States
-  const [pricePerSqm, setPricePerSqm] = useState(100000000); // 100M VND/m²
-  const [area, setArea] = useState(70); // 70m²
-  const [downPaymentPercent, setDownPaymentPercent] = useState(30); // 30%
-  const [loanTerm, setLoanTerm] = useState(20); // 20 years
-  const [interestRate, setInterestRate] = useState(8.5); // 8.5% per year
-  const [rentalYield, setRentalYield] = useState(4.5); // 4.5% per year
-  const [appreciationRate, setAppreciationRate] = useState(5); // 5% per year
-  const [maintenanceCost, setMaintenanceCost] = useState(1); // 1% of value per year
-
-  // Calculations
-  const totalPrice = pricePerSqm * area;
-  const downPayment = totalPrice * (downPaymentPercent / 100);
-  const loanAmount = totalPrice - downPayment;
-
-  // Monthly payment calculation (P * r * (1+r)^n / ((1+r)^n - 1))
-  const monthlyInterestRate = interestRate / 100 / 12;
-  const numberOfPayments = loanTerm * 12;
-  const monthlyPayment = loanAmount * (monthlyInterestRate * Math.pow(1 + monthlyInterestRate, numberOfPayments)) /
-                        (Math.pow(1 + monthlyInterestRate, numberOfPayments) - 1);
-
-  const totalPayment = monthlyPayment * numberOfPayments;
-  const totalInterest = totalPayment - loanAmount;
-
-  // Rental Income
-  const annualRentalIncome = totalPrice * (rentalYield / 100);
-  const monthlyRentalIncome = annualRentalIncome / 12;
-  const annualMaintenanceCost = totalPrice * (maintenanceCost / 100);
-  const monthlyMaintenanceCost = annualMaintenanceCost / 12;
-  const netMonthlyRentalIncome = monthlyRentalIncome - monthlyMaintenanceCost;
-
-  // Cash Flow Analysis
-  const monthlyCashFlow = netMonthlyRentalIncome - monthlyPayment;
-  const isPositiveCashFlow = monthlyCashFlow > 0;
-
-  // ROI Calculation
-  const totalInvestment = downPayment;
-  const annualNetIncome = (netMonthlyRentalIncome * 12) - (monthlyPayment * 12);
-  const cashOnCashReturn = (annualNetIncome / totalInvestment) * 100;
-
-  // Appreciation
-  const futureValue5Years = totalPrice * Math.pow(1 + appreciationRate / 100, 5);
-  const futureValue10Years = totalPrice * Math.pow(1 + appreciationRate / 100, 10);
-  const futureValue20Years = totalPrice * Math.pow(1 + appreciationRate / 100, 20);
-
-  // Cash Flow Projection (10 years)
-  const cashFlowProjection = Array.from({ length: 10 }, (_, i) => {
-    const year = i + 1;
-    const propertyValue = totalPrice * Math.pow(1 + appreciationRate / 100, year);
-    const remainingBalance = year <= loanTerm ? loanAmount * Math.pow(1 + monthlyInterestRate, year * 12) -
-                            monthlyPayment * (Math.pow(1 + monthlyInterestRate, year * 12) - 1) / monthlyInterestRate : 0;
-    const equity = propertyValue - remainingBalance;
-    const cumulativeRentalIncome = netMonthlyRentalIncome * 12 * year;
-    const cumulativeLoanPayments = monthlyPayment * 12 * Math.min(year, loanTerm);
-
-    return {
-      year,
-      propertyValue: Math.round(propertyValue),
-      remainingBalance: Math.round(Math.max(0, remainingBalance)),
-      equity: Math.round(equity),
-      cumulativeCashFlow: Math.round(cumulativeRentalIncome - cumulativeLoanPayments),
-    };
-  });
+  const { inputs, results } = useInvestmentCalculator();
 
   return (
     <>
-      <SEO
+      <SEOHead
         title="Tính toán đầu tư nâng cao"
         description="Công cụ tính toán chi tiết cho đầu tư bất động sản"
       />
@@ -133,8 +66,8 @@ const AdvancedCalculator = () => {
                 <Label>Giá/m² (VNĐ)</Label>
                 <Input
                   type="number"
-                  value={pricePerSqm}
-                  onChange={(e) => setPricePerSqm(Number(e.target.value))}
+                  value={inputs.pricePerSqm}
+                  onChange={(e) => inputs.setPricePerSqm(Number(e.target.value))}
                   step={1000000}
                 />
               </div>
@@ -143,11 +76,11 @@ const AdvancedCalculator = () => {
                 <Label>Diện tích (m²)</Label>
                 <Input
                   type="number"
-                  value={area}
-                  onChange={(e) => setArea(Number(e.target.value))}
+                  value={inputs.area}
+                  onChange={(e) => inputs.setArea(Number(e.target.value))}
                 />
                 <div className="text-sm text-muted-foreground">
-                  Tổng giá: <span className="font-bold text-primary">{formatCurrency(totalPrice)}</span>
+                  Tổng giá: <span className="font-bold text-primary">{formatCurrency(results.totalPrice)}</span>
                 </div>
               </div>
 
@@ -155,15 +88,15 @@ const AdvancedCalculator = () => {
               <div className="space-y-2">
                 <Label>Vốn tự có (%)</Label>
                 <Slider
-                  value={[downPaymentPercent]}
-                  onValueChange={(value) => setDownPaymentPercent(value[0])}
+                  value={[inputs.downPaymentPercent]}
+                  onValueChange={(value) => inputs.setDownPaymentPercent(value[0])}
                   min={10}
                   max={100}
                   step={5}
                 />
                 <div className="flex justify-between text-sm">
-                  <span>{downPaymentPercent}%</span>
-                  <span className="font-bold">{formatCurrency(downPayment)}</span>
+                  <span>{inputs.downPaymentPercent}%</span>
+                  <span className="font-bold">{formatCurrency(results.downPayment)}</span>
                 </div>
               </div>
 
@@ -171,13 +104,13 @@ const AdvancedCalculator = () => {
               <div className="space-y-2">
                 <Label>Thời hạn vay (năm)</Label>
                 <Slider
-                  value={[loanTerm]}
-                  onValueChange={(value) => setLoanTerm(value[0])}
+                  value={[inputs.loanTerm]}
+                  onValueChange={(value) => inputs.setLoanTerm(value[0])}
                   min={5}
                   max={30}
                   step={1}
                 />
-                <div className="text-sm">{loanTerm} năm</div>
+                <div className="text-sm">{inputs.loanTerm} năm</div>
               </div>
 
               {/* Interest Rate */}
@@ -185,8 +118,8 @@ const AdvancedCalculator = () => {
                 <Label>Lãi suất (%/năm)</Label>
                 <Input
                   type="number"
-                  value={interestRate}
-                  onChange={(e) => setInterestRate(Number(e.target.value))}
+                  value={inputs.interestRate}
+                  onChange={(e) => inputs.setInterestRate(Number(e.target.value))}
                   step={0.1}
                   min={0}
                   max={20}
@@ -198,8 +131,8 @@ const AdvancedCalculator = () => {
                 <Label>Lợi nhuận cho thuê (%/năm)</Label>
                 <Input
                   type="number"
-                  value={rentalYield}
-                  onChange={(e) => setRentalYield(Number(e.target.value))}
+                  value={inputs.rentalYield}
+                  onChange={(e) => inputs.setRentalYield(Number(e.target.value))}
                   step={0.1}
                   min={0}
                   max={15}
@@ -211,8 +144,8 @@ const AdvancedCalculator = () => {
                 <Label>Tăng giá dự kiến (%/năm)</Label>
                 <Input
                   type="number"
-                  value={appreciationRate}
-                  onChange={(e) => setAppreciationRate(Number(e.target.value))}
+                  value={inputs.appreciationRate}
+                  onChange={(e) => inputs.setAppreciationRate(Number(e.target.value))}
                   step={0.1}
                   min={-10}
                   max={20}
@@ -224,8 +157,8 @@ const AdvancedCalculator = () => {
                 <Label>Chi phí duy trì (%/năm)</Label>
                 <Input
                   type="number"
-                  value={maintenanceCost}
-                  onChange={(e) => setMaintenanceCost(Number(e.target.value))}
+                  value={inputs.maintenanceCost}
+                  onChange={(e) => inputs.setMaintenanceCost(Number(e.target.value))}
                   step={0.1}
                   min={0}
                   max={5}
@@ -238,16 +171,16 @@ const AdvancedCalculator = () => {
           <div className="lg:col-span-2 space-y-6">
             {/* Summary Cards */}
             <div className="grid md:grid-cols-3 gap-4">
-              <Card className={`${isPositiveCashFlow ? 'bg-green-50 dark:bg-green-950/20 border-green-200' : 'bg-red-50 dark:bg-red-950/20 border-red-200'}`}>
+              <Card className={`${results.isPositiveCashFlow ? 'bg-green-50 dark:bg-green-950/20 border-green-200' : 'bg-red-50 dark:bg-red-950/20 border-red-200'}`}>
                 <CardContent className="p-6">
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="text-sm text-muted-foreground">Cash Flow/tháng</p>
-                      <h3 className={`text-2xl font-bold mt-1 ${isPositiveCashFlow ? 'text-green-600' : 'text-red-600'}`}>
-                        {formatCurrency(monthlyCashFlow)}
+                      <h3 className={`text-2xl font-bold mt-1 ${results.isPositiveCashFlow ? 'text-green-600' : 'text-red-600'}`}>
+                        {formatCurrency(results.monthlyCashFlow)}
                       </h3>
                     </div>
-                    {isPositiveCashFlow ? (
+                    {results.isPositiveCashFlow ? (
                       <ArrowUpCircle className="h-10 w-10 text-green-600 opacity-50" />
                     ) : (
                       <ArrowDownCircle className="h-10 w-10 text-red-600 opacity-50" />
@@ -262,7 +195,7 @@ const AdvancedCalculator = () => {
                     <div>
                       <p className="text-sm text-muted-foreground">Cash-on-Cash Return</p>
                       <h3 className="text-2xl font-bold mt-1 text-blue-600">
-                        {cashOnCashReturn.toFixed(2)}%
+                        {results.cashOnCashReturn.toFixed(2)}%
                       </h3>
                     </div>
                     <TrendingUp className="h-10 w-10 text-blue-600 opacity-50" />
@@ -276,7 +209,7 @@ const AdvancedCalculator = () => {
                     <div>
                       <p className="text-sm text-muted-foreground">Thanh toán/tháng</p>
                       <h3 className="text-2xl font-bold mt-1 text-purple-600">
-                        {formatCurrency(monthlyPayment)}
+                        {formatCurrency(results.monthlyPayment)}
                       </h3>
                     </div>
                     <Wallet className="h-10 w-10 text-purple-600 opacity-50" />
@@ -316,19 +249,19 @@ const AdvancedCalculator = () => {
                     <div className="grid md:grid-cols-2 gap-4">
                       <div className="space-y-2">
                         <p className="text-sm text-muted-foreground">Số tiền vay</p>
-                        <p className="text-2xl font-bold">{formatCurrency(loanAmount)}</p>
+                        <p className="text-2xl font-bold">{formatCurrency(results.loanAmount)}</p>
                       </div>
                       <div className="space-y-2">
                         <p className="text-sm text-muted-foreground">Thanh toán hàng tháng</p>
-                        <p className="text-2xl font-bold text-primary">{formatCurrency(monthlyPayment)}</p>
+                        <p className="text-2xl font-bold text-primary">{formatCurrency(results.monthlyPayment)}</p>
                       </div>
                       <div className="space-y-2">
                         <p className="text-sm text-muted-foreground">Tổng lãi suất</p>
-                        <p className="text-2xl font-bold text-orange-600">{formatCurrency(totalInterest)}</p>
+                        <p className="text-2xl font-bold text-orange-600">{formatCurrency(results.totalInterest)}</p>
                       </div>
                       <div className="space-y-2">
                         <p className="text-sm text-muted-foreground">Tổng thanh toán</p>
-                        <p className="text-2xl font-bold">{formatCurrency(totalPayment)}</p>
+                        <p className="text-2xl font-bold">{formatCurrency(results.totalPayment)}</p>
                       </div>
                     </div>
 
@@ -338,10 +271,10 @@ const AdvancedCalculator = () => {
                         Phân tích khoản vay
                       </div>
                       <ul className="space-y-2 text-sm">
-                        <li>• Vốn tự có: {formatCurrency(downPayment)} ({downPaymentPercent}%)</li>
-                        <li>• Vay ngân hàng: {formatCurrency(loanAmount)} ({100 - downPaymentPercent}%)</li>
-                        <li>• Lãi suất: {interestRate}%/năm</li>
-                        <li>• Thời hạn: {loanTerm} năm ({numberOfPayments} tháng)</li>
+                        <li>• Vốn tự có: {formatCurrency(results.downPayment)} ({inputs.downPaymentPercent}%)</li>
+                        <li>• Vay ngân hàng: {formatCurrency(results.loanAmount)} ({100 - inputs.downPaymentPercent}%)</li>
+                        <li>• Lãi suất: {inputs.interestRate}%/năm</li>
+                        <li>• Thời hạn: {inputs.loanTerm} năm ({results.numberOfPayments} tháng)</li>
                       </ul>
                     </div>
                   </CardContent>
@@ -358,20 +291,20 @@ const AdvancedCalculator = () => {
                     <div className="grid md:grid-cols-2 gap-4">
                       <div className="space-y-2">
                         <p className="text-sm text-muted-foreground">Thu nhập thuê/tháng</p>
-                        <p className="text-2xl font-bold text-green-600">{formatCurrency(monthlyRentalIncome)}</p>
+                        <p className="text-2xl font-bold text-green-600">{formatCurrency(results.monthlyRentalIncome)}</p>
                       </div>
                       <div className="space-y-2">
                         <p className="text-sm text-muted-foreground">Chi phí duy trì/tháng</p>
-                        <p className="text-2xl font-bold text-red-600">{formatCurrency(monthlyMaintenanceCost)}</p>
+                        <p className="text-2xl font-bold text-red-600">{formatCurrency(results.monthlyMaintenanceCost)}</p>
                       </div>
                       <div className="space-y-2">
                         <p className="text-sm text-muted-foreground">Thu nhập ròng/tháng</p>
-                        <p className="text-2xl font-bold">{formatCurrency(netMonthlyRentalIncome)}</p>
+                        <p className="text-2xl font-bold">{formatCurrency(results.netMonthlyRentalIncome)}</p>
                       </div>
                       <div className="space-y-2">
                         <p className="text-sm text-muted-foreground">Cash Flow/tháng</p>
-                        <p className={`text-2xl font-bold ${isPositiveCashFlow ? 'text-green-600' : 'text-red-600'}`}>
-                          {formatCurrency(monthlyCashFlow)}
+                        <p className={`text-2xl font-bold ${results.isPositiveCashFlow ? 'text-green-600' : 'text-red-600'}`}>
+                          {formatCurrency(results.monthlyCashFlow)}
                         </p>
                       </div>
                     </div>
@@ -380,17 +313,17 @@ const AdvancedCalculator = () => {
                       <div className="space-y-2">
                         <div className="flex justify-between">
                           <span>Rental Yield</span>
-                          <span className="font-bold">{rentalYield}%/năm</span>
+                          <span className="font-bold">{inputs.rentalYield}%/năm</span>
                         </div>
                         <div className="flex justify-between">
                           <span>Cash-on-Cash Return</span>
-                          <span className="font-bold">{cashOnCashReturn.toFixed(2)}%/năm</span>
+                          <span className="font-bold">{results.cashOnCashReturn.toFixed(2)}%/năm</span>
                         </div>
                         <div className="flex justify-between">
                           <span>Thời gian hoàn vốn (ước tính)</span>
                           <span className="font-bold">
-                            {isPositiveCashFlow && cashOnCashReturn > 0
-                              ? `${(100 / cashOnCashReturn).toFixed(1)} năm`
+                            {results.isPositiveCashFlow && results.cashOnCashReturn > 0
+                              ? `${(100 / results.cashOnCashReturn).toFixed(1)} năm`
                               : 'N/A'}
                           </span>
                         </div>
@@ -405,36 +338,36 @@ const AdvancedCalculator = () => {
                 <Card>
                   <CardHeader>
                     <CardTitle>Dự báo giá trị tài sản</CardTitle>
-                    <CardDescription>Tăng giá {appreciationRate}%/năm</CardDescription>
+                    <CardDescription>Tăng giá {inputs.appreciationRate}%/năm</CardDescription>
                   </CardHeader>
                   <CardContent className="space-y-4">
                     <div className="grid md:grid-cols-3 gap-4">
                       <div className="p-4 bg-muted/50 rounded-lg">
                         <p className="text-sm text-muted-foreground mb-1">Sau 5 năm</p>
-                        <p className="text-xl font-bold">{formatCurrency(futureValue5Years)}</p>
+                        <p className="text-xl font-bold">{formatCurrency(results.futureValue5Years)}</p>
                         <p className="text-sm text-green-600 mt-1">
-                          +{formatCurrency(futureValue5Years - totalPrice)}
+                          +{formatCurrency(results.futureValue5Years - results.totalPrice)}
                         </p>
                       </div>
                       <div className="p-4 bg-muted/50 rounded-lg">
                         <p className="text-sm text-muted-foreground mb-1">Sau 10 năm</p>
-                        <p className="text-xl font-bold">{formatCurrency(futureValue10Years)}</p>
+                        <p className="text-xl font-bold">{formatCurrency(results.futureValue10Years)}</p>
                         <p className="text-sm text-green-600 mt-1">
-                          +{formatCurrency(futureValue10Years - totalPrice)}
+                          +{formatCurrency(results.futureValue10Years - results.totalPrice)}
                         </p>
                       </div>
                       <div className="p-4 bg-muted/50 rounded-lg">
                         <p className="text-sm text-muted-foreground mb-1">Sau 20 năm</p>
-                        <p className="text-xl font-bold">{formatCurrency(futureValue20Years)}</p>
+                        <p className="text-xl font-bold">{formatCurrency(results.futureValue20Years)}</p>
                         <p className="text-sm text-green-600 mt-1">
-                          +{formatCurrency(futureValue20Years - totalPrice)}
+                          +{formatCurrency(results.futureValue20Years - results.totalPrice)}
                         </p>
                       </div>
                     </div>
 
                     <div className="pt-4">
                       <ResponsiveContainer width="100%" height={300}>
-                        <AreaChart data={cashFlowProjection}>
+                        <AreaChart data={results.cashFlowProjection}>
                           <defs>
                             <linearGradient id="colorValue" x1="0" y1="0" x2="0" y2="1">
                               <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.8} />
@@ -469,7 +402,7 @@ const AdvancedCalculator = () => {
                   </CardHeader>
                   <CardContent>
                     <ResponsiveContainer width="100%" height={400}>
-                      <BarChart data={cashFlowProjection}>
+                      <BarChart data={results.cashFlowProjection}>
                         <CartesianGrid strokeDasharray="3 3" />
                         <XAxis dataKey="year" />
                         <YAxis tickFormatter={(value) => `${(value / 1000000000).toFixed(0)}B`} />
@@ -493,7 +426,7 @@ const AdvancedCalculator = () => {
                           </tr>
                         </thead>
                         <tbody>
-                          {cashFlowProjection.map((item) => (
+                          {results.cashFlowProjection.map((item) => (
                             <tr key={item.year} className="border-b">
                               <td className="p-2">{item.year}</td>
                               <td className="text-right p-2">{formatCurrency(item.propertyValue)}</td>

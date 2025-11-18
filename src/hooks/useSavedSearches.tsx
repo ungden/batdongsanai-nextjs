@@ -28,13 +28,13 @@ export const useSavedSearches = () => {
 
     try {
       const { data, error } = await supabase
-        .from('saved_searches')
+        .from('saved_searches' as any)
         .select('*')
         .eq('user_id', user.id)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      setSavedSearches(data || []);
+      setSavedSearches(((data as any) as SavedSearch[]) || []);
     } catch (error) {
       console.error('Error fetching saved searches:', error);
     } finally {
@@ -50,7 +50,7 @@ export const useSavedSearches = () => {
 
     try {
       const { data, error } = await supabase
-        .from('saved_searches')
+        .from('saved_searches' as any)
         .insert({
           user_id: user.id,
           name,
@@ -62,9 +62,10 @@ export const useSavedSearches = () => {
 
       if (error) throw error;
 
-      setSavedSearches(prev => [data, ...prev]);
+      const newSearch = (data as any) as SavedSearch;
+      setSavedSearches(prev => [newSearch, ...prev]);
       toast.success('Đã lưu tìm kiếm');
-      return data;
+      return newSearch;
     } catch (error) {
       console.error('Error saving search:', error);
       toast.error('Không thể lưu tìm kiếm');
@@ -77,7 +78,7 @@ export const useSavedSearches = () => {
 
     try {
       const { data, error } = await supabase
-        .from('saved_searches')
+        .from('saved_searches' as any)
         .update(updates)
         .eq('id', id)
         .eq('user_id', user.id)
@@ -86,11 +87,12 @@ export const useSavedSearches = () => {
 
       if (error) throw error;
 
+      const updatedSearch = (data as any) as SavedSearch;
       setSavedSearches(prev =>
-        prev.map(s => s.id === id ? data : s)
+        prev.map(s => s.id === id ? updatedSearch : s)
       );
       toast.success('Đã cập nhật');
-      return data;
+      return updatedSearch;
     } catch (error) {
       console.error('Error updating search:', error);
       toast.error('Không thể cập nhật');
@@ -103,7 +105,7 @@ export const useSavedSearches = () => {
 
     try {
       const { error } = await supabase
-        .from('saved_searches')
+        .from('saved_searches' as any)
         .delete()
         .eq('id', id)
         .eq('user_id', user.id);

@@ -28,6 +28,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { DataImportExport } from '@/components/admin/DataImportExport';
+import { DataSeeder } from '@/components/admin/DataSeeder';
 
 const DataManagement = () => {
   const { user } = useAuth();
@@ -277,7 +278,7 @@ const DataManagement = () => {
       </div>
 
       <Tabs defaultValue="catalysts" className="w-full">
-        <TabsList className="grid w-full grid-cols-6">
+        <TabsList className="grid w-full grid-cols-7">
           <TabsTrigger value="catalysts">
             <Zap className="h-4 w-4 mr-2" />
             Catalysts
@@ -301,6 +302,10 @@ const DataManagement = () => {
           <TabsTrigger value="import-export">
             <Database className="h-4 w-4 mr-2" />
             Import/Export
+          </TabsTrigger>
+          <TabsTrigger value="seeder">
+            <Upload className="h-4 w-4 mr-2" />
+            Seeder
           </TabsTrigger>
         </TabsList>
 
@@ -931,6 +936,11 @@ const DataManagement = () => {
         {/* IMPORT/EXPORT TAB */}
         <TabsContent value="import-export" className="mt-6">
           <DataImportExport />
+        </TabsContent>
+
+        {/* SEEDER TAB */}
+        <TabsContent value="seeder" className="mt-6">
+          <DataSeeder />
         </TabsContent>
       </Tabs>
     </div>

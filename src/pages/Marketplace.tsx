@@ -10,7 +10,7 @@ import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Heart, MapPin, Bed, Bath, Maximize, Eye, ChevronDown, ChevronUp, Star } from 'lucide-react';
-import { formatCurrency } from '@/lib/utils';
+import { formatCurrency } from '@/utils/formatCurrency';
 import { Link } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 

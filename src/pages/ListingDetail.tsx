@@ -9,7 +9,7 @@ import {
   MapPin, Bed, Bath, Maximize, Eye, Heart, Share2, Phone, Mail,
   Calendar, Home, Compass, Building2, FileText, Sofa, ArrowLeft, Star
 } from 'lucide-react';
-import { formatCurrency } from '@/lib/utils';
+import { formatCurrency } from '@/utils/formatCurrency';
 import { useState } from 'react';
 import {
   Dialog,
@@ -71,8 +71,8 @@ export default function ListingDetail() {
     : listing.rental_price_monthly;
 
   const priceLabel = listing.listing_type === 'sale'
-    ? formatCurrency(price)
-    : `${formatCurrency(price)}/tháng`;
+    ? formatCurrency(price || 0)
+    : `${formatCurrency(price || 0)}/tháng`;
 
   const handleShare = () => {
     if (navigator.share) {
@@ -359,7 +359,7 @@ function ContactDialog({ open, onOpenChange, listingId, listingTitle }: ContactD
 
       const { data: { user } } = await supabase.auth.getUser();
 
-      const { error } = await supabase.from('listing_contacts').insert({
+      const { error } = await supabase.from('listing_contacts' as any).insert({
         listing_id: listingId,
         user_id: user?.id || null,
         contact_name: formData.name,

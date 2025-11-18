@@ -12,15 +12,13 @@ import {
   DollarSign,
   Building2,
   Award,
-  CheckCircle2,
-  XCircle,
   Star,
   Info
 } from 'lucide-react';
 import { formatCurrency } from '@/utils/formatCurrency';
 import { useNavigate } from 'react-router-dom';
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
-import SEO from '@/components/seo/SEO';
+import SEOHead from '@/components/seo/SEOHead';
 
 const Compare = () => {
   const { compareList, removeFromCompare, clearCompare } = useCompareStore();
@@ -29,7 +27,7 @@ const Compare = () => {
   if (compareList.length === 0) {
     return (
       <>
-        <SEO
+        <SEOHead
           title="So sánh dự án"
           description="So sánh chi tiết các dự án bất động sản"
         />
@@ -116,7 +114,7 @@ const Compare = () => {
 
   return (
     <>
-      <SEO
+      <SEOHead
         title={`So sánh ${compareList.length} dự án`}
         description="So sánh chi tiết các dự án bất động sản về giá, vị trí, tiện ích"
       />

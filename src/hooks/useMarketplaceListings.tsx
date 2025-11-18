@@ -68,7 +68,7 @@ export const useMarketplaceListings = (filters: ListingFilters = {}) => {
       setLoading(true);
 
       let query = supabase
-        .from('property_listings')
+        .from('property_listings' as any)
         .select('*', { count: 'exact' })
         .eq('status', 'approved')
         .eq('is_available', true);
@@ -119,9 +119,9 @@ export const useMarketplaceListings = (filters: ListingFilters = {}) => {
 
       // Fetch images for each listing
       const listingsWithImages = await Promise.all(
-        (data || []).map(async (listing) => {
+        (data || []).map(async (listing: any) => {
           const { data: images } = await supabase
-            .from('listing_images')
+            .from('listing_images' as any)
             .select('*')
             .eq('listing_id', listing.id)
             .order('is_primary', { ascending: false })
@@ -129,12 +129,12 @@ export const useMarketplaceListings = (filters: ListingFilters = {}) => {
 
           return {
             ...listing,
-            images: images || [],
+            images: (images as ListingImage[]) || [],
           };
         })
       );
 
-      setListings(listingsWithImages);
+      setListings(listingsWithImages as PropertyListing[]);
       setTotalCount(count || 0);
     } catch (error) {
       console.error('Error fetching listings:', error);
@@ -146,7 +146,7 @@ export const useMarketplaceListings = (filters: ListingFilters = {}) => {
 
   const incrementViewCount = async (listingId: string) => {
     try {
-      await supabase.rpc('increment_listing_view_count', {
+      await supabase.rpc('increment_listing_view_count' as any, {
         listing_uuid: listingId,
       });
     } catch (error) {
@@ -164,7 +164,7 @@ export const useMarketplaceListings = (filters: ListingFilters = {}) => {
 
       // Check if already favorited
       const { data: existing } = await supabase
-        .from('listing_favorites')
+        .from('listing_favorites' as any)
         .select('id')
         .eq('user_id', user.id)
         .eq('listing_id', listingId)
@@ -173,7 +173,7 @@ export const useMarketplaceListings = (filters: ListingFilters = {}) => {
       if (existing) {
         // Remove favorite
         const { error } = await supabase
-          .from('listing_favorites')
+          .from('listing_favorites' as any)
           .delete()
           .eq('id', existing.id);
 
@@ -183,7 +183,7 @@ export const useMarketplaceListings = (filters: ListingFilters = {}) => {
       } else {
         // Add favorite
         const { error } = await supabase
-          .from('listing_favorites')
+          .from('listing_favorites' as any)
           .insert({ user_id: user.id, listing_id: listingId });
 
         if (error) throw error;
@@ -222,7 +222,7 @@ export const useListing = (listingId: string) => {
       setLoading(true);
 
       const { data, error } = await supabase
-        .from('property_listings')
+        .from('property_listings' as any)
         .select('*')
         .eq('id', listingId)
         .single();
@@ -231,19 +231,19 @@ export const useListing = (listingId: string) => {
 
       // Fetch images
       const { data: images } = await supabase
-        .from('listing_images')
+        .from('listing_images' as any)
         .select('*')
         .eq('listing_id', listingId)
         .order('is_primary', { ascending: false })
         .order('display_order', { ascending: true });
 
       setListing({
-        ...data,
-        images: images || [],
+        ...(data as PropertyListing),
+        images: (images as ListingImage[]) || [],
       });
 
       // Increment view count
-      await supabase.rpc('increment_listing_view_count', {
+      await supabase.rpc('increment_listing_view_count' as any, {
         listing_uuid: listingId,
       });
     } catch (error) {

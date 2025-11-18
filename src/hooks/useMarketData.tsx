@@ -27,13 +27,13 @@ export const usePricingHistory = (projectId: string) => {
     const fetchData = async () => {
       try {
         const { data: history, error } = await supabase
-          .from('project_pricing_history')
+          .from('project_pricing_history' as any)
           .select('*')
           .eq('project_id', projectId)
           .order('price_date', { ascending: true });
 
         if (error) throw error;
-        setData(history || []);
+        setData(((history as any) as PricingHistory[]) || []);
       } catch (error) {
         console.error('Error fetching pricing history:', error);
       } finally {
@@ -82,7 +82,7 @@ export const useMarketCatalysts = (filters?: {
     const fetchCatalysts = async () => {
       try {
         let query = supabase
-          .from('market_catalysts')
+          .from('market_catalysts' as any)
           .select('*')
           .order('effective_date', { ascending: false });
 
@@ -105,7 +105,7 @@ export const useMarketCatalysts = (filters?: {
         const { data, error } = await query;
 
         if (error) throw error;
-        setCatalysts(data || []);
+        setCatalysts(((data as any) as MarketCatalyst[]) || []);
       } catch (error) {
         console.error('Error fetching catalysts:', error);
       } finally {
@@ -148,13 +148,13 @@ export const useRentalData = (projectId: string) => {
     const fetchData = async () => {
       try {
         const { data, error } = await supabase
-          .from('rental_market_data')
+          .from('rental_market_data' as any)
           .select('*')
           .eq('project_id', projectId)
           .order('data_date', { ascending: false });
 
         if (error) throw error;
-        setRentalData(data || []);
+        setRentalData(((data as any) as RentalMarketData[]) || []);
       } catch (error) {
         console.error('Error fetching rental data:', error);
       } finally {
@@ -205,14 +205,14 @@ export const usePaymentPolicies = (projectId: string) => {
     const fetchPolicies = async () => {
       try {
         const { data, error } = await supabase
-          .from('payment_policies')
+          .from('payment_policies' as any)
           .select('*')
           .eq('project_id', projectId)
           .eq('is_active', true)
           .order('created_at', { ascending: false });
 
         if (error) throw error;
-        setPolicies(data || []);
+        setPolicies(((data as any) as PaymentPolicy[]) || []);
       } catch (error) {
         console.error('Error fetching payment policies:', error);
       } finally {
@@ -262,7 +262,7 @@ export const useInfrastructure = (filters?: {
     const fetchData = async () => {
       try {
         let query = supabase
-          .from('infrastructure_developments')
+          .from('infrastructure_developments' as any)
           .select('*')
           .order('expected_completion', { ascending: true });
 
@@ -285,7 +285,7 @@ export const useInfrastructure = (filters?: {
         const { data, error } = await query;
 
         if (error) throw error;
-        setInfrastructure(data || []);
+        setInfrastructure(((data as any) as InfrastructureDevelopment[]) || []);
       } catch (error) {
         console.error('Error fetching infrastructure:', error);
       } finally {
@@ -333,14 +333,14 @@ export const useComparableSales = (projectId: string, limit: number = 20) => {
     const fetchSales = async () => {
       try {
         const { data, error } = await supabase
-          .from('comparable_sales')
+          .from('comparable_sales' as any)
           .select('*')
           .eq('project_id', projectId)
           .order('transaction_date', { ascending: false })
           .limit(limit);
 
         if (error) throw error;
-        setSales(data || []);
+        setSales(((data as any) as ComparableSale[]) || []);
       } catch (error) {
         console.error('Error fetching comparable sales:', error);
       } finally {
@@ -392,7 +392,7 @@ export const useMarketRegulations = (filters?: {
     const fetchRegulations = async () => {
       try {
         let query = supabase
-          .from('market_regulations')
+          .from('market_regulations' as any)
           .select('*')
           .order('effective_date', { ascending: false });
 
@@ -407,7 +407,7 @@ export const useMarketRegulations = (filters?: {
         const { data, error } = await query;
 
         if (error) throw error;
-        setRegulations(data || []);
+        setRegulations(((data as any) as MarketRegulation[]) || []);
       } catch (error) {
         console.error('Error fetching regulations:', error);
       } finally {

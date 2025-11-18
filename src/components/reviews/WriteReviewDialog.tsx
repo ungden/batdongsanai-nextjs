@@ -69,7 +69,7 @@ export const WriteReviewDialog = ({
       const pros = reviewData.pros.filter(p => p.trim());
       const cons = reviewData.cons.filter(c => c.trim());
 
-      const { error } = await supabase.from('project_reviews').insert({
+      const { error } = await supabase.from('project_reviews' as any).insert({
         project_id: projectId,
         user_id: user.id,
         rating: ratings.overall,

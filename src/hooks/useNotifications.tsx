@@ -33,7 +33,7 @@ export const useNotifications = () => {
 
     try {
       const { data, error } = await supabase
-        .from('notifications')
+        .from('notifications' as any)
         .select('*')
         .eq('user_id', user.id)
         .order('created_at', { ascending: false })
@@ -41,8 +41,8 @@ export const useNotifications = () => {
 
       if (error) throw error;
 
-      setNotifications(data || []);
-      setUnreadCount(data?.filter(n => !n.read).length || 0);
+      setNotifications((data as Notification[]) || []);
+      setUnreadCount((data as Notification[])?.filter(n => !n.read).length || 0);
     } catch (error) {
       console.error('Error fetching notifications:', error);
     } finally {
@@ -56,7 +56,7 @@ export const useNotifications = () => {
 
     try {
       const { error } = await supabase
-        .from('notifications')
+        .from('notifications' as any)
         .update({ read: true })
         .eq('id', notificationId)
         .eq('user_id', user.id);
@@ -80,7 +80,7 @@ export const useNotifications = () => {
 
     try {
       const { error } = await supabase
-        .from('notifications')
+        .from('notifications' as any)
         .update({ read: true })
         .eq('user_id', user.id)
         .eq('read', false);
@@ -104,7 +104,7 @@ export const useNotifications = () => {
       const notification = notifications.find(n => n.id === notificationId);
 
       const { error } = await supabase
-        .from('notifications')
+        .from('notifications' as any)
         .delete()
         .eq('id', notificationId)
         .eq('user_id', user.id);
@@ -128,7 +128,7 @@ export const useNotifications = () => {
 
     try {
       const { error } = await supabase
-        .from('notifications')
+        .from('notifications' as any)
         .delete()
         .eq('user_id', user.id);
 
@@ -149,7 +149,7 @@ export const useNotifications = () => {
 
     try {
       const { data, error } = await supabase
-        .from('notifications')
+        .from('notifications' as any)
         .insert({
           user_id: user.id,
           ...notification
@@ -159,7 +159,7 @@ export const useNotifications = () => {
 
       if (error) throw error;
 
-      setNotifications(prev => [data, ...prev]);
+      setNotifications(prev => [data as Notification, ...prev]);
       setUnreadCount(prev => prev + 1);
       return data;
     } catch (error) {

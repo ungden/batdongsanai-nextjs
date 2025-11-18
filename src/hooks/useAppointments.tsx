@@ -34,13 +34,13 @@ export const useAppointments = () => {
 
     try {
       const { data, error } = await supabase
-        .from('appointments')
+        .from('appointments' as any)
         .select('*')
         .eq('user_id', user.id)
         .order('appointment_date', { ascending: true });
 
       if (error) throw error;
-      setAppointments(data || []);
+      setAppointments(((data as any) as Appointment[]) || []);
     } catch (error) {
       console.error('Error fetching appointments:', error);
     } finally {
@@ -56,7 +56,7 @@ export const useAppointments = () => {
 
     try {
       const { data, error } = await supabase
-        .from('appointments')
+        .from('appointments' as any)
         .insert({
           user_id: user.id,
           ...appointment,
@@ -67,11 +67,12 @@ export const useAppointments = () => {
 
       if (error) throw error;
 
-      setAppointments(prev => [...prev, data].sort((a, b) =>
+      const newAppointment = (data as any) as Appointment;
+      setAppointments(prev => [...prev, newAppointment].sort((a, b) =>
         new Date(a.appointment_date).getTime() - new Date(b.appointment_date).getTime()
       ));
       toast.success('Đã đặt lịch hẹn thành công');
-      return data;
+      return newAppointment;
     } catch (error) {
       console.error('Error creating appointment:', error);
       toast.error('Không thể đặt lịch hẹn');
@@ -84,7 +85,7 @@ export const useAppointments = () => {
 
     try {
       const { data, error } = await supabase
-        .from('appointments')
+        .from('appointments' as any)
         .update(updates)
         .eq('id', id)
         .eq('user_id', user.id)
@@ -93,12 +94,13 @@ export const useAppointments = () => {
 
       if (error) throw error;
 
+      const updatedAppointment = (data as any) as Appointment;
       setAppointments(prev =>
-        prev.map(a => a.id === id ? data : a)
+        prev.map(a => a.id === id ? updatedAppointment : a)
           .sort((a, b) => new Date(a.appointment_date).getTime() - new Date(b.appointment_date).getTime())
       );
       toast.success('Đã cập nhật lịch hẹn');
-      return data;
+      return updatedAppointment;
     } catch (error) {
       console.error('Error updating appointment:', error);
       toast.error('Không thể cập nhật');
@@ -115,7 +117,7 @@ export const useAppointments = () => {
 
     try {
       const { error } = await supabase
-        .from('appointments')
+        .from('appointments' as any)
         .delete()
         .eq('id', id)
         .eq('user_id', user.id);

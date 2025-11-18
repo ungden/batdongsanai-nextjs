@@ -8,6 +8,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Progress } from '@/components/ui/progress';
+import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { ArrowLeft, ArrowRight, Upload, X } from 'lucide-react';
@@ -191,7 +192,7 @@ export default function CreateListing() {
 
       // Insert listing
       const { data: listing, error: listingError } = await supabase
-        .from('property_listings')
+        .from('property_listings' as any)
         .insert({
           user_id: user.id,
           listing_type: formData.listingType,
@@ -258,7 +259,7 @@ export default function CreateListing() {
         }));
 
         const { error: imagesError } = await supabase
-          .from('listing_images')
+          .from('listing_images' as any)
           .insert(imageRecords);
 
         if (imagesError) {

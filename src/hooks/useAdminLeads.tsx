@@ -56,7 +56,7 @@ export const useAdminLeads = (filters: LeadFilters = {}) => {
       setLoading(true);
 
       let query = supabase
-        .from('project_inquiries')
+        .from('project_inquiries' as any)
         .select('*', { count: 'exact' })
         .order('lead_score', { ascending: false })
         .order('created_at', { ascending: false });
@@ -92,7 +92,7 @@ export const useAdminLeads = (filters: LeadFilters = {}) => {
 
       if (error) throw error;
 
-      setLeads(data || []);
+      setLeads(((data as any) as LeadInquiry[]) || []);
       setTotalCount(count || 0);
     } catch (error) {
       console.error('Error fetching leads:', error);
@@ -114,7 +114,7 @@ export const useAdminLeads = (filters: LeadFilters = {}) => {
         return false;
       }
 
-      const { error } = await supabase.rpc('admin_assign_inquiry', {
+      const { error } = await supabase.rpc('admin_assign_inquiry' as any, {
         inquiry_uuid: inquiryId,
         agent_uuid: agentId,
         admin_uuid: user.id,
@@ -135,7 +135,7 @@ export const useAdminLeads = (filters: LeadFilters = {}) => {
   const updateLeadNotes = async (inquiryId: string, notes: string) => {
     try {
       const { error } = await supabase
-        .from('project_inquiries')
+        .from('project_inquiries' as any)
         .update({
           admin_notes: notes,
           updated_at: new Date().toISOString(),
@@ -157,7 +157,7 @@ export const useAdminLeads = (filters: LeadFilters = {}) => {
   const updateLeadStatus = async (inquiryId: string, status: string) => {
     try {
       const { error } = await supabase
-        .from('project_inquiries')
+        .from('project_inquiries' as any)
         .update({
           status,
           updated_at: new Date().toISOString(),
@@ -253,24 +253,25 @@ export const useLeadStats = (dateRange: { from?: string; to?: string } = {}) => 
     try {
       setLoading(true);
 
-      const { data, error } = await supabase.rpc('get_lead_statistics', {
+      const { data, error } = await supabase.rpc('get_lead_statistics' as any, {
         start_date: dateRange.from || new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString(),
         end_date: dateRange.to || new Date().toISOString(),
       });
 
       if (error) throw error;
 
-      if (data && data.length > 0) {
+      if (data && (data as any).length > 0) {
+        const statData = (data as any)[0];
         setStats({
-          total_leads: Number(data[0].total_leads),
-          hot_leads: Number(data[0].hot_leads),
-          warm_leads: Number(data[0].warm_leads),
-          cold_leads: Number(data[0].cold_leads),
-          unqualified_leads: Number(data[0].unqualified_leads),
-          avg_score: Number(data[0].avg_score),
-          assigned_leads: Number(data[0].assigned_leads),
-          unassigned_leads: Number(data[0].unassigned_leads),
-          conversion_rate: Number(data[0].conversion_rate),
+          total_leads: Number(statData.total_leads),
+          hot_leads: Number(statData.hot_leads),
+          warm_leads: Number(statData.warm_leads),
+          cold_leads: Number(statData.cold_leads),
+          unqualified_leads: Number(statData.unqualified_leads),
+          avg_score: Number(statData.avg_score),
+          assigned_leads: Number(statData.assigned_leads),
+          unassigned_leads: Number(statData.unassigned_leads),
+          conversion_rate: Number(statData.conversion_rate),
         });
       }
     } catch (error) {

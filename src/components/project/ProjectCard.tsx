@@ -1,4 +1,3 @@
-
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { StatusBadge } from "@/components/ui/status-badge";
@@ -80,7 +79,7 @@ const ProjectCard = ({ project, onClick }: ProjectCardProps) => {
             </div>
             <div onClick={(e) => e.stopPropagation()} className="flex gap-2">
               <AddToCompareButton
-                project={project}
+                project={project as any}
                 variant="ghost"
                 size="icon"
                 showText={false}

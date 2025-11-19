@@ -17,7 +17,9 @@ import {
   PenTool,
   CheckSquare,
   Workflow,
-  Bot
+  Bot,
+  UploadCloud,
+  type LucideIcon
 } from "lucide-react";
 import {
   Sidebar,
@@ -34,8 +36,17 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 
-const mainItems = [
+interface MenuItem {
+  title: string;
+  url: string;
+  icon: LucideIcon;
+  badge?: string;
+  badgeColor?: string;
+}
+
+const mainItems: MenuItem[] = [
   { title: "Dashboard", url: "/admin/dashboard", icon: LayoutDashboard },
+  { title: "Batch Upload (AI)", url: "/admin/ai-scout", icon: UploadCloud, badge: "NEW", badgeColor: "bg-green-100 text-green-700 border-green-200" },
   { title: "Pipeline Dữ liệu", url: "/admin/pipeline", icon: Workflow, badge: "MAIN", badgeColor: "bg-blue-100 text-blue-700 border-blue-200" },
   { title: "Duyệt nội dung", url: "/admin/approvals", icon: CheckSquare, badge: "QC", badgeColor: "bg-orange-100 text-orange-700 border-orange-200" },
   { title: "Quản lý Leads", url: "/admin/leads", icon: Target },
@@ -48,7 +59,7 @@ const mainItems = [
   { title: "Nhật ký Admin", url: "/admin/logs", icon: Shield },
 ];
 
-const aiTools = [
+const aiTools: MenuItem[] = [
   { title: "AI Scout (Tìm dự án)", url: "/admin/ai-scout", icon: Bot, badge: "START" },
   { title: "Nghiên cứu Thị trường", url: "/admin/market-research-factory", icon: LineChart },
   { title: "Phân tích Chất xúc tác", url: "/admin/catalyst-factory", icon: Sparkles },
@@ -59,6 +70,14 @@ export function AdminSidebar() {
   const { state } = useSidebar();
   const location = useLocation();
   const collapsed = state === "collapsed";
+
+  const isActive = (path: string) => location.pathname.startsWith(path);
+
+  const getNavClassName = (path: string) => {
+    return isActive(path)
+      ? "bg-sidebar-accent text-sidebar-accent-foreground font-semibold shadow-sm border-l-4 border-sidebar-primary pl-2"
+      : "text-sidebar-foreground/70 hover:bg-sidebar-accent/50 hover:text-sidebar-accent-foreground";
+  };
 
   return (
     <Sidebar
@@ -116,12 +135,7 @@ export function AdminSidebar() {
                     <SidebarMenuButton asChild tooltip={item.title}>
                       <NavLink 
                         to={item.url} 
-                        className={({ isActive }) => cn(
-                          "flex w-full items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors relative group",
-                          isActive 
-                            ? "bg-sidebar-accent text-sidebar-accent-foreground font-semibold shadow-sm border-l-4 border-sidebar-primary pl-2" 
-                            : "text-sidebar-foreground/70 hover:bg-sidebar-accent/50 hover:text-sidebar-accent-foreground"
-                        )}
+                        className={getNavClassName(item.url) + " flex w-full items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors relative group"}
                       >
                         <item.icon className="h-5 w-5 flex-shrink-0" />
                         {!collapsed && (
@@ -158,12 +172,7 @@ export function AdminSidebar() {
                     <SidebarMenuButton asChild tooltip={item.title}>
                       <NavLink 
                         to={item.url} 
-                        className={({ isActive }) => cn(
-                          "flex w-full items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors relative",
-                          isActive 
-                            ? "bg-sidebar-accent text-sidebar-accent-foreground font-semibold shadow-sm border-l-4 border-blue-500 pl-2" 
-                            : "text-sidebar-foreground/70 hover:bg-sidebar-accent/50 hover:text-sidebar-accent-foreground"
-                        )}
+                        className={getNavClassName(item.url) + " flex w-full items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors relative"}
                       >
                         <item.icon className="h-5 w-5 flex-shrink-0" />
                         {!collapsed && (

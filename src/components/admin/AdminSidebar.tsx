@@ -14,7 +14,8 @@ import {
   BarChart3,
   Target,
   Newspaper,
-  PenTool
+  PenTool,
+  CheckSquare
 } from "lucide-react";
 import {
   Sidebar,
@@ -33,7 +34,8 @@ import { cn } from "@/lib/utils";
 
 const mainItems = [
   { title: "Dashboard", url: "/admin/dashboard", icon: LayoutDashboard },
-  { title: "Quản lý Leads", url: "/admin/leads", icon: Target, badge: "NEW", badgeColor: "bg-red-500" },
+  { title: "Duyệt nội dung", url: "/admin/approvals", icon: CheckSquare, badge: "PENDING", badgeColor: "bg-orange-100 text-orange-700 border-orange-200" },
+  { title: "Quản lý Leads", url: "/admin/leads", icon: Target, badge: "NEW", badgeColor: "bg-red-100 text-red-700 border-red-200" },
   { title: "Quản lý dữ liệu", url: "/admin/data-management", icon: Database },
   { title: "Analytics", url: "/admin/analytics", icon: BarChart3 },
   { title: "Quản lý người dùng", url: "/admin/users", icon: Users },

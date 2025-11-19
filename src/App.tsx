@@ -36,10 +36,11 @@ const ProjectAnalysisHub = lazy(() => import("./pages/ProjectAnalysisHub"));
 // Admin Pages
 const AdminLayout = lazy(() => import('@/pages/admin/AdminLayout'));
 const AdminDashboard = lazy(() => import('@/pages/admin/Dashboard'));
+const ApprovalCenter = lazy(() => import('@/pages/admin/ApprovalCenter')); // New
 const ResearchFactory = lazy(() => import('@/pages/admin/ResearchFactory'));
 const MarketResearchFactory = lazy(() => import('@/pages/admin/MarketResearchFactory'));
 const CatalystFactory = lazy(() => import('@/pages/admin/CatalystFactory'));
-const ContentStudio = lazy(() => import('@/pages/admin/ContentStudio')); // New
+const ContentStudio = lazy(() => import('@/pages/admin/ContentStudio')); 
 const DataManagement = lazy(() => import('@/pages/admin/DataManagement'));
 const AnalyticsDashboard = lazy(() => import('@/pages/admin/AnalyticsDashboard'));
 const LeadManagement = lazy(() => import('@/pages/admin/LeadManagement'));
@@ -114,6 +115,7 @@ const App = () => (
               <Route path="/admin" element={<AdminLayout />}>
                 <Route index element={<Navigate to="/admin/dashboard" replace />} />
                 <Route path="dashboard" element={<AdminDashboard />} />
+                <Route path="approvals" element={<ApprovalCenter />} /> {/* New Route */}
                 <Route path="leads" element={<LeadManagement />} />
                 <Route path="data-management" element={<DataManagement />} />
                 <Route path="analytics" element={<AnalyticsDashboard />} />
@@ -122,7 +124,7 @@ const App = () => (
                 <Route path="research-factory" element={<ResearchFactory />} />
                 <Route path="market-research-factory" element={<MarketResearchFactory />} />
                 <Route path="catalyst-factory" element={<CatalystFactory />} />
-                <Route path="content-studio" element={<ContentStudio />} /> {/* New Route */}
+                <Route path="content-studio" element={<ContentStudio />} />
                 
                 {/* Functional Admin Pages */}
                 <Route path="users" element={<AdminUsers />} />

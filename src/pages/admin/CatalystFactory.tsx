@@ -9,14 +9,14 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Loader2, Zap, Save, ArrowRight, Database } from "lucide-react";
+import { Loader2, Zap, Save, ArrowRight, Database, Send } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 export default function CatalystFactory() {
   const [rawText, setRawText] = useState("");
   const [processing, setProcessing] = useState(false);
-  
-  // Editing State
   const [formData, setFormData] = useState<any>(null);
+  const navigate = useNavigate();
 
   const handleAnalyze = async () => {
     if (!rawText.trim()) return;
@@ -28,7 +28,6 @@ export default function CatalystFactory() {
 
       if (error) throw error;
       
-      // Load result into editable state
       const result = data.data;
       setFormData({
         title: result.title || "",
@@ -41,7 +40,7 @@ export default function CatalystFactory() {
         effective_date: result.effective_date || ""
       });
       
-      toast.success("Đã trích xuất dữ liệu! Vui lòng kiểm tra lại.");
+      toast.success("AI đã trích xuất xong! Vui lòng kiểm tra.");
     } catch (error: any) {
       toast.error("Lỗi: " + error.message);
     } finally {
@@ -52,19 +51,19 @@ export default function CatalystFactory() {
   const handleSave = async () => {
     if (!formData) return;
     try {
-      // Convert affected_areas string back to array
       const payload = {
         ...formData,
         affected_areas: formData.affected_areas.split(',').map((s: string) => s.trim()).filter(Boolean),
-        verification_status: 'verified' // Auto verify since admin is saving it
+        verification_status: 'pending' // QUAN TRỌNG: Lưu dưới dạng chờ duyệt
       };
 
       const { error } = await supabase.from('market_catalysts' as any).insert(payload);
       if (error) throw error;
       
-      toast.success("Đã lưu Catalyst vào Database");
+      toast.success("Đã gửi vào hàng đợi duyệt!");
       setFormData(null);
       setRawText("");
+      // Option: Redirect to approval center or stay
     } catch (error: any) {
       toast.error("Lỗi lưu: " + error.message);
     }
@@ -99,12 +98,12 @@ export default function CatalystFactory() {
           </CardContent>
         </Card>
 
-        <Card className="bg-muted/30 border-l-4 border-l-primary">
+        <Card className="bg-blue-50/50 border-l-4 border-l-blue-500">
           <CardHeader className="pb-2">
             <div className="flex justify-between items-start">
                 <div>
-                    <CardTitle>2. Kiểm tra & Chỉnh sửa</CardTitle>
-                    <CardDescription>Dữ liệu sẽ được lưu vào bảng: <strong>market_catalysts</strong></CardDescription>
+                    <CardTitle>2. Kiểm tra & Gửi duyệt</CardTitle>
+                    <CardDescription>Dữ liệu sẽ được chuyển đến <strong>Approval Center</strong></CardDescription>
                 </div>
                 <Database className="w-5 h-5 text-muted-foreground" />
             </div>
@@ -182,7 +181,7 @@ export default function CatalystFactory() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label>Khu vực ảnh hưởng (cách nhau dấu phẩy)</Label>
+                  <Label>Khu vực ảnh hưởng</Label>
                   <Input 
                     value={formData.affected_areas} 
                     onChange={(e) => setFormData({...formData, affected_areas: e.target.value})} 
@@ -191,7 +190,7 @@ export default function CatalystFactory() {
                 </div>
                 
                  <div className="space-y-2">
-                  <Label>Ngày hiệu lực / Hoàn thành (Dự kiến)</Label>
+                  <Label>Ngày hiệu lực (Dự kiến)</Label>
                   <Input 
                     type="date"
                     value={formData.effective_date} 
@@ -208,14 +207,14 @@ export default function CatalystFactory() {
                   />
                 </div>
 
-                <Button onClick={handleSave} className="w-full bg-green-600 hover:bg-green-700 shadow-md">
-                  <Save className="mr-2 h-4 w-4" /> Lưu vào Database
+                <Button onClick={handleSave} className="w-full bg-blue-600 hover:bg-blue-700 shadow-md">
+                  <Send className="mr-2 h-4 w-4" /> Gửi duyệt
                 </Button>
               </div>
             ) : (
               <div className="flex flex-col items-center justify-center h-[300px] text-muted-foreground border-2 border-dashed rounded-lg">
                 <ArrowRight className="w-8 h-8 mb-2 opacity-20" />
-                <p>Kết quả phân tích sẽ hiện ở đây để bạn chỉnh sửa</p>
+                <p>Kết quả phân tích sẽ hiện ở đây để bạn kiểm tra</p>
               </div>
             )}
           </CardContent>

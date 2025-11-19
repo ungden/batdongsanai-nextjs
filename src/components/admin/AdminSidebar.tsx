@@ -13,6 +13,7 @@ import {
   Database,
   BarChart3,
   Target,
+  Newspaper
 } from "lucide-react";
 import {
   Sidebar,
@@ -26,22 +27,23 @@ import {
   SidebarHeader,
   useSidebar,
 } from "@/components/ui/sidebar";
+import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
-import { Button } from "../ui/button";
 
 const mainItems = [
   { title: "Dashboard", url: "/admin/dashboard", icon: LayoutDashboard },
-  { title: "Quản lý Leads", url: "/admin/leads", icon: Target, badge: "AI" },
+  { title: "Quản lý Leads", url: "/admin/leads", icon: Target, badge: "NEW", badgeColor: "bg-red-500" },
   { title: "Quản lý dữ liệu", url: "/admin/data-management", icon: Database },
   { title: "Analytics", url: "/admin/analytics", icon: BarChart3 },
   { title: "Quản lý người dùng", url: "/admin/users", icon: Users },
   { title: "Quản lý dự án", url: "/admin/projects", icon: FileText },
+  { title: "Tin tức & Bài viết", url: "/admin/news", icon: Newspaper },
   { title: "Cài đặt hệ thống", url: "/admin/settings", icon: Settings },
   { title: "Nhật ký Admin", url: "/admin/logs", icon: Shield },
 ];
 
 const aiTools = [
-  { title: "Nghiên cứu Dự án", url: "/admin/research-factory", icon: Sparkles },
+  { title: "Nghiên cứu Dự án", url: "/admin/research-factory", icon: Sparkles, badge: "AI" },
   { title: "Nghiên cứu Thị trường", url: "/admin/market-research-factory", icon: LineChart },
   { title: "Phân tích Chất xúc tác", url: "/admin/catalyst-factory", icon: Sparkles },
 ];
@@ -67,17 +69,21 @@ export function AdminSidebar() {
       )}
       collapsible="icon"
     >
-      <SidebarHeader className="border-b px-4 py-3">
-        {!collapsed && (
-          <div className="space-y-1">
-            <h2 className="text-lg font-bold tracking-tight">Admin Panel</h2>
-            <p className="text-xs text-muted-foreground">PropertyHub</p>
+      <SidebarHeader className="border-b px-4 py-3 h-16 flex items-center justify-center">
+        {!collapsed ? (
+          <div className="space-y-1 w-full">
+            <h2 className="text-lg font-bold tracking-tight flex items-center gap-2">
+              <Shield className="w-5 h-5 text-primary" />
+              Admin Panel
+            </h2>
+            <p className="text-xs text-muted-foreground pl-7">PropertyHub System</p>
           </div>
+        ) : (
+          <Shield className="w-6 h-6 text-primary" />
         )}
-        {collapsed && <Shield className="w-6 h-6 mx-auto" />}
       </SidebarHeader>
 
-      <SidebarContent className="px-3 py-4 flex flex-col h-full">
+      <SidebarContent className="px-3 py-4 flex flex-col h-full overflow-y-auto custom-scrollbar">
         <div className="space-y-6">
           <SidebarGroup>
             <SidebarGroupContent>
@@ -95,15 +101,27 @@ export function AdminSidebar() {
           </SidebarGroup>
 
           <SidebarGroup className="space-y-2">
-            {!collapsed && <SidebarGroupLabel className="px-2 text-xs uppercase tracking-wide">Quản lý</SidebarGroupLabel>}
+            {!collapsed && <SidebarGroupLabel className="px-2 text-xs uppercase tracking-wide text-muted-foreground/70 font-bold">Quản lý</SidebarGroupLabel>}
             <SidebarGroupContent>
               <SidebarMenu className="space-y-1">
                 {mainItems.map((item) => (
                   <SidebarMenuItem key={item.title}>
-                    <SidebarMenuButton asChild>
-                      <NavLink to={item.url} className={`${getNavClassName(item.url)} block w-full rounded-lg py-2 px-3 flex items-center gap-3`}>
-                        <item.icon className="h-5 w-5" />
-                        {!collapsed && <span>{item.title}</span>}
+                    <SidebarMenuButton asChild tooltip={item.title}>
+                      <NavLink to={item.url} className={`${getNavClassName(item.url)} block w-full rounded-lg py-2 px-3 flex items-center gap-3 relative group`}>
+                        <item.icon className="h-5 w-5 flex-shrink-0" />
+                        {!collapsed && (
+                          <>
+                            <span className="flex-1 truncate">{item.title}</span>
+                            {item.badge && (
+                              <Badge 
+                                className={`ml-auto text-[10px] px-1.5 h-5 ${item.badgeColor || "bg-primary/10 text-primary border-primary/20"}`}
+                                variant="outline"
+                              >
+                                {item.badge}
+                              </Badge>
+                            )}
+                          </>
+                        )}
                       </NavLink>
                     </SidebarMenuButton>
                   </SidebarMenuItem>
@@ -113,15 +131,24 @@ export function AdminSidebar() {
           </SidebarGroup>
 
           <SidebarGroup className="space-y-2">
-            {!collapsed && <SidebarGroupLabel className="px-2 text-xs uppercase tracking-wide text-blue-600">Công cụ AI</SidebarGroupLabel>}
+            {!collapsed && <SidebarGroupLabel className="px-2 text-xs uppercase tracking-wide text-blue-600 font-bold">Công cụ AI</SidebarGroupLabel>}
             <SidebarGroupContent>
               <SidebarMenu className="space-y-1">
                 {aiTools.map((item) => (
                   <SidebarMenuItem key={item.title}>
-                    <SidebarMenuButton asChild>
-                      <NavLink to={item.url} className={`${getNavClassName(item.url)} block w-full rounded-lg py-2 px-3 flex items-center gap-3`}>
-                        <item.icon className="h-5 w-5" />
-                        {!collapsed && <span>{item.title}</span>}
+                    <SidebarMenuButton asChild tooltip={item.title}>
+                      <NavLink to={item.url} className={`${getNavClassName(item.url)} block w-full rounded-lg py-2 px-3 flex items-center gap-3 relative`}>
+                        <item.icon className="h-5 w-5 flex-shrink-0" />
+                        {!collapsed && (
+                          <>
+                            <span className="flex-1 truncate">{item.title}</span>
+                            {item.badge && (
+                              <Badge className="ml-auto bg-purple-100 text-purple-700 border-purple-200 text-[10px] px-1.5 h-5">
+                                {item.badge}
+                              </Badge>
+                            )}
+                          </>
+                        )}
                       </NavLink>
                     </SidebarMenuButton>
                   </SidebarMenuItem>

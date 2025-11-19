@@ -36,9 +36,9 @@ import { cn } from "@/lib/utils";
 
 const mainItems = [
   { title: "Dashboard", url: "/admin/dashboard", icon: LayoutDashboard },
-  { title: "Duyệt nội dung", url: "/admin/approvals", icon: CheckSquare, badge: "PENDING", badgeColor: "bg-orange-100 text-orange-700 border-orange-200" },
-  { title: "Quy trình Dữ liệu", url: "/admin/enrichment", icon: Workflow, badge: "MAIN", badgeColor: "bg-green-100 text-green-700 border-green-200" },
-  { title: "Quản lý Leads", url: "/admin/leads", icon: Target, badge: "NEW", badgeColor: "bg-red-100 text-red-700 border-red-200" },
+  { title: "Pipeline Dữ liệu", url: "/admin/pipeline", icon: Workflow, badge: "MAIN", badgeColor: "bg-blue-100 text-blue-700 border-blue-200" },
+  { title: "Duyệt nội dung", url: "/admin/approvals", icon: CheckSquare, badge: "QC", badgeColor: "bg-orange-100 text-orange-700 border-orange-200" },
+  { title: "Quản lý Leads", url: "/admin/leads", icon: Target },
   { title: "Quản lý dữ liệu", url: "/admin/data-management", icon: Database },
   { title: "Analytics", url: "/admin/analytics", icon: BarChart3 },
   { title: "Quản lý người dùng", url: "/admin/users", icon: Users },
@@ -52,7 +52,7 @@ const aiTools = [
   { title: "AI Scout (Tìm dự án)", url: "/admin/ai-scout", icon: Bot, badge: "START" },
   { title: "Nghiên cứu Thị trường", url: "/admin/market-research-factory", icon: LineChart },
   { title: "Phân tích Chất xúc tác", url: "/admin/catalyst-factory", icon: Sparkles },
-  { title: "Content Studio", url: "/admin/content-studio", icon: PenTool, badge: "Beta" },
+  { title: "Content Studio", url: "/admin/content-studio", icon: PenTool },
 ];
 
 export function AdminSidebar() {

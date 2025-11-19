@@ -50,10 +50,10 @@ const AdminDevelopers = lazy(() => import('@/pages/admin/AdminDevelopers'));
 const AdminSettings = lazy(() => import('@/pages/admin/AdminSettings'));
 const AdminLogsPage = lazy(() => import('@/pages/admin/AdminLogs'));
 const AdminNews = lazy(() => import('@/pages/admin/AdminNews'));
-const AiProjectScout = lazy(() => import('@/pages/admin/AiProjectScout')); // New
+const AiProjectScout = lazy(() => import('@/pages/admin/AiProjectScout'));
 
 // New Workflow Pages
-const ProjectEnrichment = lazy(() => import('@/pages/admin/ProjectEnrichment'));
+const ProjectPipeline = lazy(() => import('@/pages/admin/ProjectPipeline')); // New Kanban
 const ProjectWorkspace = lazy(() => import('@/pages/admin/ProjectWorkspace'));
 
 // New Feature Pages
@@ -123,8 +123,9 @@ const App = () => (
                 <Route path="approvals" element={<ApprovalCenter />} />
                 <Route path="leads" element={<LeadManagement />} />
                 
-                {/* Workflow Routes */}
-                <Route path="enrichment" element={<ProjectEnrichment />} />
+                {/* Workflow Routes - Updated */}
+                <Route path="pipeline" element={<ProjectPipeline />} />
+                <Route path="enrichment" element={<Navigate to="/admin/pipeline" replace />} /> {/* Redirect old link */}
                 <Route path="enrichment/:id" element={<ProjectWorkspace />} />
                 
                 {/* AI Tools */}

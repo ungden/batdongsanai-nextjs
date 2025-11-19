@@ -22,7 +22,7 @@ export function ProjectAgents({ projectId, projectName }: ProjectAgentsProps) {
 
   if (loading) {
     return (
-      <Card>
+      <Card className="bg-card border-border">
         <CardHeader>
           <CardTitle>Tư vấn viên</CardTitle>
         </CardHeader>
@@ -43,7 +43,7 @@ export function ProjectAgents({ projectId, projectName }: ProjectAgentsProps) {
 
   if (agents.length === 0) {
     return (
-      <Card>
+      <Card className="bg-card border-border">
         <CardHeader>
           <CardTitle>Liên hệ tư vấn</CardTitle>
         </CardHeader>
@@ -58,7 +58,7 @@ export function ProjectAgents({ projectId, projectName }: ProjectAgentsProps) {
   }
 
   return (
-    <Card>
+    <Card className="bg-card border-border">
       <CardHeader>
         <CardTitle>Tư vấn viên chuyên nghiệp</CardTitle>
         <p className="text-sm text-muted-foreground">
@@ -67,49 +67,50 @@ export function ProjectAgents({ projectId, projectName }: ProjectAgentsProps) {
       </CardHeader>
       <CardContent className="space-y-6">
         {agents.map((agent) => (
-          <div key={agent.id} className="border rounded-lg p-4 space-y-4">
+          <div key={agent.id} className="border border-border rounded-lg p-4 space-y-4 bg-muted/10">
             {/* Agent Header */}
             <div className="flex gap-4">
-              <Avatar className="h-16 w-16">
+              <Avatar className="h-16 w-16 border border-border">
                 <AvatarImage src={agent.avatar_url || undefined} alt={agent.full_name} />
-                <AvatarFallback className="text-lg">
+                <AvatarFallback className="text-lg bg-primary/10 text-primary">
                   {agent.full_name.charAt(0)}
                 </AvatarFallback>
               </Avatar>
 
-              <div className="flex-1">
+              <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 mb-1">
-                  <h4 className="font-semibold">{agent.full_name}</h4>
+                  <h4 className="font-semibold truncate">{agent.full_name}</h4>
                   {agent.is_verified && (
-                    <CheckCircle className="h-4 w-4 text-green-600" />
-                  )}
-                  {agent.role === 'lead_agent' && (
-                    <Badge variant="default">Trưởng nhóm</Badge>
+                    <CheckCircle className="h-4 w-4 text-success shrink-0" />
                   )}
                 </div>
+                
+                {agent.role === 'lead_agent' && (
+                   <Badge variant="default" className="mb-2">Trưởng nhóm</Badge>
+                )}
 
                 {agent.company_name && (
                   <div className="flex items-center text-sm text-muted-foreground mb-2">
-                    <Building2 className="h-3 w-3 mr-1" />
-                    {agent.company_name}
+                    <Building2 className="h-3 w-3 mr-1 shrink-0" />
+                    <span className="truncate">{agent.company_name}</span>
                   </div>
                 )}
 
                 {/* Rating & Experience */}
-                <div className="flex items-center gap-4 text-sm">
+                <div className="flex flex-wrap items-center gap-4 text-sm">
                   {agent.rating > 0 && (
                     <div className="flex items-center gap-1">
                       <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
                       <span className="font-medium">{agent.rating.toFixed(1)}</span>
                       <span className="text-muted-foreground">
-                        ({agent.total_reviews} đánh giá)
+                        ({agent.total_reviews})
                       </span>
                     </div>
                   )}
                   {agent.years_experience && (
                     <div className="flex items-center gap-1 text-muted-foreground">
                       <Award className="h-4 w-4" />
-                      {agent.years_experience} năm kinh nghiệm
+                      {agent.years_experience} năm
                     </div>
                   )}
                 </div>
@@ -120,7 +121,7 @@ export function ProjectAgents({ projectId, projectName }: ProjectAgentsProps) {
             {agent.specialization && agent.specialization.length > 0 && (
               <div className="flex flex-wrap gap-2">
                 {agent.specialization.map((spec) => (
-                  <Badge key={spec} variant="secondary" className="text-xs">
+                  <Badge key={spec} variant="secondary" className="text-xs border-border bg-background">
                     {formatSpecialization(spec)}
                   </Badge>
                 ))}
@@ -134,43 +135,15 @@ export function ProjectAgents({ projectId, projectName }: ProjectAgentsProps) {
               </p>
             )}
 
-            {/* Performance Stats */}
-            {agent.leads_received > 0 && (
-              <div className="flex gap-4 text-xs text-muted-foreground border-t pt-3">
-                <div>
-                  <span className="font-medium text-foreground">
-                    {agent.leads_received}
-                  </span>{' '}
-                  khách hàng
-                </div>
-                {agent.leads_converted > 0 && (
-                  <div>
-                    <span className="font-medium text-foreground">
-                      {agent.leads_converted}
-                    </span>{' '}
-                    giao dịch thành công
-                  </div>
-                )}
-                {agent.leads_converted > 0 && agent.leads_received > 0 && (
-                  <div>
-                    Tỷ lệ:{' '}
-                    <span className="font-medium text-green-600">
-                      {((agent.leads_converted / agent.leads_received) * 100).toFixed(0)}%
-                    </span>
-                  </div>
-                )}
-              </div>
-            )}
-
             {/* Contact Buttons */}
             <div className="grid grid-cols-2 gap-2">
-              <Button variant="outline" size="sm" asChild>
+              <Button variant="outline" size="sm" asChild className="w-full">
                 <a href={`tel:${agent.phone}`}>
                   <Phone className="h-4 w-4 mr-2" />
                   Gọi điện
                 </a>
               </Button>
-              <Button variant="outline" size="sm" asChild>
+              <Button variant="outline" size="sm" asChild className="w-full">
                 <a href={`mailto:${agent.email}`}>
                   <Mail className="h-4 w-4 mr-2" />
                   Email
@@ -181,7 +154,7 @@ export function ProjectAgents({ projectId, projectName }: ProjectAgentsProps) {
         ))}
 
         {/* Main CTA */}
-        <div className="pt-4 border-t">
+        <div className="pt-4 border-t border-border">
           <InquiryDialog
             projectId={projectId}
             projectName={projectName}

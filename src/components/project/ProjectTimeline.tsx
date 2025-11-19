@@ -70,24 +70,24 @@ const ProjectTimeline = ({ completionDate, soldUnits, totalUnits }: ProjectTimel
   const getStatusColor = (status: string) => {
     switch (status) {
       case "completed":
-        return "bg-emerald-500";
+        return "bg-emerald-500 text-white";
       case "in-progress":
-        return "bg-blue-500";
+        return "bg-blue-500 text-white";
       case "upcoming":
-        return "bg-slate-300";
+        return "bg-muted text-muted-foreground";
       default:
-        return "bg-slate-300";
+        return "bg-muted text-muted-foreground";
     }
   };
 
   const getStatusBadge = (status: string) => {
     switch (status) {
       case "completed":
-        return <Badge className="bg-emerald-100 text-emerald-700 border-emerald-200">Hoàn thành</Badge>;
+        return <Badge className="bg-emerald-100 text-emerald-700 border-emerald-200 dark:bg-emerald-950/30 dark:text-emerald-400 dark:border-emerald-900">Hoàn thành</Badge>;
       case "in-progress":
-        return <Badge className="bg-blue-100 text-blue-700 border-blue-200">Đang thực hiện</Badge>;
+        return <Badge className="bg-blue-100 text-blue-700 border-blue-200 dark:bg-blue-950/30 dark:text-blue-400 dark:border-blue-900">Đang thực hiện</Badge>;
       case "upcoming":
-        return <Badge variant="outline">Sắp tới</Badge>;
+        return <Badge variant="outline" className="text-muted-foreground">Sắp tới</Badge>;
       default:
         return null;
     }
@@ -97,10 +97,10 @@ const ProjectTimeline = ({ completionDate, soldUnits, totalUnits }: ProjectTimel
   const progressPercent = (completedEvents / timelineEvents.length) * 100;
 
   return (
-    <Card className="rounded-2xl shadow-lg border-0 bg-white">
-      <CardHeader className="bg-gradient-to-r from-slate-50 to-blue-50/30 rounded-t-2xl border-b">
+    <Card className="rounded-2xl shadow-lg border-0 bg-card">
+      <CardHeader className="bg-gradient-to-r from-slate-50 to-blue-50/30 dark:from-slate-900/50 dark:to-blue-900/20 rounded-t-2xl border-b border-border/50">
         <div className="flex items-center justify-between">
-          <CardTitle className="flex items-center gap-2">
+          <CardTitle className="flex items-center gap-2 text-foreground">
             <Calendar className="w-5 h-5 text-primary" />
             Tiến độ xây dựng
           </CardTitle>
@@ -113,7 +113,7 @@ const ProjectTimeline = ({ completionDate, soldUnits, totalUnits }: ProjectTimel
         {/* Overall Progress */}
         <div className="space-y-3">
           <div className="flex items-center justify-between text-sm">
-            <span className="font-medium text-slate-700">Tiến độ tổng thể</span>
+            <span className="font-medium text-foreground">Tiến độ tổng thể</span>
             <span className="font-bold text-primary">{completedEvents}/{timelineEvents.length} giai đoạn</span>
           </div>
           <Progress value={progressPercent} className="h-3" />
@@ -121,18 +121,18 @@ const ProjectTimeline = ({ completionDate, soldUnits, totalUnits }: ProjectTimel
 
         {/* Sales Progress */}
         {soldUnits && totalUnits && (
-          <div className="p-4 bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl border border-blue-200">
+          <div className="p-4 bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-950/30 dark:to-indigo-950/30 rounded-xl border border-blue-200 dark:border-blue-900/50">
             <div className="flex items-center justify-between mb-2">
-              <span className="text-sm font-medium text-slate-700">Tiến độ bán hàng</span>
-              <span className="text-sm font-bold text-blue-600">
+              <span className="text-sm font-medium text-foreground">Tiến độ bán hàng</span>
+              <span className="text-sm font-bold text-blue-600 dark:text-blue-400">
                 {soldUnits}/{totalUnits} căn
               </span>
             </div>
             <Progress 
               value={(soldUnits / totalUnits) * 100} 
-              className="h-2 mb-2"
+              className="h-2 mb-2 bg-blue-200 dark:bg-blue-900"
             />
-            <div className="text-xs text-slate-600">
+            <div className="text-xs text-muted-foreground">
               {Math.round((soldUnits / totalUnits) * 100)}% đã có chủ
             </div>
           </div>
@@ -141,7 +141,7 @@ const ProjectTimeline = ({ completionDate, soldUnits, totalUnits }: ProjectTimel
         {/* Timeline */}
         <div className="relative">
           {/* Vertical line */}
-          <div className="absolute left-6 top-0 bottom-0 w-0.5 bg-slate-200" />
+          <div className="absolute left-6 top-0 bottom-0 w-0.5 bg-border" />
 
           <div className="space-y-6">
             {timelineEvents.map((event, index) => {
@@ -151,24 +151,24 @@ const ProjectTimeline = ({ completionDate, soldUnits, totalUnits }: ProjectTimel
               return (
                 <div key={event.id} className="relative flex gap-4">
                   {/* Icon */}
-                  <div className={`relative z-10 flex-shrink-0 w-12 h-12 rounded-full ${getStatusColor(event.status)} flex items-center justify-center shadow-lg`}>
-                    <IconComponent className="w-6 h-6 text-white" />
+                  <div className={`relative z-10 flex-shrink-0 w-12 h-12 rounded-full ${getStatusColor(event.status)} flex items-center justify-center shadow-lg border-2 border-background`}>
+                    <IconComponent className="w-6 h-6" />
                   </div>
 
                   {/* Content */}
                   <div className={`flex-1 ${isLast ? '' : 'pb-6'}`}>
-                    <div className="bg-gradient-to-br from-slate-50 to-slate-100/50 rounded-xl p-4 shadow-sm hover:shadow-md transition-all">
+                    <div className="bg-card hover:bg-accent/50 rounded-xl p-4 shadow-sm border border-border transition-all">
                       <div className="flex items-start justify-between mb-2">
                         <div>
-                          <h4 className="font-semibold text-slate-900 mb-1">{event.title}</h4>
-                          <div className="flex items-center gap-2 text-xs text-slate-600">
+                          <h4 className="font-semibold text-foreground mb-1">{event.title}</h4>
+                          <div className="flex items-center gap-2 text-xs text-muted-foreground">
                             <Clock className="w-3 h-3" />
                             <span>{event.date}</span>
                           </div>
                         </div>
                         {getStatusBadge(event.status)}
                       </div>
-                      <p className="text-sm text-slate-600 leading-relaxed">
+                      <p className="text-sm text-muted-foreground leading-relaxed">
                         {event.description}
                       </p>
                     </div>
@@ -181,34 +181,34 @@ const ProjectTimeline = ({ completionDate, soldUnits, totalUnits }: ProjectTimel
 
         {/* Status Summary */}
         <div className="grid grid-cols-3 gap-3">
-          <div className="p-3 bg-emerald-50 rounded-xl text-center">
-            <div className="text-2xl font-bold text-emerald-600">
+          <div className="p-3 bg-emerald-50 dark:bg-emerald-950/30 rounded-xl text-center">
+            <div className="text-2xl font-bold text-emerald-600 dark:text-emerald-400">
               {timelineEvents.filter(e => e.status === "completed").length}
             </div>
-            <div className="text-xs text-slate-600 mt-1">Hoàn thành</div>
+            <div className="text-xs text-muted-foreground mt-1">Hoàn thành</div>
           </div>
-          <div className="p-3 bg-blue-50 rounded-xl text-center">
-            <div className="text-2xl font-bold text-blue-600">
+          <div className="p-3 bg-blue-50 dark:bg-blue-950/30 rounded-xl text-center">
+            <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">
               {timelineEvents.filter(e => e.status === "in-progress").length}
             </div>
-            <div className="text-xs text-slate-600 mt-1">Đang thực hiện</div>
+            <div className="text-xs text-muted-foreground mt-1">Đang thực hiện</div>
           </div>
-          <div className="p-3 bg-slate-50 rounded-xl text-center">
-            <div className="text-2xl font-bold text-slate-600">
+          <div className="p-3 bg-muted/50 rounded-xl text-center">
+            <div className="text-2xl font-bold text-muted-foreground">
               {timelineEvents.filter(e => e.status === "upcoming").length}
             </div>
-            <div className="text-xs text-slate-600 mt-1">Sắp tới</div>
+            <div className="text-xs text-muted-foreground mt-1">Sắp tới</div>
           </div>
         </div>
 
         {/* Warning if delayed */}
         {!isCompleted && new Date(completionDate) < new Date() && (
-          <div className="p-4 bg-amber-50 rounded-xl border border-amber-200">
+          <div className="p-4 bg-amber-50 dark:bg-amber-950/30 rounded-xl border border-amber-200 dark:border-amber-900/50">
             <div className="flex items-start gap-3">
-              <AlertTriangle className="w-5 h-5 text-amber-600 mt-0.5 flex-shrink-0" />
+              <AlertTriangle className="w-5 h-5 text-amber-600 dark:text-amber-400 mt-0.5 flex-shrink-0" />
               <div>
-                <div className="font-semibold text-amber-900 mb-1">Lưu ý về tiến độ</div>
-                <p className="text-sm text-amber-700 leading-relaxed">
+                <div className="font-semibold text-amber-900 dark:text-amber-300 mb-1">Lưu ý về tiến độ</div>
+                <p className="text-sm text-amber-700 dark:text-amber-400 leading-relaxed">
                   Dự án có thể đang chậm so với kế hoạch ban đầu. 
                   Vui lòng liên hệ chủ đầu tư để biết thông tin cập nhật chính xác.
                 </p>
@@ -219,12 +219,12 @@ const ProjectTimeline = ({ completionDate, soldUnits, totalUnits }: ProjectTimel
 
         {/* Completion message */}
         {isCompleted && (
-          <div className="p-4 bg-emerald-50 rounded-xl border border-emerald-200">
+          <div className="p-4 bg-emerald-50 dark:bg-emerald-950/30 rounded-xl border border-emerald-200 dark:border-emerald-900/50">
             <div className="flex items-start gap-3">
-              <CheckCircle className="w-5 h-5 text-emerald-600 mt-0.5 flex-shrink-0" />
+              <CheckCircle className="w-5 h-5 text-emerald-600 dark:text-emerald-400 mt-0.5 flex-shrink-0" />
               <div>
-                <div className="font-semibold text-emerald-900 mb-1">Dự án đã hoàn thành</div>
-                <p className="text-sm text-emerald-700 leading-relaxed">
+                <div className="font-semibold text-emerald-900 dark:text-emerald-300 mb-1">Dự án đã hoàn thành</div>
+                <p className="text-sm text-emerald-700 dark:text-emerald-400 leading-relaxed">
                   Dự án đã hoàn thành và đang trong giai đoạn bàn giao cho khách hàng. 
                   Đây là thời điểm tốt để xem xét đầu tư vào các căn hộ còn lại.
                 </p>

@@ -16,7 +16,7 @@ export const PaymentPoliciesCard = ({ projectId }: PaymentPoliciesCardProps) => 
 
   if (loading) {
     return (
-      <Card>
+      <Card className="bg-card border-border">
         <CardContent className="p-8">
           <div className="text-center">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
@@ -28,7 +28,7 @@ export const PaymentPoliciesCard = ({ projectId }: PaymentPoliciesCardProps) => 
 
   if (paymentPolicies.length === 0) {
     return (
-      <Card>
+      <Card className="bg-card border-border">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <CreditCard className="h-5 w-5" />
@@ -60,35 +60,35 @@ export const PaymentPoliciesCard = ({ projectId }: PaymentPoliciesCardProps) => 
   const getPolicyBadgeColor = (type: string) => {
     switch (type) {
       case 'promotion':
-        return 'bg-success/10 text-success';
+        return 'bg-success/10 text-success border-success/20';
       case 'bank_loan':
-        return 'bg-primary/10 text-primary';
+        return 'bg-primary/10 text-primary border-primary/20';
       case 'installment':
-        return 'bg-accent/10 text-accent';
+        return 'bg-accent/10 text-accent border-accent/20';
       default:
-        return 'bg-muted';
+        return 'bg-muted text-muted-foreground border-border';
     }
   };
 
   return (
-    <Card className="hover-lift">
+    <Card className="hover-lift bg-card border-border shadow-sm">
       <CardHeader>
-        <CardTitle className="flex items-center gap-2">
+        <CardTitle className="flex items-center gap-2 text-foreground">
           <CreditCard className="h-5 w-5" />
           Chính sách thanh toán & Ưu đãi
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
         {paymentPolicies.map((policy) => (
-          <Card key={policy.id} className="bg-muted/30 hover:bg-muted/50 transition-colors">
+          <Card key={policy.id} className="bg-muted/30 hover:bg-muted/50 transition-colors border-border/50">
             <CardContent className="p-4 space-y-3">
               {/* Header */}
               <div className="flex items-start justify-between">
                 <div className="space-y-1">
                   <div className="flex items-center gap-2">
-                    <Badge className={getPolicyBadgeColor(policy.policy_type)}>
+                    <Badge className={getPolicyBadgeColor(policy.policy_type)} variant="outline">
                       {getPolicyIcon(policy.policy_type)}
-                      <span className="ml-1">{policy.policy_type}</span>
+                      <span className="ml-1 capitalize">{policy.policy_type.replace('_', ' ')}</span>
                     </Badge>
                     {policy.end_date && new Date(policy.end_date) > new Date() && (
                       <Badge variant="destructive" className="animate-pulse-slow">
@@ -96,7 +96,7 @@ export const PaymentPoliciesCard = ({ projectId }: PaymentPoliciesCardProps) => 
                       </Badge>
                     )}
                   </div>
-                  <h4 className="font-semibold text-lg">{policy.policy_name}</h4>
+                  <h4 className="font-semibold text-lg text-foreground">{policy.policy_name}</h4>
                 </div>
               </div>
 
@@ -112,7 +112,7 @@ export const PaymentPoliciesCard = ({ projectId }: PaymentPoliciesCardProps) => 
                 {policy.down_payment_percent !== null && policy.down_payment_percent !== undefined && (
                   <div className="space-y-1">
                     <div className="text-xs text-muted-foreground">Trả trước</div>
-                    <div className="font-semibold flex items-center gap-1">
+                    <div className="font-semibold flex items-center gap-1 text-foreground">
                       <Percent className="h-3 w-3" />
                       {policy.down_payment_percent}%
                     </div>
@@ -122,7 +122,7 @@ export const PaymentPoliciesCard = ({ projectId }: PaymentPoliciesCardProps) => 
                 {policy.installment_periods && (
                   <div className="space-y-1">
                     <div className="text-xs text-muted-foreground">Thời gian</div>
-                    <div className="font-semibold flex items-center gap-1">
+                    <div className="font-semibold flex items-center gap-1 text-foreground">
                       <Calendar className="h-3 w-3" />
                       {policy.installment_periods} tháng
                     </div>
@@ -132,7 +132,7 @@ export const PaymentPoliciesCard = ({ projectId }: PaymentPoliciesCardProps) => 
                 {policy.interest_rate !== null && policy.interest_rate !== undefined && (
                   <div className="space-y-1">
                     <div className="text-xs text-muted-foreground">Lãi suất</div>
-                    <div className="font-semibold flex items-center gap-1">
+                    <div className="font-semibold flex items-center gap-1 text-foreground">
                       <Percent className="h-3 w-3" />
                       {policy.interest_rate}%/năm
                     </div>
@@ -142,7 +142,7 @@ export const PaymentPoliciesCard = ({ projectId }: PaymentPoliciesCardProps) => 
                 {policy.bank_partner && (
                   <div className="space-y-1">
                     <div className="text-xs text-muted-foreground">Ngân hàng</div>
-                    <div className="font-semibold flex items-center gap-1">
+                    <div className="font-semibold flex items-center gap-1 text-foreground">
                       <Building2 className="h-3 w-3" />
                       {policy.bank_partner}
                     </div>
@@ -168,7 +168,7 @@ export const PaymentPoliciesCard = ({ projectId }: PaymentPoliciesCardProps) => 
                   <div className="text-xs text-muted-foreground mb-2">Áp dụng cho:</div>
                   <div className="flex flex-wrap gap-1">
                     {policy.eligible_unit_types.map((type, index) => (
-                      <Badge key={index} variant="outline" className="text-xs">
+                      <Badge key={index} variant="outline" className="text-xs border-border">
                         {type}
                       </Badge>
                     ))}
@@ -178,7 +178,7 @@ export const PaymentPoliciesCard = ({ projectId }: PaymentPoliciesCardProps) => 
 
               {/* Validity Period */}
               {(policy.start_date || policy.end_date) && (
-                <div className="flex items-center gap-4 text-xs text-muted-foreground pt-2 border-t">
+                <div className="flex items-center gap-4 text-xs text-muted-foreground pt-2 border-t border-border/50">
                   {policy.start_date && (
                     <div>
                       Từ: {format(new Date(policy.start_date), 'dd/MM/yyyy', { locale: vi })}
@@ -199,7 +199,6 @@ export const PaymentPoliciesCard = ({ projectId }: PaymentPoliciesCardProps) => 
                     variant="link"
                     className="p-0 h-auto text-xs"
                     onClick={() => {
-                      // Open terms in modal or new tab
                       alert(policy.terms_conditions);
                     }}
                   >
@@ -213,7 +212,7 @@ export const PaymentPoliciesCard = ({ projectId }: PaymentPoliciesCardProps) => 
         ))}
 
         {/* Contact CTA */}
-        <Card className="bg-gradient-to-br from-primary/10 to-accent/10 border-primary/20">
+        <Card className="bg-gradient-to-br from-primary/5 to-accent/5 border-primary/20">
           <CardContent className="p-4 text-center">
             <p className="text-sm text-muted-foreground mb-2">
               Cần tư vấn thêm về các chính sách thanh toán?

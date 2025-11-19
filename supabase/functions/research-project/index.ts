@@ -20,9 +20,10 @@ async function callGeminiSearch(apiKey: string, prompt: string) {
     contents: [{ parts: [{ text: prompt }] }],
     tools: [{ google_search: {} }],
     generationConfig: {
-      temperature: 0.1, // Giảm nhiệt độ xuống thấp nhất để giảm sáng tạo/hội thoại
+      temperature: 0.1,
       maxOutputTokens: 8192,
     },
+    // Tắt safety filter để tránh block các từ khóa nhạy cảm trong BĐS nếu có
     safetySettings: [
       { category: "HARM_CATEGORY_HARASSMENT", threshold: "BLOCK_NONE" },
       { category: "HARM_CATEGORY_HATE_SPEECH", threshold: "BLOCK_NONE" },
@@ -43,15 +44,8 @@ async function callGeminiSearch(apiKey: string, prompt: string) {
   }
 
   const data = await response.json();
-  const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
-
-  // Kiểm tra nếu kết quả trả về quá ngắn hoặc chứa từ khóa xã giao
-  if (!text || text.length < 50 || text.includes("Tôi sẽ") || text.includes("I will")) {
-     // Nếu dính lỗi này, trả về một chuỗi đặc biệt để client biết mà retry hoặc xử lý
-     return `RAW_DATA_NOT_FOUND: ${text}`; 
-  }
-  
-  return text;
+  // Trả về nguyên văn text để debug ở client
+  return data.candidates?.[0]?.content?.parts?.[0]?.text || "[[AI trả về rỗng]]";
 }
 
 serve(async (req: Request) => {
@@ -65,79 +59,42 @@ serve(async (req: Request) => {
     let resultText = "";
 
     if (mode === 'deep_scan') {
-      // PROMPT ĐƯỢC VIẾT LẠI HOÀN TOÀN THEO PHONG CÁCH "MÁY MÓC"
       let searchInstructions = "";
 
+      // Prompt cực kỳ cụ thể để ép AI trả về dữ liệu thay vì chat
       switch (section) {
         case 'overview':
-          searchInstructions = `
-          DATA POINTS REQUIRED:
-          - Official Project Name
-          - Developer Name (Full)
-          - Exact Address (Number, Street, District, City)
-          - Project Description (Location advantages, connections)`;
+          searchInstructions = `TÌM KIẾM: Tên dự án, Chủ đầu tư, Vị trí chính xác, Mô tả.`;
           break;
         case 'specs':
-          searchInstructions = `
-          DATA POINTS REQUIRED:
-          - Total Land Area (m2/ha)
-          - Construction Density (%)
-          - Scale: Number of Blocks, Floors per Block
-          - Total Units (Apartments)
-          - Apartment Areas (e.g., 50m2 - 100m2)
-          - Handover Condition (Bare shell/Basic/Full)`;
+          searchInstructions = `TÌM KIẾM: Diện tích đất, Quy mô (số tòa/tầng/căn), Mật độ xây dựng.`;
           break;
         case 'financial':
-          searchInstructions = `
-          DATA POINTS REQUIRED:
-          - Launch Price (Price at first sale) in VND/m2
-          - Current Market Price (Secondary market) in VND/m2
-          - Total Price Range (e.g., 3-5 billion VND)
-          - Bank Support (Bank names)
-          - Payment Schedule Summary`;
+          searchInstructions = `TÌM KIẾM: Giá bán (m2), Giá mở bán, Chính sách thanh toán.`;
           break;
         case 'legal':
-          searchInstructions = `
-          DATA POINTS REQUIRED:
-          - Legal Status (Pink book/Sales Contract/1:500)
-          - Construction Permit (Yes/No)
-          - Construction Status (Foundation/Topped out/Handed over)
-          - Estimated/Actual Handover Date (Month/Year)`;
+          searchInstructions = `TÌM KIẾM: Pháp lý (Sổ hồng/HĐMB), Giấy phép xây dựng, Thời gian bàn giao.`;
           break;
         case 'amenities':
-          searchInstructions = `
-          DATA POINTS REQUIRED:
-          - Internal Amenities (Pool, Gym, Park...)
-          - External Amenities (Nearby Schools, Hospitals, Malls)`;
+          searchInstructions = `TÌM KIẾM: Tiện ích nội khu và ngoại khu.`;
           break;
-        default:
-          searchInstructions = "Find all key details about this real estate project.";
       }
 
       const prompt = `
-      TASK: SEARCH_AND_EXTRACT
-      TARGET: Real Estate Project "${query}"
+      [SYSTEM: ACT AS A SEARCH ENGINE WRAPPER. NO CONVERSATION.]
       
-      INSTRUCTIONS:
-      1. Perform a Google Search for the "${query}".
-      2. Extract ONLY the data points listed below.
-      3. OUTPUT FORMAT: Raw text list.
+      QUERY: ${query}
+      CONTEXT: ${searchInstructions}
       
-      NEGATIVE CONSTRAINTS (DO NOT DO THIS):
-      - DO NOT say "I will search".
-      - DO NOT say "Here is the information".
-      - DO NOT start with "Based on...".
-      - DO NOT act as a chatbot. Be a database query result.
-
-      ${searchInstructions}
-      
-      START OUTPUT NOW:
+      INSTRUCTION:
+      1. Use Google Search to find specific data.
+      2. OUTPUT RAW DATA ONLY. Do not say "I found this" or "Here is the info".
+      3. Just list the facts found. If not found, say "Not found".
       `;
       
       resultText = await callGeminiSearch(apiKey, prompt);
     } 
     else if (mode === 'batch_extract') {
-      // Giữ nguyên logic batch cũ nhưng đổi prompt tiếng Anh để model hiểu lệnh tốt hơn
       const prompt = `Extract list of real estate projects from this text. Return strictly 1 project per line. Text: \n${raw_content}`;
       resultText = await callGeminiSearch(apiKey, prompt);
     }

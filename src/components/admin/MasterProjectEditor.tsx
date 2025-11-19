@@ -10,8 +10,9 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Save, Loader2, ScanSearch, Sparkles, Play, CheckCircle2, AlertCircle } from "lucide-react";
+import { Save, Loader2, ScanSearch, Sparkles, Terminal, CheckCircle2, XCircle } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 interface MasterEditorProps {
   projectId: string;
@@ -34,7 +35,6 @@ const safeParseFloat = (val: any): number | null => {
   return match ? parseFloat(match[0]) : null;
 }
 
-// Helper to map flat JSON keys to our DB structure
 const mapAiDataToFields = (aiData: any, section: string, currentData: any) => {
   const newData = { ...currentData };
   
@@ -65,16 +65,12 @@ const mapAiDataToFields = (aiData: any, section: string, currentData: any) => {
   if (section === 'specs') {
     const units = find(['total_units', 'totalUnits', 'so_can_ho']);
     if (units) newData.total_units = safeParseInt(units);
-    
     const floors = find(['total_floors', 'floors', 'so_tang']);
     if (floors) newData.floors = safeParseInt(floors);
-
     const blocks = find(['blocks', 'so_block']);
     if (blocks) newData.blocks = safeParseInt(blocks);
-    
     const types = find(['apartment_types']);
     if (types && Array.isArray(types)) newData.apartment_types = types;
-    
     const handover = find(['handover_standard']);
     if (handover) newData.handover_standard = handover;
   }
@@ -82,10 +78,8 @@ const mapAiDataToFields = (aiData: any, section: string, currentData: any) => {
   if (section === 'financial') {
     const price = find(['price_per_sqm', 'current_price']);
     if (price) newData.price_per_sqm = safeParseInt(price);
-    
     const launch = find(['launch_price']);
     if (launch) newData.launch_price = safeParseInt(launch);
-    
     const range = find(['price_range']);
     if (range) newData.price_range = range;
   }
@@ -93,10 +87,8 @@ const mapAiDataToFields = (aiData: any, section: string, currentData: any) => {
   if (section === 'legal') {
     const status = find(['legal_status']);
     if (status) newData.legal_status = status;
-    
     const date = find(['completion_date']);
     if (date) newData.completion_date = date;
-
     if (newData.legal_status?.toLowerCase().includes('sổ') || newData.legal_status?.toLowerCase().includes('hđmb')) {
        if (!newData.legal_score) newData.legal_score = 8;
     }
@@ -123,6 +115,10 @@ export default function MasterProjectEditor({ projectId, onSave }: MasterEditorP
   const [currentStep, setCurrentStep] = useState<string>("");
   const [progress, setProgress] = useState(0);
   const [logs, setLogs] = useState<string[]>([]);
+  
+  const [showDebug, setShowDebug] = useState(false);
+  const [lastRawOutput, setLastRawOutput] = useState("");
+  const [lastJsonOutput, setLastJsonOutput] = useState<any>(null);
 
   useEffect(() => {
     loadProject();
@@ -154,33 +150,33 @@ export default function MasterProjectEditor({ projectId, onSave }: MasterEditorP
     }
   };
 
-  // --- SECTION SCAN LOGIC ---
   const runScanForSection = async (section: string, isAuto = false) => {
-    if (!isAuto) setAuditStatus('running');
+    if (!isAuto) {
+        setAuditStatus('running');
+        setLastRawOutput("");
+        setLastJsonOutput(null);
+        setShowDebug(true);
+    }
     
     try {
-      // 1. Research
       const { data: resData, error: resError } = await supabase.functions.invoke('research-project', {
         body: { query: data.name, mode: 'deep_scan', section }
       });
       if (resError) throw resError;
       
-      // Check raw text error
-      if (resData.data && typeof resData.data === 'string' && resData.data.startsWith("RAW_DATA_NOT_FOUND")) {
-         throw new Error("AI không tìm thấy thông tin hoặc bị từ chối (Conversational Response)");
-      }
-      
-      // 2. Structure
+      const rawText = resData.data || "No data returned";
+      setLastRawOutput(rawText);
+
       const { data: structData, error: structError } = await supabase.functions.invoke('structure-data', {
-        body: { content: resData.data, type: 'project_detail' }
+        body: { content: rawText, type: 'project_detail' }
       });
       if (structError) throw structError;
 
-      // 3. Apply
+      setLastJsonOutput(structData.data);
+
       const newData = mapAiDataToFields(structData.data, section, data);
       setData(newData);
       
-      // Auto save
       await supabase.from('projects').update(newData).eq('id', projectId);
 
       if (!isAuto) {
@@ -190,6 +186,7 @@ export default function MasterProjectEditor({ projectId, onSave }: MasterEditorP
       return true;
     } catch (error: any) {
       console.error(`Error scanning ${section}:`, error);
+      setLastRawOutput(prev => prev + `\n\n❌ ERROR: ${error.message}`);
       if (!isAuto) {
         setAuditStatus('idle');
         toast.error(`Lỗi quét phần ${section}: ${error.message}`);
@@ -198,13 +195,13 @@ export default function MasterProjectEditor({ projectId, onSave }: MasterEditorP
     }
   };
 
-  // --- FULL AUTO AUDIT ---
   const runFullAudit = async () => {
     if (!data.name) return toast.error("Chưa có tên dự án");
     
     setAuditStatus('running');
     setLogs([]);
     setProgress(0);
+    setShowDebug(true);
 
     const sections = [
       { id: 'overview', label: 'Tổng quan & Vị trí' },
@@ -213,8 +210,6 @@ export default function MasterProjectEditor({ projectId, onSave }: MasterEditorP
       { id: 'legal', label: 'Pháp lý & Tiến độ' },
       { id: 'amenities', label: 'Tiện ích' }
     ];
-
-    let failCount = 0;
 
     for (let i = 0; i < sections.length; i++) {
       const sec = sections[i];
@@ -225,33 +220,27 @@ export default function MasterProjectEditor({ projectId, onSave }: MasterEditorP
       
       if (success) {
         setLogs(prev => {
-          const newLogs = [...prev];
-          newLogs[newLogs.length - 1] = `✅ Hoàn tất: ${sec.label}`;
-          return newLogs;
+            const newLogs = [...prev];
+            newLogs[newLogs.length - 1] = `✅ Hoàn tất: ${sec.label}`;
+            return newLogs;
         });
       } else {
-        failCount++;
-        setLogs(prev => [...prev, `⚠️ Không tìm thấy dữ liệu: ${sec.label}`]);
+        setLogs(prev => [...prev, `❌ Thất bại: ${sec.label}`]);
       }
       
-      await new Promise(r => setTimeout(r, 1500)); // Delay
+      await new Promise(r => setTimeout(r, 1000));
       setProgress(Math.round(((i + 1) / sections.length) * 100));
     }
 
     setAuditStatus('completed');
     setTimeout(() => setAuditStatus('idle'), 3000);
-    if (failCount === 0) {
-      toast.success("Đã hoàn thành Audit toàn diện!");
-    } else {
-      toast.warning(`Hoàn thành với ${failCount} cảnh báo. Vui lòng kiểm tra log.`);
-    }
+    toast.success("Đã hoàn thành Audit toàn diện!");
   };
 
   if (loading) return <div className="p-8 text-center"><Loader2 className="w-8 h-8 animate-spin mx-auto" /></div>;
 
   return (
     <div className="space-y-4">
-      {/* Actions Bar */}
       <div className="flex flex-col md:flex-row justify-between items-center bg-card p-4 rounded-lg border shadow-sm gap-4">
         <div className="flex items-center gap-4 w-full md:w-auto">
           <h2 className="text-xl font-bold text-foreground truncate max-w-[200px]">{data.name}</h2>
@@ -265,15 +254,25 @@ export default function MasterProjectEditor({ projectId, onSave }: MasterEditorP
                </div>
              </div>
           ) : (
-             <Button 
-               variant="secondary" 
-               size="sm" 
-               onClick={runFullAudit} 
-               className="border border-purple-200 bg-purple-50 text-purple-700 hover:bg-purple-100 w-full md:w-auto"
-             >
-               <Sparkles className="w-4 h-4 mr-2" />
-               Chạy Full Audit (AI)
-             </Button>
+             <div className="flex gap-2">
+                <Button 
+                  variant="secondary" 
+                  size="sm" 
+                  onClick={runFullAudit} 
+                  className="border border-purple-200 bg-purple-50 text-purple-700 hover:bg-purple-100"
+                >
+                  <Sparkles className="w-4 h-4 mr-2" />
+                  Chạy Full Audit (AI)
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setShowDebug(!showDebug)}
+                >
+                  <Terminal className="w-4 h-4 mr-2" />
+                  {showDebug ? "Ẩn Console" : "Hiện Console"}
+                </Button>
+             </div>
           )}
         </div>
         <Button onClick={() => handleSave()} disabled={saving} className="bg-green-600 hover:bg-green-700 text-white font-bold shadow-md w-full md:w-auto">
@@ -282,14 +281,40 @@ export default function MasterProjectEditor({ projectId, onSave }: MasterEditorP
         </Button>
       </div>
 
-      {/* Logs Area (Only show when running) */}
-      {logs.length > 0 && (
-        <div className="bg-slate-900 text-green-400 p-3 rounded-lg font-mono text-xs space-y-1 max-h-32 overflow-y-auto shadow-inner">
-          {logs.map((log, i) => <div key={i} className={log.includes("⚠️") ? "text-yellow-400" : ""}>{log}</div>)}
-        </div>
+      {showDebug && (
+        <Card className="bg-slate-950 text-green-400 border-slate-800 shadow-inner font-mono text-xs">
+            <CardContent className="p-4 space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 h-64">
+                    <div className="flex flex-col h-full">
+                        <div className="text-slate-500 mb-1 font-bold">&gt;&gt;&gt; RAW AI OUTPUT (STEP 1)</div>
+                        <Textarea 
+                            value={lastRawOutput || "// Waiting for AI scan..."} 
+                            readOnly 
+                            className="flex-1 bg-slate-900 border-slate-800 text-green-300 resize-none font-mono text-xs"
+                        />
+                    </div>
+                    <div className="flex flex-col h-full">
+                         <div className="text-slate-500 mb-1 font-bold">&gt;&gt;&gt; JSON PARSED (STEP 2)</div>
+                         <Textarea 
+                            value={lastJsonOutput ? JSON.stringify(lastJsonOutput, null, 2) : "// JSON structure will appear here..."} 
+                            readOnly 
+                            className="flex-1 bg-slate-900 border-slate-800 text-blue-300 resize-none font-mono text-xs"
+                        />
+                    </div>
+                </div>
+                
+                {logs.length > 0 && (
+                    <div className="border-t border-slate-800 pt-2">
+                        <div className="text-slate-500 mb-1 font-bold">&gt;&gt;&gt; AUDIT LOGS</div>
+                        <ScrollArea className="h-24 w-full rounded-md border border-slate-800 bg-slate-900 p-2">
+                            {logs.map((log, i) => <div key={i} className={log.includes("❌") ? "text-red-400" : ""}>{log}</div>)}
+                        </ScrollArea>
+                    </div>
+                )}
+            </CardContent>
+        </Card>
       )}
 
-      {/* Tabs Form */}
       <Tabs defaultValue="overview" className="w-full">
         <TabsList className="w-full justify-start h-12 bg-muted/50 p-1 border-b overflow-x-auto">
           <TabsTrigger value="overview" className="px-4 py-2">Tổng quan</TabsTrigger>
@@ -299,7 +324,6 @@ export default function MasterProjectEditor({ projectId, onSave }: MasterEditorP
           <TabsTrigger value="amenities" className="px-4 py-2">Tiện ích</TabsTrigger>
         </TabsList>
 
-        {/* OVERVIEW TAB */}
         <TabsContent value="overview">
           <Card>
             <CardContent className="p-6 space-y-4">
@@ -340,7 +364,6 @@ export default function MasterProjectEditor({ projectId, onSave }: MasterEditorP
           </Card>
         </TabsContent>
 
-        {/* SPECS TAB */}
         <TabsContent value="specs">
           <Card>
             <CardContent className="p-6 space-y-4">
@@ -375,7 +398,6 @@ export default function MasterProjectEditor({ projectId, onSave }: MasterEditorP
           </Card>
         </TabsContent>
 
-        {/* FINANCIAL TAB */}
         <TabsContent value="financial">
           <Card>
             <CardContent className="p-6 space-y-4">
@@ -402,7 +424,6 @@ export default function MasterProjectEditor({ projectId, onSave }: MasterEditorP
           </Card>
         </TabsContent>
 
-        {/* LEGAL TAB */}
         <TabsContent value="legal">
           <Card>
             <CardContent className="p-6 space-y-4">
@@ -440,7 +461,6 @@ export default function MasterProjectEditor({ projectId, onSave }: MasterEditorP
           </Card>
         </TabsContent>
 
-        {/* AMENITIES TAB */}
         <TabsContent value="amenities">
           <Card>
             <CardContent className="p-6 space-y-4">

@@ -35,6 +35,7 @@ export interface PropertyListing {
   status: string;
   created_at: string;
   images?: ListingImage[];
+  is_available: boolean;
 }
 
 export interface ListingImage {
@@ -87,6 +88,7 @@ const MOCK_LISTINGS: PropertyListing[] = [
     view_count: 150,
     favorite_count: 12,
     status: 'approved',
+    is_available: true,
     created_at: new Date().toISOString(),
     images: [{ id: 'img-1', image_url: 'https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=800&fit=crop', is_primary: true, caption: 'Phòng khách' }]
   },
@@ -121,6 +123,7 @@ const MOCK_LISTINGS: PropertyListing[] = [
     view_count: 85,
     favorite_count: 5,
     status: 'approved',
+    is_available: true,
     created_at: new Date(Date.now() - 86400000).toISOString(),
     images: [{ id: 'img-2', image_url: 'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=800&fit=crop', is_primary: true, caption: 'Phòng ngủ' }]
   },
@@ -155,6 +158,7 @@ const MOCK_LISTINGS: PropertyListing[] = [
     view_count: 320,
     favorite_count: 45,
     status: 'approved',
+    is_available: true,
     created_at: new Date(Date.now() - 172800000).toISOString(),
     images: [{ id: 'img-3', image_url: 'https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=800&fit=crop', is_primary: true, caption: 'Phòng khách view sông' }]
   }
@@ -175,7 +179,7 @@ export const useMarketplaceListings = (filters: ListingFilters = {}) => {
 
       let query = supabase
         .from('property_listings' as any)
-        .select('*', { count: 'exact' })
+        .select('*, images:listing_images(*)', { count: 'exact' })
         .eq('status', 'approved')
         .eq('is_available', true);
 
@@ -183,23 +187,11 @@ export const useMarketplaceListings = (filters: ListingFilters = {}) => {
       if (filters.listingType && filters.listingType !== 'all') {
         query = query.eq('listing_type', filters.listingType);
       }
-
-      if (filters.district) {
-        query = query.eq('district', filters.district);
-      }
-
-      if (filters.bedrooms) {
-        query = query.eq('bedrooms', filters.bedrooms);
-      }
-
-      if (filters.minArea) {
-        query = query.gte('area_sqm', filters.minArea);
-      }
-
-      if (filters.maxArea) {
-        query = query.lte('area_sqm', filters.maxArea);
-      }
-
+      if (filters.district) query = query.eq('district', filters.district);
+      if (filters.bedrooms) query = query.eq('bedrooms', filters.bedrooms);
+      if (filters.minArea) query = query.gte('area_sqm', filters.minArea);
+      if (filters.maxArea) query = query.lte('area_sqm', filters.maxArea);
+      
       // Price filters
       if (filters.minPrice) {
         query = query.or(
@@ -218,43 +210,21 @@ export const useMarketplaceListings = (filters: ListingFilters = {}) => {
       const { data, error, count } = await query;
 
       if (error) {
-        // If table doesn't exist or error, fallback to mock data
         console.warn('Database error, using mock listings:', error.message);
-        let filteredMock = [...MOCK_LISTINGS];
-        
-        if (filters.listingType && filters.listingType !== 'all') {
-          filteredMock = filteredMock.filter(l => l.listing_type === filters.listingType);
-        }
-        if (filters.district) {
-          filteredMock = filteredMock.filter(l => l.district === filters.district);
-        }
-        
-        setListings(filteredMock);
-        setTotalCount(filteredMock.length);
+        setListings(MOCK_LISTINGS);
+        setTotalCount(MOCK_LISTINGS.length);
       } else {
-        // Fetch images for each listing
-        const listingsWithImages = await Promise.all(
-          (data || []).map(async (listing: any) => {
-            const { data: images } = await supabase
-              .from('listing_images' as any)
-              .select('*')
-              .eq('listing_id', listing.id)
-              .order('is_primary', { ascending: false })
-              .order('display_order', { ascending: true });
-
-            return {
-              ...listing,
-              images: ((images as any) as ListingImage[]) || [],
-            };
-          })
-        );
-
-        setListings(listingsWithImages as PropertyListing[]);
+        // Map data to ensure images array is correct
+        const formattedListings = data.map((item: any) => ({
+            ...item,
+            images: item.images || []
+        }));
+        setListings(formattedListings as PropertyListing[]);
         setTotalCount(count || 0);
       }
     } catch (error) {
       console.error('Error fetching listings:', error);
-      setListings(MOCK_LISTINGS); // Fallback
+      setListings(MOCK_LISTINGS);
       setTotalCount(MOCK_LISTINGS.length);
     } finally {
       setLoading(false);
@@ -264,9 +234,7 @@ export const useMarketplaceListings = (filters: ListingFilters = {}) => {
   const incrementViewCount = async (listingId: string) => {
     try {
       if (listingId.startsWith('mock-')) return;
-      await supabase.rpc('increment_listing_view_count' as any, {
-        listing_uuid: listingId,
-      });
+      await supabase.rpc('increment_listing_view_count' as any, { listing_uuid: listingId });
     } catch (error) {
       console.error('Error incrementing view count:', error);
     }
@@ -336,21 +304,16 @@ export const useListing = (listingId: string) => {
 
       const { data, error } = await supabase
         .from('property_listings' as any)
-        .select('*')
+        .select('*, images:listing_images(*)')
         .eq('id', listingId)
         .single();
 
       if (error) throw error;
 
-      const { data: images } = await supabase
-        .from('listing_images' as any)
-        .select('*')
-        .eq('listing_id', listingId);
-
       setListing({
-        ...((data as any) as PropertyListing),
-        images: ((images as any) as ListingImage[]) || [],
-      });
+        ...(data as any),
+        images: (data as any).images || []
+      } as PropertyListing);
     } catch (error) {
       console.error('Error fetching listing:', error);
     } finally {

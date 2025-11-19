@@ -1,16 +1,17 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import { projectsData } from "@/data/projectsData";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { 
   Plus, ArrowRight, Search, Database, Map, 
-  PenTool, CheckCircle, MoreHorizontal 
+  PenTool, CheckCircle, MoreHorizontal, Loader2 
 } from "lucide-react";
+import { useProjects } from "@/hooks/useProjects";
+import { Project } from "@/types/project";
 
 // Định nghĩa các cột trạng thái (Stages) sử dụng semantic utility classes
 const STAGES = [
@@ -23,10 +24,11 @@ const STAGES = [
 
 export default function ProjectPipeline() {
   const navigate = useNavigate();
+  const { projects, loading } = useProjects();
 
-  // Giả lập logic phân loại dự án vào các cột
+  // Logic phân loại dự án vào các cột
   const pipelineData = useMemo(() => {
-    const columns: Record<string, typeof projectsData> = {
+    const columns: Record<string, Project[]> = {
       new: [],
       enriching: [],
       analyzing: [],
@@ -34,28 +36,30 @@ export default function ProjectPipeline() {
       ready: []
     };
 
-    projectsData.forEach(p => {
-      if (p.status === 'good' && p.description && p.priceHistory?.length) {
+    projects.forEach(p => {
+      if (p.status === 'good' && p.description && p.description.length > 50 && p.priceHistory?.length) {
         columns.ready.push(p);
-      } else if (p.description && p.amenities?.length) {
+      } else if (p.description && p.description.length > 50 && p.amenities && p.amenities.length > 0) {
         columns.content.push(p);
-      } else if (p.pricePerSqm > 0) {
+      } else if (p.pricePerSqm > 0 && p.legalScore > 0) {
         columns.analyzing.push(p);
-      } else if (p.location) {
+      } else if (p.location && p.location !== 'Đang cập nhật' && p.developer !== 'Đang cập nhật') {
         columns.enriching.push(p);
       } else {
         columns.new.push(p);
       }
     });
 
-    // Demo: Move items to ensure board isn't empty for demo
-    if (columns.new.length === 0 && columns.ready.length > 0) {
-        columns.new.push(columns.ready.pop()!);
-        columns.enriching.push(columns.ready.pop()!);
-    }
-
     return columns;
-  }, []);
+  }, [projects]);
+
+  if (loading) {
+    return (
+      <div className="h-[calc(100vh-4rem)] flex items-center justify-center">
+        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+      </div>
+    );
+  }
 
   return (
     <div className="h-[calc(100vh-4rem)] flex flex-col space-y-4 text-foreground">

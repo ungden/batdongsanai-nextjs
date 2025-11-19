@@ -29,6 +29,7 @@ const Auth = () => {
 
   useEffect(() => {
     if (user) {
+      // Nếu đã login thì chuyển hướng về trang trước đó hoặc trang chủ
       navigate(from, { replace: true });
     }
   }, [user, navigate, from]);
@@ -37,11 +38,13 @@ const Auth = () => {
     e.preventDefault();
     setLoading(true);
     try {
-      const result = await signIn(email, password);
-      if (result.error) {
+      const { error } = await signIn(email, password);
+      if (error) {
         toast({
           title: "Đăng nhập thất bại",
-          description: "Email hoặc mật khẩu không chính xác.",
+          description: error.message === "Invalid login credentials" 
+            ? "Email hoặc mật khẩu không chính xác." 
+            : error.message,
           variant: "destructive"
         });
       } else {
@@ -49,7 +52,7 @@ const Auth = () => {
           title: "Đăng nhập thành công",
           description: "Chào mừng bạn quay trở lại!",
         });
-        navigate(from, { replace: true });
+        // Điều hướng sẽ được thực hiện bởi useEffect khi user state thay đổi
       }
     } catch (error) {
       toast({
@@ -71,19 +74,26 @@ const Auth = () => {
         setLoading(false);
         return;
       }
-      const result = await signUp(email, password, fullName);
-      if (result.error) {
+      const { error, data } = await signUp(email, password, fullName);
+      if (error) {
         toast({
           title: "Đăng ký thất bại",
-          description: result.error.message,
+          description: error.message,
           variant: "destructive"
         });
       } else {
-        toast({
-          title: "Đăng ký thành công",
-          description: "Vui lòng kiểm tra email để xác thực tài khoản.",
-        });
-        setView('login');
+        if (data?.user && !data.session) {
+             toast({
+              title: "Đăng ký thành công",
+              description: "Vui lòng kiểm tra email để xác thực tài khoản trước khi đăng nhập.",
+            });
+            setView('login');
+        } else {
+            toast({
+              title: "Đăng ký thành công",
+              description: "Tài khoản đã được tạo và đăng nhập.",
+            });
+        }
       }
     } catch (error) {
       toast({ title: "Lỗi", description: "Có lỗi xảy ra, vui lòng thử lại", variant: "destructive" });
@@ -97,7 +107,7 @@ const Auth = () => {
     setLoading(true);
     try {
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${window.location.origin}/auth?view=reset`,
+        redirectTo: `${window.location.origin}/auth/reset-password`,
       });
       
       if (error) throw error;

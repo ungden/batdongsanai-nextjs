@@ -12,6 +12,9 @@ import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { ArrowLeft, ArrowRight, Upload, X } from 'lucide-react';
+import DesktopLayout from '@/components/layout/DesktopLayout';
+import BottomNavigation from '@/components/layout/BottomNavigation';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 const STEPS = [
   { id: 1, title: 'Thông tin cơ bản', description: 'Loại tin và vị trí' },
@@ -23,6 +26,7 @@ const STEPS = [
 
 export default function CreateListing() {
   const navigate = useNavigate();
+  const isMobile = useIsMobile();
   const [currentStep, setCurrentStep] = useState(1);
   const [submitting, setSubmitting] = useState(false);
 
@@ -279,440 +283,451 @@ export default function CreateListing() {
 
   const progress = (currentStep / STEPS.length) * 100;
 
-  return (
-    <div className="min-h-screen bg-background">
-      {/* Header */}
-      <div className="border-b bg-card">
-        <div className="container mx-auto px-4 py-6">
-          <Button variant="ghost" onClick={() => navigate('/marketplace')}>
+  const content = (
+    <div className="container mx-auto px-4 py-8">
+      <div className="max-w-3xl mx-auto space-y-6">
+        {/* Header with back button */}
+        <div className="flex items-center gap-4">
+          <Button variant="ghost" onClick={() => navigate('/marketplace')} className="-ml-2">
             <ArrowLeft className="mr-2 h-4 w-4" />
             Quay lại
           </Button>
-          <h1 className="text-3xl font-bold mt-4">Đăng tin mới</h1>
+          <h1 className="text-2xl font-bold">Đăng tin mới</h1>
         </div>
-      </div>
 
-      <div className="container mx-auto px-4 py-8">
-        <div className="max-w-3xl mx-auto">
-          {/* Progress */}
-          <div className="mb-8">
-            <div className="flex justify-between mb-2">
-              {STEPS.map((step) => (
-                <div
-                  key={step.id}
-                  className={`text-sm ${
-                    step.id === currentStep
-                      ? 'text-primary font-semibold'
-                      : step.id < currentStep
-                      ? 'text-green-600'
-                      : 'text-muted-foreground'
-                  }`}
-                >
-                  Bước {step.id}
-                </div>
-              ))}
-            </div>
-            <Progress value={progress} className="h-2" />
+        {/* Progress */}
+        <div className="mb-8">
+          <div className="flex justify-between mb-2">
+            {STEPS.map((step) => (
+              <div
+                key={step.id}
+                className={`text-sm ${
+                  step.id === currentStep
+                    ? 'text-primary font-semibold'
+                    : step.id < currentStep
+                    ? 'text-green-600'
+                    : 'text-muted-foreground'
+                }`}
+              >
+                Bước {step.id}
+              </div>
+            ))}
           </div>
+          <Progress value={progress} className="h-2" />
+        </div>
 
-          {/* Current Step Card */}
-          <Card>
-            <CardHeader>
-              <CardTitle>{STEPS[currentStep - 1].title}</CardTitle>
-              <CardDescription>{STEPS[currentStep - 1].description}</CardDescription>
-            </CardHeader>
-            <CardContent>
-              {/* Step 1: Basic Info */}
-              {currentStep === 1 && (
-                <div className="space-y-4">
-                  <div>
-                    <Label>Loại tin đăng *</Label>
-                    <div className="grid grid-cols-2 gap-4 mt-2">
-                      <Button
-                        type="button"
-                        variant={formData.listingType === 'sale' ? 'default' : 'outline'}
-                        onClick={() => handleInputChange('listingType', 'sale')}
-                        className="w-full"
-                      >
-                        Bán
-                      </Button>
-                      <Button
-                        type="button"
-                        variant={formData.listingType === 'rent' ? 'default' : 'outline'}
-                        onClick={() => handleInputChange('listingType', 'rent')}
-                        className="w-full"
-                      >
-                        Cho thuê
-                      </Button>
-                    </div>
+        {/* Current Step Card */}
+        <Card>
+          <CardHeader>
+            <CardTitle>{STEPS[currentStep - 1].title}</CardTitle>
+            <CardDescription>{STEPS[currentStep - 1].description}</CardDescription>
+          </CardHeader>
+          <CardContent>
+            {/* Step 1: Basic Info */}
+            {currentStep === 1 && (
+              <div className="space-y-4">
+                <div>
+                  <Label>Loại tin đăng *</Label>
+                  <div className="grid grid-cols-2 gap-4 mt-2">
+                    <Button
+                      type="button"
+                      variant={formData.listingType === 'sale' ? 'default' : 'outline'}
+                      onClick={() => handleInputChange('listingType', 'sale')}
+                      className="w-full"
+                    >
+                      Bán
+                    </Button>
+                    <Button
+                      type="button"
+                      variant={formData.listingType === 'rent' ? 'default' : 'outline'}
+                      onClick={() => handleInputChange('listingType', 'rent')}
+                      className="w-full"
+                    >
+                      Cho thuê
+                    </Button>
                   </div>
+                </div>
 
+                <div>
+                  <Label htmlFor="propertyType">Loại hình bất động sản *</Label>
+                  <Select
+                    value={formData.propertyType}
+                    onValueChange={(value) => handleInputChange('propertyType', value)}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Chọn loại hình" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {propertyTypes.map(type => (
+                        <SelectItem key={type} value={type}>{type}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div>
+                  <Label htmlFor="title">Tiêu đề tin đăng *</Label>
+                  <Input
+                    id="title"
+                    placeholder="VD: Bán căn hộ 2PN view sông tại Quận 2"
+                    value={formData.title}
+                    onChange={(e) => handleInputChange('title', e.target.value)}
+                    maxLength={200}
+                  />
+                  <p className="text-xs text-muted-foreground mt-1">
+                    {formData.title.length}/200 ký tự
+                  </p>
+                </div>
+
+                <div>
+                  <Label htmlFor="description">Mô tả chi tiết *</Label>
+                  <Textarea
+                    id="description"
+                    rows={6}
+                    placeholder="Mô tả chi tiết về bất động sản..."
+                    value={formData.description}
+                    onChange={(e) => handleInputChange('description', e.target.value)}
+                  />
+                </div>
+
+                <div>
+                  <Label htmlFor="address">Địa chỉ *</Label>
+                  <Input
+                    id="address"
+                    placeholder="Số nhà, đường, phường/xã"
+                    value={formData.address}
+                    onChange={(e) => handleInputChange('address', e.target.value)}
+                  />
+                </div>
+
+                <div className="grid md:grid-cols-2 gap-4">
                   <div>
-                    <Label htmlFor="propertyType">Loại hình bất động sản *</Label>
+                    <Label htmlFor="district">Quận/Huyện *</Label>
                     <Select
-                      value={formData.propertyType}
-                      onValueChange={(value) => handleInputChange('propertyType', value)}
+                      value={formData.district}
+                      onValueChange={(value) => handleInputChange('district', value)}
                     >
                       <SelectTrigger>
-                        <SelectValue placeholder="Chọn loại hình" />
+                        <SelectValue placeholder="Chọn quận" />
                       </SelectTrigger>
                       <SelectContent>
-                        {propertyTypes.map(type => (
-                          <SelectItem key={type} value={type}>{type}</SelectItem>
+                        {districts.map(district => (
+                          <SelectItem key={district} value={district}>{district}</SelectItem>
                         ))}
                       </SelectContent>
                     </Select>
                   </div>
 
                   <div>
-                    <Label htmlFor="title">Tiêu đề tin đăng *</Label>
+                    <Label htmlFor="city">Thành phố *</Label>
                     <Input
-                      id="title"
-                      placeholder="VD: Bán căn hộ 2PN view sông tại Quận 2"
-                      value={formData.title}
-                      onChange={(e) => handleInputChange('title', e.target.value)}
-                      maxLength={200}
-                    />
-                    <p className="text-xs text-muted-foreground mt-1">
-                      {formData.title.length}/200 ký tự
-                    </p>
-                  </div>
-
-                  <div>
-                    <Label htmlFor="description">Mô tả chi tiết *</Label>
-                    <Textarea
-                      id="description"
-                      rows={6}
-                      placeholder="Mô tả chi tiết về bất động sản..."
-                      value={formData.description}
-                      onChange={(e) => handleInputChange('description', e.target.value)}
-                    />
-                  </div>
-
-                  <div>
-                    <Label htmlFor="address">Địa chỉ *</Label>
-                    <Input
-                      id="address"
-                      placeholder="Số nhà, đường, phường/xã"
-                      value={formData.address}
-                      onChange={(e) => handleInputChange('address', e.target.value)}
-                    />
-                  </div>
-
-                  <div className="grid md:grid-cols-2 gap-4">
-                    <div>
-                      <Label htmlFor="district">Quận/Huyện *</Label>
-                      <Select
-                        value={formData.district}
-                        onValueChange={(value) => handleInputChange('district', value)}
-                      >
-                        <SelectTrigger>
-                          <SelectValue placeholder="Chọn quận" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {districts.map(district => (
-                            <SelectItem key={district} value={district}>{district}</SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-
-                    <div>
-                      <Label htmlFor="city">Thành phố *</Label>
-                      <Input
-                        id="city"
-                        value={formData.city}
-                        onChange={(e) => handleInputChange('city', e.target.value)}
-                      />
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {/* Step 2: Property Details */}
-              {currentStep === 2 && (
-                <div className="space-y-4">
-                  <div className="grid md:grid-cols-3 gap-4">
-                    <div>
-                      <Label htmlFor="bedrooms">Phòng ngủ *</Label>
-                      <Input
-                        id="bedrooms"
-                        type="number"
-                        min="0"
-                        value={formData.bedrooms}
-                        onChange={(e) => handleInputChange('bedrooms', e.target.value)}
-                      />
-                    </div>
-
-                    <div>
-                      <Label htmlFor="bathrooms">Phòng tắm *</Label>
-                      <Input
-                        id="bathrooms"
-                        type="number"
-                        min="0"
-                        value={formData.bathrooms}
-                        onChange={(e) => handleInputChange('bathrooms', e.target.value)}
-                      />
-                    </div>
-
-                    <div>
-                      <Label htmlFor="areaSqm">Diện tích (m²) *</Label>
-                      <Input
-                        id="areaSqm"
-                        type="number"
-                        min="0"
-                        step="0.1"
-                        value={formData.areaSqm}
-                        onChange={(e) => handleInputChange('areaSqm', e.target.value)}
-                      />
-                    </div>
-                  </div>
-
-                  <div className="grid md:grid-cols-2 gap-4">
-                    <div>
-                      <Label htmlFor="floorNumber">Tầng số</Label>
-                      <Input
-                        id="floorNumber"
-                        type="number"
-                        min="0"
-                        value={formData.floorNumber}
-                        onChange={(e) => handleInputChange('floorNumber', e.target.value)}
-                      />
-                    </div>
-
-                    <div>
-                      <Label htmlFor="direction">Hướng</Label>
-                      <Select
-                        value={formData.direction}
-                        onValueChange={(value) => handleInputChange('direction', value)}
-                      >
-                        <SelectTrigger>
-                          <SelectValue placeholder="Chọn hướng" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="Đông">Đông</SelectItem>
-                          <SelectItem value="Tây">Tây</SelectItem>
-                          <SelectItem value="Nam">Nam</SelectItem>
-                          <SelectItem value="Bắc">Bắc</SelectItem>
-                          <SelectItem value="Đông Nam">Đông Nam</SelectItem>
-                          <SelectItem value="Đông Bắc">Đông Bắc</SelectItem>
-                          <SelectItem value="Tây Nam">Tây Nam</SelectItem>
-                          <SelectItem value="Tây Bắc">Tây Bắc</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  </div>
-
-                  <div>
-                    <Label htmlFor="viewDescription">Mô tả view & cảnh quan</Label>
-                    <Textarea
-                      id="viewDescription"
-                      rows={3}
-                      placeholder="VD: View sông, view công viên, tầng cao..."
-                      value={formData.viewDescription}
-                      onChange={(e) => handleInputChange('viewDescription', e.target.value)}
+                      id="city"
+                      value={formData.city}
+                      onChange={(e) => handleInputChange('city', e.target.value)}
                     />
                   </div>
                 </div>
-              )}
+              </div>
+            )}
 
-              {/* Step 3: Price & Legal */}
-              {currentStep === 3 && (
-                <div className="space-y-4">
-                  {formData.listingType === 'sale' ? (
-                    <div>
-                      <Label htmlFor="priceTotal">Giá bán (VNĐ) *</Label>
-                      <Input
-                        id="priceTotal"
-                        type="number"
-                        min="0"
-                        placeholder="VD: 5000000000"
-                        value={formData.priceTotal}
-                        onChange={(e) => handleInputChange('priceTotal', e.target.value)}
-                      />
-                      <p className="text-xs text-muted-foreground mt-1">
-                        Nhập số tiền đầy đủ (VD: 5 tỷ = 5000000000)
-                      </p>
-                    </div>
-                  ) : (
-                    <div>
-                      <Label htmlFor="rentalPriceMonthly">Giá thuê/tháng (VNĐ) *</Label>
-                      <Input
-                        id="rentalPriceMonthly"
-                        type="number"
-                        min="0"
-                        placeholder="VD: 15000000"
-                        value={formData.rentalPriceMonthly}
-                        onChange={(e) => handleInputChange('rentalPriceMonthly', e.target.value)}
-                      />
-                    </div>
-                  )}
+            {/* Step 2: Property Details */}
+            {currentStep === 2 && (
+              <div className="space-y-4">
+                <div className="grid md:grid-cols-3 gap-4">
+                  <div>
+                    <Label htmlFor="bedrooms">Phòng ngủ *</Label>
+                    <Input
+                      id="bedrooms"
+                      type="number"
+                      min="0"
+                      value={formData.bedrooms}
+                      onChange={(e) => handleInputChange('bedrooms', e.target.value)}
+                    />
+                  </div>
 
                   <div>
-                    <Label htmlFor="furnitureStatus">Tình trạng nội thất</Label>
+                    <Label htmlFor="bathrooms">Phòng tắm *</Label>
+                    <Input
+                      id="bathrooms"
+                      type="number"
+                      min="0"
+                      value={formData.bathrooms}
+                      onChange={(e) => handleInputChange('bathrooms', e.target.value)}
+                    />
+                  </div>
+
+                  <div>
+                    <Label htmlFor="areaSqm">Diện tích (m²) *</Label>
+                    <Input
+                      id="areaSqm"
+                      type="number"
+                      min="0"
+                      step="0.1"
+                      value={formData.areaSqm}
+                      onChange={(e) => handleInputChange('areaSqm', e.target.value)}
+                    />
+                  </div>
+                </div>
+
+                <div className="grid md:grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="floorNumber">Tầng số</Label>
+                    <Input
+                      id="floorNumber"
+                      type="number"
+                      min="0"
+                      value={formData.floorNumber}
+                      onChange={(e) => handleInputChange('floorNumber', e.target.value)}
+                    />
+                  </div>
+
+                  <div>
+                    <Label htmlFor="direction">Hướng</Label>
                     <Select
-                      value={formData.furnitureStatus || 'unspecified'}
-                      onValueChange={(value) => handleInputChange('furnitureStatus', value === 'unspecified' ? undefined : value)}
+                      value={formData.direction}
+                      onValueChange={(value) => handleInputChange('direction', value)}
                     >
                       <SelectTrigger>
-                        <SelectValue placeholder="Chọn tình trạng" />
+                        <SelectValue placeholder="Chọn hướng" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="unspecified">Chưa xác định</SelectItem>
-                        <SelectItem value="full">Đầy đủ</SelectItem>
-                        <SelectItem value="partial">Cơ bản</SelectItem>
-                        <SelectItem value="none">Không nội thất</SelectItem>
+                        <SelectItem value="Đông">Đông</SelectItem>
+                        <SelectItem value="Tây">Tây</SelectItem>
+                        <SelectItem value="Nam">Nam</SelectItem>
+                        <SelectItem value="Bắc">Bắc</SelectItem>
+                        <SelectItem value="Đông Nam">Đông Nam</SelectItem>
+                        <SelectItem value="Đông Bắc">Đông Bắc</SelectItem>
+                        <SelectItem value="Tây Nam">Tây Nam</SelectItem>
+                        <SelectItem value="Tây Bắc">Tây Bắc</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
-
-                  <div>
-                    <Label htmlFor="legalStatus">Pháp lý</Label>
-                    <Input
-                      id="legalStatus"
-                      placeholder="VD: Sổ hồng/Sổ đỏ chính chủ"
-                      value={formData.legalStatus}
-                      onChange={(e) => handleInputChange('legalStatus', e.target.value)}
-                    />
-                  </div>
-
-                  <div>
-                    <Label htmlFor="availableFrom">Có sẵn từ ngày</Label>
-                    <Input
-                      id="availableFrom"
-                      type="date"
-                      value={formData.availableFrom}
-                      onChange={(e) => handleInputChange('availableFrom', e.target.value)}
-                    />
-                  </div>
                 </div>
-              )}
 
-              {/* Step 4: Images */}
-              {currentStep === 4 && (
-                <div className="space-y-4">
-                  <div>
-                    <Label>Hình ảnh (Tối đa 10 ảnh) *</Label>
-                    <div className="mt-2">
-                      <label htmlFor="images" className="cursor-pointer">
-                        <div className="border-2 border-dashed rounded-lg p-8 text-center hover:border-primary transition-colors">
-                          <Upload className="mx-auto h-12 w-12 text-muted-foreground" />
-                          <p className="mt-2 text-sm text-muted-foreground">
-                            Click để chọn ảnh hoặc kéo thả vào đây
-                          </p>
-                          <p className="text-xs text-muted-foreground mt-1">
-                            PNG, JPG, JPEG (Tối đa 5MB/ảnh)
-                          </p>
-                        </div>
-                        <Input
-                          id="images"
-                          type="file"
-                          accept="image/*"
-                          multiple
-                          className="hidden"
-                          onChange={handleImageUpload}
-                        />
-                      </label>
-                    </div>
-                  </div>
-
-                  {/* Image Previews */}
-                  {formData.imagePreviews.length > 0 && (
-                    <div className="grid grid-cols-3 gap-4">
-                      {formData.imagePreviews.map((preview, index) => (
-                        <div key={index} className="relative aspect-video rounded-lg overflow-hidden border">
-                          <img
-                            src={preview}
-                            alt={`Preview ${index + 1}`}
-                            className="w-full h-full object-cover"
-                          />
-                          {index === 0 && (
-                            <div className="absolute top-2 left-2">
-                              <Badge>Ảnh chính</Badge>
-                            </div>
-                          )}
-                          <Button
-                            size="icon"
-                            variant="destructive"
-                            className="absolute top-2 right-2"
-                            onClick={() => removeImage(index)}
-                          >
-                            <X className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      ))}
-                    </div>
-                  )}
+                <div>
+                  <Label htmlFor="viewDescription">Mô tả view & cảnh quan</Label>
+                  <Textarea
+                    id="viewDescription"
+                    rows={3}
+                    placeholder="VD: View sông, view công viên, tầng cao..."
+                    value={formData.viewDescription}
+                    onChange={(e) => handleInputChange('viewDescription', e.target.value)}
+                  />
                 </div>
-              )}
+              </div>
+            )}
 
-              {/* Step 5: Contact */}
-              {currentStep === 5 && (
-                <div className="space-y-4">
+            {/* Step 3: Price & Legal */}
+            {currentStep === 3 && (
+              <div className="space-y-4">
+                {formData.listingType === 'sale' ? (
                   <div>
-                    <Label htmlFor="contactName">Tên người liên hệ *</Label>
+                    <Label htmlFor="priceTotal">Giá bán (VNĐ) *</Label>
                     <Input
-                      id="contactName"
-                      value={formData.contactName}
-                      onChange={(e) => handleInputChange('contactName', e.target.value)}
+                      id="priceTotal"
+                      type="number"
+                      min="0"
+                      placeholder="VD: 5000000000"
+                      value={formData.priceTotal}
+                      onChange={(e) => handleInputChange('priceTotal', e.target.value)}
                     />
-                  </div>
-
-                  <div>
-                    <Label htmlFor="contactPhone">Số điện thoại *</Label>
-                    <Input
-                      id="contactPhone"
-                      type="tel"
-                      value={formData.contactPhone}
-                      onChange={(e) => handleInputChange('contactPhone', e.target.value)}
-                    />
-                  </div>
-
-                  <div>
-                    <Label htmlFor="contactEmail">Email</Label>
-                    <Input
-                      id="contactEmail"
-                      type="email"
-                      value={formData.contactEmail}
-                      onChange={(e) => handleInputChange('contactEmail', e.target.value)}
-                    />
-                  </div>
-
-                  <div className="bg-muted p-4 rounded-lg">
-                    <p className="text-sm text-muted-foreground">
-                      Tin đăng sẽ được kiểm duyệt trong vòng 24 giờ. Bạn sẽ nhận được thông báo qua email
-                      khi tin đăng được duyệt.
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Nhập số tiền đầy đủ (VD: 5 tỷ = 5000000000)
                     </p>
                   </div>
+                ) : (
+                  <div>
+                    <Label htmlFor="rentalPriceMonthly">Giá thuê/tháng (VNĐ) *</Label>
+                    <Input
+                      id="rentalPriceMonthly"
+                      type="number"
+                      min="0"
+                      placeholder="VD: 15000000"
+                      value={formData.rentalPriceMonthly}
+                      onChange={(e) => handleInputChange('rentalPriceMonthly', e.target.value)}
+                    />
+                  </div>
+                )}
+
+                <div>
+                  <Label htmlFor="furnitureStatus">Tình trạng nội thất</Label>
+                  <Select
+                    value={formData.furnitureStatus || 'unspecified'}
+                    onValueChange={(value) => handleInputChange('furnitureStatus', value === 'unspecified' ? undefined : value)}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Chọn tình trạng" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="unspecified">Chưa xác định</SelectItem>
+                      <SelectItem value="full">Đầy đủ</SelectItem>
+                      <SelectItem value="partial">Cơ bản</SelectItem>
+                      <SelectItem value="none">Không nội thất</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
-              )}
-            </CardContent>
-          </Card>
 
-          {/* Navigation Buttons */}
-          <div className="flex justify-between mt-6">
-            <Button
-              variant="outline"
-              onClick={handleBack}
-              disabled={currentStep === 1}
-            >
-              <ArrowLeft className="mr-2 h-4 w-4" />
-              Quay lại
-            </Button>
+                <div>
+                  <Label htmlFor="legalStatus">Pháp lý</Label>
+                  <Input
+                    id="legalStatus"
+                    placeholder="VD: Sổ hồng/Sổ đỏ chính chủ"
+                    value={formData.legalStatus}
+                    onChange={(e) => handleInputChange('legalStatus', e.target.value)}
+                  />
+                </div>
 
-            {currentStep < STEPS.length ? (
-              <Button onClick={handleNext}>
-                Tiếp tục
-                <ArrowRight className="ml-2 h-4 w-4" />
-              </Button>
-            ) : (
-              <Button onClick={handleSubmit} disabled={submitting}>
-                {submitting ? 'Đang đăng tin...' : 'Hoàn tất'}
-              </Button>
+                <div>
+                  <Label htmlFor="availableFrom">Có sẵn từ ngày</Label>
+                  <Input
+                    id="availableFrom"
+                    type="date"
+                    value={formData.availableFrom}
+                    onChange={(e) => handleInputChange('availableFrom', e.target.value)}
+                  />
+                </div>
+              </div>
             )}
-          </div>
+
+            {/* Step 4: Images */}
+            {currentStep === 4 && (
+              <div className="space-y-4">
+                <div>
+                  <Label>Hình ảnh (Tối đa 10 ảnh) *</Label>
+                  <div className="mt-2">
+                    <label htmlFor="images" className="cursor-pointer">
+                      <div className="border-2 border-dashed rounded-lg p-8 text-center hover:border-primary transition-colors">
+                        <Upload className="mx-auto h-12 w-12 text-muted-foreground" />
+                        <p className="mt-2 text-sm text-muted-foreground">
+                          Click để chọn ảnh hoặc kéo thả vào đây
+                        </p>
+                        <p className="text-xs text-muted-foreground mt-1">
+                          PNG, JPG, JPEG (Tối đa 5MB/ảnh)
+                        </p>
+                      </div>
+                      <Input
+                        id="images"
+                        type="file"
+                        accept="image/*"
+                        multiple
+                        className="hidden"
+                        onChange={handleImageUpload}
+                      />
+                    </label>
+                  </div>
+                </div>
+
+                {/* Image Previews */}
+                {formData.imagePreviews.length > 0 && (
+                  <div className="grid grid-cols-3 gap-4">
+                    {formData.imagePreviews.map((preview, index) => (
+                      <div key={index} className="relative aspect-video rounded-lg overflow-hidden border">
+                        <img
+                          src={preview}
+                          alt={`Preview ${index + 1}`}
+                          className="w-full h-full object-cover"
+                        />
+                        {index === 0 && (
+                          <div className="absolute top-2 left-2">
+                            <Badge>Ảnh chính</Badge>
+                          </div>
+                        )}
+                        <Button
+                          size="icon"
+                          variant="destructive"
+                          className="absolute top-2 right-2 h-6 w-6"
+                          onClick={() => removeImage(index)}
+                        >
+                          <X className="h-3 w-3" />
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Step 5: Contact */}
+            {currentStep === 5 && (
+              <div className="space-y-4">
+                <div>
+                  <Label htmlFor="contactName">Tên người liên hệ *</Label>
+                  <Input
+                    id="contactName"
+                    value={formData.contactName}
+                    onChange={(e) => handleInputChange('contactName', e.target.value)}
+                  />
+                </div>
+
+                <div>
+                  <Label htmlFor="contactPhone">Số điện thoại *</Label>
+                  <Input
+                    id="contactPhone"
+                    type="tel"
+                    value={formData.contactPhone}
+                    onChange={(e) => handleInputChange('contactPhone', e.target.value)}
+                  />
+                </div>
+
+                <div>
+                  <Label htmlFor="contactEmail">Email</Label>
+                  <Input
+                    id="contactEmail"
+                    type="email"
+                    value={formData.contactEmail}
+                    onChange={(e) => handleInputChange('contactEmail', e.target.value)}
+                  />
+                </div>
+
+                <div className="bg-muted p-4 rounded-lg">
+                  <p className="text-sm text-muted-foreground">
+                    Tin đăng sẽ được kiểm duyệt trong vòng 24 giờ. Bạn sẽ nhận được thông báo qua email
+                    khi tin đăng được duyệt.
+                  </p>
+                </div>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Navigation Buttons */}
+        <div className="flex justify-between mt-6">
+          <Button
+            variant="outline"
+            onClick={handleBack}
+            disabled={currentStep === 1}
+          >
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            Quay lại
+          </Button>
+
+          {currentStep < STEPS.length ? (
+            <Button onClick={handleNext}>
+              Tiếp tục
+              <ArrowRight className="ml-2 h-4 w-4" />
+            </Button>
+          ) : (
+            <Button onClick={handleSubmit} disabled={submitting}>
+              {submitting ? 'Đang đăng tin...' : 'Hoàn tất'}
+            </Button>
+          )}
         </div>
       </div>
     </div>
+  );
+
+  if (isMobile) {
+    return (
+      <div className="min-h-screen bg-background pb-20">
+        {content}
+        <BottomNavigation />
+      </div>
+    );
+  }
+
+  return (
+    <DesktopLayout title="Đăng tin">
+      {content}
+    </DesktopLayout>
   );
 }

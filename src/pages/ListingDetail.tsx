@@ -24,42 +24,52 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
+import DesktopLayout from '@/components/layout/DesktopLayout';
+import BottomNavigation from '@/components/layout/BottomNavigation';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 export default function ListingDetail() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const isMobile = useIsMobile();
   const { listing, loading } = useListing(id!);
   const [selectedImage, setSelectedImage] = useState(0);
   const [contactDialogOpen, setContactDialogOpen] = useState(false);
 
-  if (loading) {
-    return (
-      <div className="container mx-auto px-4 py-8">
-        <Skeleton className="h-96 w-full mb-6" />
-        <div className="grid lg:grid-cols-3 gap-6">
-          <div className="lg:col-span-2 space-y-4">
-            <Skeleton className="h-32 w-full" />
-            <Skeleton className="h-64 w-full" />
-          </div>
-          <Skeleton className="h-96 w-full" />
+  const loadingState = (
+    <div className="container mx-auto px-4 py-8">
+      <Skeleton className="h-96 w-full mb-6" />
+      <div className="grid lg:grid-cols-3 gap-6">
+        <div className="lg:col-span-2 space-y-4">
+          <Skeleton className="h-32 w-full" />
+          <Skeleton className="h-64 w-full" />
         </div>
+        <Skeleton className="h-96 w-full" />
       </div>
-    );
+    </div>
+  );
+
+  const notFoundState = (
+    <div className="container mx-auto px-4 py-8">
+      <Card>
+        <CardContent className="py-12 text-center">
+          <p className="text-muted-foreground">Không tìm thấy tin đăng</p>
+          <Button onClick={() => navigate('/marketplace')} className="mt-4">
+            Quay lại danh sách
+          </Button>
+        </CardContent>
+      </Card>
+    </div>
+  );
+
+  if (loading) {
+    if (isMobile) return <div className="min-h-screen bg-background pb-20">{loadingState}<BottomNavigation/></div>;
+    return <DesktopLayout title="Chi tiết tin đăng">{loadingState}</DesktopLayout>;
   }
 
   if (!listing) {
-    return (
-      <div className="container mx-auto px-4 py-8">
-        <Card>
-          <CardContent className="py-12 text-center">
-            <p className="text-muted-foreground">Không tìm thấy tin đăng</p>
-            <Button onClick={() => navigate('/marketplace')} className="mt-4">
-              Quay lại danh sách
-            </Button>
-          </CardContent>
-        </Card>
-      </div>
-    );
+    if (isMobile) return <div className="min-h-screen bg-background pb-20">{notFoundState}<BottomNavigation/></div>;
+    return <DesktopLayout title="Chi tiết tin đăng">{notFoundState}</DesktopLayout>;
   }
 
   const primaryImage = listing.images?.find(img => img.is_primary)?.image_url
@@ -87,233 +97,242 @@ export default function ListingDetail() {
     }
   };
 
-  return (
-    <div className="min-h-screen bg-background">
+  const content = (
+    <div className="container mx-auto px-4 py-6">
       {/* Back Button */}
-      <div className="border-b">
-        <div className="container mx-auto px-4 py-4">
-          <Button variant="ghost" onClick={() => navigate('/marketplace')}>
-            <ArrowLeft className="mr-2 h-4 w-4" />
-            Quay lại
-          </Button>
+      <Button variant="ghost" onClick={() => navigate('/marketplace')} className="mb-4 -ml-2">
+        <ArrowLeft className="mr-2 h-4 w-4" />
+        Quay lại
+      </Button>
+
+      {/* Image Gallery */}
+      <div className="mb-6">
+        <div className="aspect-video rounded-lg overflow-hidden mb-4 bg-muted">
+          <img
+            src={listing.images?.[selectedImage]?.image_url || primaryImage}
+            alt={listing.title}
+            className="w-full h-full object-cover"
+          />
         </div>
+
+        {/* Thumbnails */}
+        {listing.images && listing.images.length > 1 && (
+          <div className="grid grid-cols-6 gap-2">
+            {listing.images.map((image, index) => (
+              <button
+                key={image.id}
+                onClick={() => setSelectedImage(index)}
+                className={`aspect-video rounded overflow-hidden border-2 ${
+                  selectedImage === index ? 'border-primary' : 'border-transparent'
+                }`}
+              >
+                <img
+                  src={image.image_url}
+                  alt={image.caption || `Image ${index + 1}`}
+                  className="w-full h-full object-cover"
+                />
+              </button>
+            ))}
+          </div>
+        )}
       </div>
 
-      <div className="container mx-auto px-4 py-8">
-        {/* Image Gallery */}
-        <div className="mb-6">
-          <div className="aspect-video rounded-lg overflow-hidden mb-4">
-            <img
-              src={listing.images?.[selectedImage]?.image_url || primaryImage}
-              alt={listing.title}
-              className="w-full h-full object-cover"
-            />
-          </div>
+      <div className="grid lg:grid-cols-3 gap-6">
+        {/* Main Content */}
+        <div className="lg:col-span-2 space-y-6">
+          {/* Header */}
+          <Card>
+            <CardContent className="p-6">
+              <div className="flex items-start justify-between mb-4">
+                <div>
+                  <div className="flex items-center gap-2 mb-2">
+                    <Badge variant={listing.listing_type === 'sale' ? 'default' : 'secondary'}>
+                      {listing.listing_type === 'sale' ? 'Bán' : 'Thuê'}
+                    </Badge>
+                    {listing.is_featured && (
+                      <Badge className="bg-yellow-500">
+                        <Star className="w-3 h-3 mr-1" /> Nổi bật
+                      </Badge>
+                    )}
+                    {listing.is_verified && (
+                      <Badge variant="outline" className="bg-green-50 border-green-500 text-green-700">
+                        ✓ Đã xác minh
+                      </Badge>
+                    )}
+                  </div>
+                  <h1 className="text-2xl md:text-3xl font-bold mb-2">{listing.title}</h1>
+                  <div className="flex items-center text-muted-foreground">
+                    <MapPin className="w-4 h-4 mr-1" />
+                    {listing.address}
+                  </div>
+                </div>
 
-          {/* Thumbnails */}
-          {listing.images && listing.images.length > 1 && (
-            <div className="grid grid-cols-6 gap-2">
-              {listing.images.map((image, index) => (
-                <button
-                  key={image.id}
-                  onClick={() => setSelectedImage(index)}
-                  className={`aspect-video rounded overflow-hidden border-2 ${
-                    selectedImage === index ? 'border-primary' : 'border-transparent'
-                  }`}
-                >
-                  <img
-                    src={image.image_url}
-                    alt={image.caption || `Image ${index + 1}`}
-                    className="w-full h-full object-cover"
+                <div className="flex gap-2">
+                  <Button size="icon" variant="outline">
+                    <Heart className="h-4 w-4" />
+                  </Button>
+                  <Button size="icon" variant="outline" onClick={handleShare}>
+                    <Share2 className="h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
+
+              <Separator className="my-4" />
+
+              {/* Price & Key Info */}
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div>
+                  <p className="text-sm text-muted-foreground mb-1">Giá</p>
+                  <p className="text-xl md:text-2xl font-bold text-primary">{priceLabel}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground mb-1">Giá/m²</p>
+                  <p className="text-lg font-semibold">
+                    {listing.price_per_sqm ? formatCurrency(listing.price_per_sqm) : 'N/A'}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground mb-1">Diện tích</p>
+                  <p className="text-lg font-semibold">{listing.area_sqm}m²</p>
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground mb-1">Lượt xem</p>
+                  <p className="text-lg font-semibold flex items-center">
+                    <Eye className="w-4 h-4 mr-1" />
+                    {listing.view_count}
+                  </p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Description */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Mô tả</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="whitespace-pre-wrap text-sm md:text-base">{listing.description}</p>
+            </CardContent>
+          </Card>
+
+          {/* Property Details */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Thông tin chi tiết</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid md:grid-cols-2 gap-4">
+                <DetailRow icon={Home} label="Loại hình" value={listing.property_type} />
+                <DetailRow icon={Bed} label="Phòng ngủ" value={`${listing.bedrooms} phòng`} />
+                <DetailRow icon={Bath} label="Phòng tắm" value={`${listing.bathrooms} phòng`} />
+                <DetailRow icon={Maximize} label="Diện tích" value={`${listing.area_sqm}m²`} />
+                {listing.floor_number && (
+                  <DetailRow icon={Building2} label="Tầng" value={`Tầng ${listing.floor_number}`} />
+                )}
+                {listing.direction && (
+                  <DetailRow icon={Compass} label="Hướng" value={listing.direction} />
+                )}
+                {listing.furniture_status && (
+                  <DetailRow
+                    icon={Sofa}
+                    label="Nội thất"
+                    value={
+                      listing.furniture_status === 'full' ? 'Đầy đủ' :
+                      listing.furniture_status === 'partial' ? 'Cơ bản' : 'Không nội thất'
+                    }
                   />
-                </button>
-              ))}
-            </div>
-          )}
+                )}
+                {listing.legal_status && (
+                  <DetailRow icon={FileText} label="Pháp lý" value={listing.legal_status} />
+                )}
+                {listing.available_from && (
+                  <DetailRow
+                    icon={Calendar}
+                    label="Có sẵn từ"
+                    value={new Date(listing.available_from).toLocaleDateString('vi-VN')}
+                  />
+                )}
+              </div>
+
+              {listing.view_description && (
+                <>
+                  <Separator className="my-4" />
+                  <div>
+                    <h4 className="font-semibold mb-2">View & Cảnh quan</h4>
+                    <p className="text-muted-foreground">{listing.view_description}</p>
+                  </div>
+                </>
+              )}
+            </CardContent>
+          </Card>
         </div>
 
-        <div className="grid lg:grid-cols-3 gap-6">
-          {/* Main Content */}
-          <div className="lg:col-span-2 space-y-6">
-            {/* Header */}
-            <Card>
-              <CardContent className="p-6">
-                <div className="flex items-start justify-between mb-4">
-                  <div>
-                    <div className="flex items-center gap-2 mb-2">
-                      <Badge variant={listing.listing_type === 'sale' ? 'default' : 'secondary'}>
-                        {listing.listing_type === 'sale' ? 'Bán' : 'Thuê'}
-                      </Badge>
-                      {listing.is_featured && (
-                        <Badge className="bg-yellow-500">
-                          <Star className="w-3 h-3 mr-1" /> Nổi bật
-                        </Badge>
-                      )}
-                      {listing.is_verified && (
-                        <Badge variant="outline" className="bg-green-50 border-green-500 text-green-700">
-                          ✓ Đã xác minh
-                        </Badge>
-                      )}
-                    </div>
-                    <h1 className="text-3xl font-bold mb-2">{listing.title}</h1>
-                    <div className="flex items-center text-muted-foreground">
-                      <MapPin className="w-4 h-4 mr-1" />
-                      {listing.address}
-                    </div>
-                  </div>
+        {/* Sidebar - Contact */}
+        <div className="lg:col-span-1">
+          <Card className="sticky top-20">
+            <CardHeader>
+              <CardTitle>Thông tin liên hệ</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div>
+                <p className="text-sm text-muted-foreground mb-1">Người đăng</p>
+                <p className="font-semibold">{listing.contact_name}</p>
+              </div>
 
-                  <div className="flex gap-2">
-                    <Button size="icon" variant="outline">
-                      <Heart className="h-4 w-4" />
-                    </Button>
-                    <Button size="icon" variant="outline" onClick={handleShare}>
-                      <Share2 className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </div>
+              <Separator />
 
-                <Separator className="my-4" />
+              <div className="space-y-2">
+                <Button className="w-full" size="lg" asChild>
+                  <a href={`tel:${listing.contact_phone}`}>
+                    <Phone className="mr-2 h-4 w-4" />
+                    {listing.contact_phone}
+                  </a>
+                </Button>
 
-                {/* Price & Key Info */}
-                <div className="grid md:grid-cols-4 gap-4">
-                  <div>
-                    <p className="text-sm text-muted-foreground mb-1">Giá</p>
-                    <p className="text-2xl font-bold text-primary">{priceLabel}</p>
-                  </div>
-                  <div>
-                    <p className="text-sm text-muted-foreground mb-1">Giá/m²</p>
-                    <p className="text-lg font-semibold">
-                      {listing.price_per_sqm ? formatCurrency(listing.price_per_sqm) : 'N/A'}
-                    </p>
-                  </div>
-                  <div>
-                    <p className="text-sm text-muted-foreground mb-1">Diện tích</p>
-                    <p className="text-lg font-semibold">{listing.area_sqm}m²</p>
-                  </div>
-                  <div>
-                    <p className="text-sm text-muted-foreground mb-1">Lượt xem</p>
-                    <p className="text-lg font-semibold flex items-center">
-                      <Eye className="w-4 h-4 mr-1" />
-                      {listing.view_count}
-                    </p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Description */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Mô tả</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="whitespace-pre-wrap">{listing.description}</p>
-              </CardContent>
-            </Card>
-
-            {/* Property Details */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Thông tin chi tiết</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="grid md:grid-cols-2 gap-4">
-                  <DetailRow icon={Home} label="Loại hình" value={listing.property_type} />
-                  <DetailRow icon={Bed} label="Phòng ngủ" value={`${listing.bedrooms} phòng`} />
-                  <DetailRow icon={Bath} label="Phòng tắm" value={`${listing.bathrooms} phòng`} />
-                  <DetailRow icon={Maximize} label="Diện tích" value={`${listing.area_sqm}m²`} />
-                  {listing.floor_number && (
-                    <DetailRow icon={Building2} label="Tầng" value={`Tầng ${listing.floor_number}`} />
-                  )}
-                  {listing.direction && (
-                    <DetailRow icon={Compass} label="Hướng" value={listing.direction} />
-                  )}
-                  {listing.furniture_status && (
-                    <DetailRow
-                      icon={Sofa}
-                      label="Nội thất"
-                      value={
-                        listing.furniture_status === 'full' ? 'Đầy đủ' :
-                        listing.furniture_status === 'partial' ? 'Cơ bản' : 'Không nội thất'
-                      }
-                    />
-                  )}
-                  {listing.legal_status && (
-                    <DetailRow icon={FileText} label="Pháp lý" value={listing.legal_status} />
-                  )}
-                  {listing.available_from && (
-                    <DetailRow
-                      icon={Calendar}
-                      label="Có sẵn từ"
-                      value={new Date(listing.available_from).toLocaleDateString('vi-VN')}
-                    />
-                  )}
-                </div>
-
-                {listing.view_description && (
-                  <>
-                    <Separator className="my-4" />
-                    <div>
-                      <h4 className="font-semibold mb-2">View & Cảnh quan</h4>
-                      <p className="text-muted-foreground">{listing.view_description}</p>
-                    </div>
-                  </>
-                )}
-              </CardContent>
-            </Card>
-          </div>
-
-          {/* Sidebar - Contact */}
-          <div className="lg:col-span-1">
-            <Card className="sticky top-4">
-              <CardHeader>
-                <CardTitle>Thông tin liên hệ</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div>
-                  <p className="text-sm text-muted-foreground mb-1">Người đăng</p>
-                  <p className="font-semibold">{listing.contact_name}</p>
-                </div>
-
-                <Separator />
-
-                <div className="space-y-2">
-                  <Button className="w-full" size="lg" asChild>
-                    <a href={`tel:${listing.contact_phone}`}>
-                      <Phone className="mr-2 h-4 w-4" />
-                      {listing.contact_phone}
+                {listing.contact_email && (
+                  <Button variant="outline" className="w-full" asChild>
+                    <a href={`mailto:${listing.contact_email}`}>
+                      <Mail className="mr-2 h-4 w-4" />
+                      Email
                     </a>
                   </Button>
+                )}
 
-                  {listing.contact_email && (
-                    <Button variant="outline" className="w-full" asChild>
-                      <a href={`mailto:${listing.contact_email}`}>
-                        <Mail className="mr-2 h-4 w-4" />
-                        Email
-                      </a>
-                    </Button>
-                  )}
+                <ContactDialog
+                  open={contactDialogOpen}
+                  onOpenChange={setContactDialogOpen}
+                  listingId={listing.id}
+                  listingTitle={listing.title}
+                />
+              </div>
 
-                  <ContactDialog
-                    open={contactDialogOpen}
-                    onOpenChange={setContactDialogOpen}
-                    listingId={listing.id}
-                    listingTitle={listing.title}
-                  />
-                </div>
+              <Separator />
 
-                <Separator />
-
-                <div className="text-sm text-muted-foreground">
-                  <p>Đăng ngày: {new Date(listing.created_at).toLocaleDateString('vi-VN')}</p>
-                  <p className="mt-1">ID: {listing.id.slice(0, 8)}</p>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
+              <div className="text-sm text-muted-foreground">
+                <p>Đăng ngày: {new Date(listing.created_at).toLocaleDateString('vi-VN')}</p>
+                <p className="mt-1">ID: {listing.id.slice(0, 8)}</p>
+              </div>
+            </CardContent>
+          </Card>
         </div>
       </div>
     </div>
+  );
+
+  if (isMobile) {
+    return (
+      <div className="min-h-screen bg-background pb-20">
+        {content}
+        <BottomNavigation />
+      </div>
+    );
+  }
+
+  return (
+    <DesktopLayout title="Chi tiết tin đăng">
+      {content}
+    </DesktopLayout>
   );
 }
 

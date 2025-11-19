@@ -191,4 +191,21 @@
   .custom-scrollbar::-webkit-scrollbar-thumb {
     @apply bg-muted-foreground/20 rounded-full hover:bg-muted-foreground/40 transition-colors;
   }
+
+  /* Adaptive Backgrounds */
+  .bg-subtle-blue {
+    @apply bg-blue-50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-900/50;
+  }
+  .bg-subtle-green {
+    @apply bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-100 dark:border-emerald-900/50;
+  }
+  .bg-subtle-amber {
+    @apply bg-amber-50 dark:bg-amber-900/20 border border-amber-100 dark:border-amber-900/50;
+  }
+  .bg-subtle-purple {
+    @apply bg-purple-50 dark:bg-purple-900/20 border border-purple-100 dark:border-purple-900/50;
+  }
+  .bg-subtle-slate {
+    @apply bg-slate-100 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700;
+  }
 }

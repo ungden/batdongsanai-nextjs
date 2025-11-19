@@ -157,90 +157,30 @@ const MarketOverview = () => {
 
   if (isMobile) {
     return (
-      <>
-        <SEOHead
-          title="Tổng quan thị trường BĐS - PropertyHub"
-          description={`Khám phá ${filteredProjects.length} dự án bất động sản. So sánh giá và tìm cơ hội đầu tư tốt nhất.`}
-          keywords="thị trường bất động sản, dự án, giá nhà, đầu tư, listing"
-        />
-        <div className="min-h-screen bg-slate-50 pb-20">
-          <div className="sticky top-0 z-40 bg-white/95 backdrop-blur-lg border-b border-slate-200 shadow-sm">
-            <div className="p-3 space-y-3">
-              <div className="flex items-center justify-between">
-                <h1 className="text-xl font-bold text-slate-900">Thị trường</h1>
-                <Badge variant="outline" className="font-semibold text-xs bg-slate-100 text-slate-600 border-slate-200">
-                  {filteredProjects.length}
-                </Badge>
-              </div>
-
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 w-4 h-4" />
-                <Input
-                  placeholder="Tìm dự án..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-10 h-10 rounded-full text-sm bg-slate-50 border-slate-200 focus:bg-white focus:border-primary transition-all"
+      <div className="min-h-screen bg-background pb-20">
+        <div className="p-4 space-y-4">
+          <h1 className="text-2xl font-bold">Tổng quan thị trường</h1>
+          
+          <MarketStatsCard projects={projectsData} />
+          
+          <div className="space-y-4">
+            <h2 className="font-semibold">Dự án tiêu biểu</h2>
+            {filteredProjects.slice(0, 5).map((project) => (
+              <div key={project.id} className="animate-fade-in">
+                <ProjectCard 
+                  project={project} 
+                  onClick={() => navigate(`/projects/${project.id}`)} 
                 />
               </div>
-
-              <MarketTabs 
-                activeTab={activeTab} 
-                onTabChange={setActiveTab}
-                counts={tabCounts}
-              />
-
-              {activeTab !== "stats" && (
-                <QuickFilters
-                  filters={quickFilters}
-                  selectedFilters={selectedQuickFilters}
-                  onToggleFilter={handleToggleQuickFilter}
-                />
-              )}
-            </div>
+            ))}
           </div>
-
-          <div className="p-3 space-y-3">
-            {activeTab === "stats" ? (
-              <MarketStatsCard projects={projectsData} />
-            ) : (
-              <>
-                <FilterTags
-                  selectedTags={selectedFilterTags}
-                  onRemoveTag={handleRemoveFilterTag}
-                  onClearAll={handleClearAllFilters}
-                />
-
-                {filteredProjects.map((project) => (
-                  <ProjectCard
-                    key={project.id}
-                    project={project}
-                    onClick={(id) => navigate(`/projects/${id}`)}
-                  />
-                ))}
-
-                {filteredProjects.length === 0 && (
-                  <Card className="border-dashed">
-                    <CardContent className="p-10 text-center">
-                      <Building2 className="w-14 h-14 mx-auto text-slate-300 mb-3" />
-                      <h3 className="text-base font-semibold mb-1.5 text-slate-700">Không tìm thấy dự án</h3>
-                      <p className="text-slate-500 text-sm mb-3">Thử điều chỉnh bộ lọc</p>
-                      <Button variant="outline" onClick={handleClearAllFilters} className="rounded-full h-9 text-sm">
-                        Xóa bộ lọc
-                      </Button>
-                    </CardContent>
-                  </Card>
-                )}
-              </>
-            )}
-          </div>
-
-          <BottomNavigation />
         </div>
-      </>
+        <BottomNavigation />
+      </div>
     );
   }
 
-  // Desktop layout
+  // Desktop layout - Refined
   return (
     <>
       <SEOHead
@@ -250,21 +190,21 @@ const MarketOverview = () => {
       />
       <DesktopLayout title="Tổng quan thị trường" subtitle={`${filteredProjects.length} dự án`}>
         <div className="space-y-6">
-          {/* Search and Tabs */}
-          <Card className="border-none shadow-sm bg-white rounded-2xl">
-            <div className="p-4 space-y-4">
+          {/* Search and Tabs - Compact */}
+          <Card className="border-none shadow-sm bg-white rounded-xl">
+            <div className="p-3 space-y-3">
               <div className="flex items-center justify-between gap-4">
-                <div className="relative max-w-lg flex-1">
+                <div className="relative flex-1 min-w-[300px]">
                   <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 w-4 h-4" />
                   <Input
-                    placeholder="Tìm kiếm dự án, chủ đầu tư, khu vực..."
+                    placeholder="Tìm kiếm theo tên dự án, địa điểm, chủ đầu tư..."
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    className="pl-9 h-10 text-sm bg-slate-50 border-transparent focus:bg-white focus:border-primary rounded-xl"
+                    className="pl-9 h-10 text-sm bg-slate-50 border-transparent focus:bg-white focus:border-primary rounded-lg"
                   />
                 </div>
                 <div className="flex items-center gap-2">
-                   <Button variant="outline" size="sm" className="h-10 rounded-xl border-slate-200 text-slate-600">
+                   <Button variant="outline" size="sm" className="h-10 rounded-lg border-slate-200 text-slate-600">
                       <Download className="w-4 h-4 mr-2" /> Xuất báo cáo
                    </Button>
                 </div>
@@ -277,7 +217,7 @@ const MarketOverview = () => {
               />
 
               {activeTab !== "stats" && (
-                <div className="pt-4 border-t border-slate-100">
+                <div className="pt-3 border-t border-slate-100">
                   <QuickFilters
                     filters={quickFilters}
                     selectedFilters={selectedQuickFilters}
@@ -298,15 +238,15 @@ const MarketOverview = () => {
           {activeTab === "stats" ? (
             <MarketStatsCard projects={projectsData} />
           ) : (
-            <Card className="border-none shadow-sm bg-white rounded-2xl overflow-hidden">
+            <Card className="border-none shadow-sm bg-white rounded-xl overflow-hidden">
               <CardContent className="p-0">
                 <div className="overflow-x-auto">
                   <Table>
                     <TableHeader>
                       <TableRow className="bg-slate-50/50 hover:bg-slate-50/50 border-b border-slate-100">
-                        <TableHead className="font-bold text-sm py-4 pl-6 text-slate-700">Dự án</TableHead>
-                        <TableHead className="font-bold text-sm py-4 text-slate-700">Vị trí</TableHead>
-                        <TableHead className="text-right font-bold text-sm py-4 text-slate-700">
+                        <TableHead className="font-bold text-xs py-3 pl-4 text-slate-600 uppercase tracking-wider">Dự án</TableHead>
+                        <TableHead className="font-bold text-xs py-3 text-slate-600 uppercase tracking-wider">Vị trí</TableHead>
+                        <TableHead className="text-right font-bold text-xs py-3 text-slate-600 uppercase tracking-wider">
                           <Button
                             variant="ghost"
                             size="sm"
@@ -314,18 +254,18 @@ const MarketOverview = () => {
                               setSortBy("pricePerSqm");
                               setSortOrder(sortOrder === "desc" ? "asc" : "desc");
                             }}
-                            className="h-auto p-0 hover:bg-transparent font-bold text-slate-700"
+                            className="h-auto p-0 hover:bg-transparent font-bold text-xs text-slate-600 uppercase tracking-wider"
                           >
                             Giá/m²
                             {sortBy === "pricePerSqm" && (
-                              sortOrder === "desc" ? <ChevronDown className="w-4 h-4 ml-1" /> : <ChevronUp className="w-4 h-4 ml-1" />
+                              sortOrder === "desc" ? <ChevronDown className="w-3 h-3 ml-1" /> : <ChevronUp className="w-3 h-3 ml-1" />
                             )}
                           </Button>
                         </TableHead>
-                        <TableHead className="text-right font-bold text-sm py-4 text-slate-700">Tổng giá</TableHead>
-                        <TableHead className="text-right font-bold text-sm py-4 text-slate-700">Biến động</TableHead>
-                        <TableHead className="text-center font-bold text-sm py-4 text-slate-700">Đã bán</TableHead>
-                        <TableHead className="text-center font-bold text-sm py-4 text-slate-700">
+                        <TableHead className="text-right font-bold text-xs py-3 text-slate-600 uppercase tracking-wider">Tổng giá</TableHead>
+                        <TableHead className="text-right font-bold text-xs py-3 text-slate-600 uppercase tracking-wider">Biến động</TableHead>
+                        <TableHead className="text-center font-bold text-xs py-3 text-slate-600 uppercase tracking-wider">Đã bán</TableHead>
+                        <TableHead className="text-center font-bold text-xs py-3 text-slate-600 uppercase tracking-wider">
                           <Button
                             variant="ghost"
                             size="sm"
@@ -333,15 +273,15 @@ const MarketOverview = () => {
                               setSortBy("legalScore");
                               setSortOrder(sortOrder === "desc" ? "asc" : "desc");
                             }}
-                            className="h-auto p-0 hover:bg-transparent font-bold text-slate-700"
+                            className="h-auto p-0 hover:bg-transparent font-bold text-xs text-slate-600 uppercase tracking-wider"
                           >
-                            Đánh giá
+                            Pháp lý
                             {sortBy === "legalScore" && (
-                              sortOrder === "desc" ? <ChevronDown className="w-4 h-4 ml-1" /> : <ChevronUp className="w-4 h-4 ml-1" />
+                              sortOrder === "desc" ? <ChevronDown className="w-3 h-3 ml-1" /> : <ChevronUp className="w-3 h-3 ml-1" />
                             )}
                           </Button>
                         </TableHead>
-                        <TableHead className="text-center font-bold text-sm py-4 pr-6 text-slate-700">Bàn giao</TableHead>
+                        <TableHead className="text-center font-bold text-xs py-3 pr-4 text-slate-600 uppercase tracking-wider">Bàn giao</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -352,81 +292,85 @@ const MarketOverview = () => {
                         return (
                           <TableRow 
                             key={project.id}
-                            className="cursor-pointer hover:bg-slate-50 transition-colors group border-b border-slate-100 last:border-0"
+                            className="cursor-pointer hover:bg-slate-50/80 transition-colors group border-b border-slate-100 last:border-0 h-14" // Fixed height for compactness
                             onClick={() => navigate(`/projects/${project.id}`)}
                           >
-                            <TableCell className="py-4 pl-6">
+                            <TableCell className="py-2 pl-4">
                               <div className="flex items-center gap-3">
-                                <Avatar className="w-12 h-12 border border-slate-200 rounded-lg">
+                                <Avatar className="w-10 h-10 border border-slate-200 rounded-lg">
                                   <AvatarImage src={project.image} alt={project.name} className="object-cover" />
-                                  <AvatarFallback className="text-sm font-bold bg-blue-50 text-blue-600 rounded-lg">
+                                  <AvatarFallback className="text-xs font-bold bg-blue-50 text-blue-600 rounded-lg">
                                     {project.name.slice(0, 2).toUpperCase()}
                                   </AvatarFallback>
                                 </Avatar>
                                 <div className="flex-1 min-w-0">
-                                  <div className="font-bold text-sm leading-tight text-slate-900 group-hover:text-primary transition-colors">
+                                  <div className="font-bold text-sm leading-tight text-slate-900 group-hover:text-primary transition-colors truncate max-w-[180px]">
                                     {project.name}
                                   </div>
-                                  <div className="text-xs text-slate-500 mt-1">
+                                  <div className="text-[11px] text-slate-500 mt-0.5 truncate max-w-[180px]">
                                     {project.developer}
                                   </div>
                                 </div>
                               </div>
                             </TableCell>
                             
-                            <TableCell className="py-4">
-                              <div className="flex items-center gap-2">
-                                <MapPin className="w-4 h-4 text-slate-400 flex-shrink-0" />
+                            <TableCell className="py-2">
+                              <div className="flex items-center gap-1.5">
+                                <MapPin className="w-3.5 h-3.5 text-slate-400 flex-shrink-0" />
                                 <div>
-                                  <div className="font-medium text-sm text-slate-700">{project.district}</div>
-                                  <div className="text-xs text-slate-500">{project.city}</div>
+                                  <div className="font-medium text-xs text-slate-700">{project.district}</div>
+                                  <div className="text-[10px] text-slate-500">{project.city === "TP. Hồ Chí Minh" ? "HCM" : project.city}</div>
                                 </div>
                               </div>
                             </TableCell>
                             
-                            <TableCell className="text-right py-4">
+                            <TableCell className="text-right py-2">
                               <div className="font-bold text-primary text-sm">
                                 {formatPrice(project.pricePerSqm)}
                               </div>
-                              <div className="text-xs text-slate-500">VNĐ/m²</div>
+                              <div className="text-[10px] text-slate-500">/m²</div>
                             </TableCell>
 
-                            <TableCell className="text-right py-4">
+                            <TableCell className="text-right py-2">
                               <div className="font-medium text-sm text-slate-700">
-                                {project.priceRange}
+                                {project.priceRange.split(' ')[0]} <span className="text-[10px]">tỷ</span>
                               </div>
                             </TableCell>
 
-                            <TableCell className="text-right py-4">
+                            <TableCell className="text-right py-2">
                               {project.launchPrice && project.currentPrice ? (
                                 <PriceChangeIndicator
                                   currentPrice={project.currentPrice}
                                   launchPrice={project.launchPrice}
+                                  showIcon={false}
+                                  className="text-xs"
                                 />
                               ) : (
-                                <span className="text-slate-400 text-sm">—</span>
+                                <span className="text-slate-300 text-xs">—</span>
                               )}
                             </TableCell>
 
-                            <TableCell className="text-center py-4">
+                            <TableCell className="text-center py-2">
                               {soldPct > 0 ? (
                                 <div className="space-y-1">
-                                  <div className="font-bold text-sm text-slate-700">{soldPct}%</div>
-                                  <Progress value={soldPct} className="h-1.5 w-16 mx-auto bg-slate-100" />
+                                  <div className="font-bold text-xs text-slate-700">{soldPct}%</div>
+                                  <Progress value={soldPct} className="h-1 w-12 mx-auto bg-slate-100" />
                                 </div>
                               ) : (
-                                <span className="text-slate-400 text-sm">—</span>
+                                <span className="text-slate-300 text-xs">—</span>
                               )}
                             </TableCell>
                             
-                            <TableCell className="text-center py-4">
-                              <StatusBadge variant={getStatusVariant(project.status)} className="font-bold text-xs px-2.5 py-1 rounded-full border-0">
+                            <TableCell className="text-center py-2">
+                              <StatusBadge variant={getStatusVariant(project.status)} className="font-semibold text-[10px] px-2 py-0.5 rounded-full border-0 h-5">
                                 {project.legalScore}/10
                               </StatusBadge>
                             </TableCell>
                             
-                            <TableCell className="text-center pr-6 py-4">
-                              <div className="text-sm font-medium text-slate-600">{project.completionDate}</div>
+                            <TableCell className="text-center pr-4 py-2">
+                              <div className="text-xs font-medium text-slate-600">
+                                {project.completionDate.includes('20') ? project.completionDate.substring(project.completionDate.indexOf('20')) : project.completionDate}
+                              </div>
                             </TableCell>
                           </TableRow>
                         );
@@ -434,31 +378,6 @@ const MarketOverview = () => {
                     </TableBody>
                   </Table>
                 </div>
-
-                {filteredProjects.length === 0 && (
-                  <div className="p-16 text-center">
-                    <div className="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-4">
-                      <Search className="w-8 h-8 text-slate-300" />
-                    </div>
-                    <h3 className="text-lg font-bold mb-2 text-slate-900">Không tìm thấy dự án</h3>
-                    <p className="text-slate-500 text-sm mb-4">Thử điều chỉnh bộ lọc hoặc từ khóa tìm kiếm</p>
-                    <Button variant="outline" onClick={handleClearAllFilters} className="rounded-full h-10 px-6 text-sm">
-                      Xóa tất cả bộ lọc
-                    </Button>
-                  </div>
-                )}
-
-                {filteredProjects.length > 0 && (
-                  <div className="px-6 py-4 border-t border-slate-100 bg-slate-50/30 flex items-center justify-between">
-                    <span className="text-sm text-slate-500">
-                      Hiển thị <span className="font-semibold text-slate-900">{filteredProjects.length}</span> dự án
-                    </span>
-                    <Button variant="outline" size="sm" className="h-9 rounded-lg text-xs border-slate-200 text-slate-600 hover:bg-white">
-                      <Download className="w-3.5 h-3.5 mr-1.5" />
-                      Xuất Excel
-                    </Button>
-                  </div>
-                )}
               </CardContent>
             </Card>
           )}

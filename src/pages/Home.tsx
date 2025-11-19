@@ -67,9 +67,9 @@ const Home = () => {
   };
 
   const content = (
-    <div className="space-y-12 pb-20">
-      {/* Hero Section - Always Dark & Premium for better contrast */}
-      <div className="relative rounded-3xl overflow-hidden shadow-2xl isolate">
+    <div className="space-y-8 pb-20">
+      {/* Hero Section - More compact and refined */}
+      <div className="relative rounded-2xl overflow-hidden shadow-xl isolate">
         {/* Background Image */}
         <div className="absolute inset-0 z-0">
           <img 
@@ -81,45 +81,43 @@ const Home = () => {
           <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-blue-950 to-slate-900 opacity-95" />
         </div>
         
-        <div className="relative z-10 px-6 py-20 md:py-32 text-center space-y-8 max-w-5xl mx-auto">
+        <div className="relative z-10 px-6 py-12 md:py-20 text-center space-y-6 max-w-4xl mx-auto">
           {/* Badge */}
-          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/10 backdrop-blur-md border border-white/10 text-blue-100 text-sm font-medium shadow-lg animate-fade-in">
-            <Sparkles className="w-4 h-4 text-yellow-400 fill-yellow-400" />
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 backdrop-blur-md border border-white/10 text-blue-100 text-xs font-medium shadow-sm animate-fade-in">
+            <Sparkles className="w-3 h-3 text-yellow-400 fill-yellow-400" />
             <span>Nền tảng AI Bất động sản #1 Việt Nam</span>
           </div>
           
           {/* Headline */}
-          <h1 className="text-4xl md:text-6xl lg:text-7xl font-black tracking-tight text-white leading-[1.1] drop-shadow-lg">
+          <h1 className="text-3xl md:text-5xl font-black tracking-tight text-white leading-tight drop-shadow-lg">
             Đầu tư thông minh <br className="hidden md:block" />
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-200 via-white to-blue-200">
               An toàn pháp lý
             </span>
           </h1>
           
-          <p className="text-lg md:text-xl text-slate-300 max-w-2xl mx-auto leading-relaxed font-light">
+          <p className="text-base md:text-lg text-slate-300 max-w-xl mx-auto leading-relaxed font-light">
             Phân tích chuyên sâu, kiểm tra pháp lý và dự báo giá chính xác cho hơn <span className="text-white font-semibold">{stats.total}+</span> dự án.
           </p>
 
-          {/* Search Bar - Floating */}
-          <div className="max-w-2xl mx-auto mt-8">
+          {/* Compact Search Bar */}
+          <div className="max-w-xl mx-auto mt-6">
             <div className="relative group">
-              {/* Glow Effect */}
-              <div className="absolute -inset-0.5 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full blur opacity-30 group-hover:opacity-60 transition duration-500"></div>
-              
-              <div className="relative flex items-center w-full h-16 rounded-full bg-white shadow-2xl overflow-hidden pl-6 pr-2">
-                <Search className="h-6 w-6 text-slate-400 shrink-0 mr-3" />
+              <div className="absolute -inset-0.5 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full blur opacity-20 group-hover:opacity-40 transition duration-500"></div>
+              <div className="relative flex items-center w-full h-12 rounded-full bg-white dark:bg-slate-800 shadow-lg overflow-hidden pl-5 pr-1.5">
+                <Search className="h-5 w-5 text-slate-400 shrink-0 mr-3" />
                 <input
-                  className="peer h-full w-full outline-none text-lg text-slate-900 placeholder:text-slate-400 bg-transparent"
+                  className="peer h-full w-full outline-none text-base text-slate-900 dark:text-white placeholder:text-slate-400 bg-transparent"
                   type="text"
-                  placeholder="Tìm dự án, khu vực, chủ đầu tư..."
+                  placeholder="Tìm dự án, khu vực..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   onKeyDown={(e) => e.key === "Enter" && handleSearch()}
                 />
                 <Button 
                   onClick={handleSearch} 
-                  size="lg" 
-                  className="h-12 px-8 rounded-full font-bold bg-blue-600 hover:bg-blue-700 text-white shadow-md transition-all hover:scale-105 shrink-0"
+                  size="sm" 
+                  className="h-9 px-6 rounded-full font-bold bg-blue-600 hover:bg-blue-700 text-white shadow-md transition-all hover:scale-105 shrink-0 text-sm"
                 >
                   Tìm kiếm
                 </Button>
@@ -127,9 +125,9 @@ const Home = () => {
             </div>
             
             {/* Quick Tags */}
-            <div className="flex flex-wrap justify-center gap-x-4 gap-y-2 mt-6 text-sm text-slate-400">
-              <span className="opacity-70">Phổ biến:</span>
-              {['Vinhomes', 'Masterise', 'Thủ Thiêm', 'Căn hộ Quận 9'].map(tag => (
+            <div className="flex flex-wrap justify-center gap-x-3 gap-y-2 mt-4 text-xs text-slate-400">
+              <span className="opacity-70">Gợi ý:</span>
+              {['Vinhomes', 'Masterise', 'Thủ Thiêm', 'Quận 9'].map(tag => (
                 <span 
                   key={tag} 
                   className="cursor-pointer text-slate-300 hover:text-white hover:underline transition-colors"
@@ -143,19 +141,19 @@ const Home = () => {
         </div>
       </div>
 
-      {/* Quick Stats */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 -mt-8 relative z-20 px-4 max-w-6xl mx-auto">
+      {/* Quick Stats - Smaller & Tighter */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 -mt-6 relative z-20 px-4 max-w-5xl mx-auto">
         {[
           { label: "Dự án theo dõi", value: stats.total, icon: Building2, color: "text-blue-600", bg: "bg-blue-50 dark:bg-slate-800" },
           { label: "Pháp lý an toàn", value: stats.goodLegal, icon: Shield, color: "text-emerald-600", bg: "bg-emerald-50 dark:bg-slate-800" },
           { label: "Điểm pháp lý TB", value: stats.avgLegal, icon: Star, color: "text-amber-500", bg: "bg-amber-50 dark:bg-slate-800" },
           { label: "Tỷ lệ an toàn", value: `${stats.safetyRate}%`, icon: Award, color: "text-purple-600", bg: "bg-purple-50 dark:bg-slate-800" },
         ].map((stat, index) => (
-          <Card key={index} className={`border-0 shadow-lg hover:shadow-xl transition-all duration-300 backdrop-blur-sm ${stat.bg}`}>
-            <CardContent className="p-5 flex flex-col items-center justify-center text-center">
-              <stat.icon className={`w-8 h-8 mb-2 ${stat.color}`} />
-              <div className="text-2xl font-black text-slate-900 dark:text-white tracking-tight">{stat.value}</div>
-              <div className="text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wide">{stat.label}</div>
+          <Card key={index} className={`border-0 shadow-md hover:shadow-lg transition-all duration-300 backdrop-blur-sm ${stat.bg}`}>
+            <CardContent className="p-4 flex flex-col items-center justify-center text-center">
+              <stat.icon className={`w-5 h-5 mb-1.5 ${stat.color} stroke-[1.5px]`} />
+              <div className="text-xl font-bold text-slate-900 dark:text-white tracking-tight">{stat.value}</div>
+              <div className="text-[10px] font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wide">{stat.label}</div>
             </CardContent>
           </Card>
         ))}
@@ -164,58 +162,58 @@ const Home = () => {
       {/* Quick Tools Section */}
       <div className="px-4">
         <div className="max-w-6xl mx-auto">
-          <h2 className="text-2xl font-bold text-slate-900 dark:text-white mb-6 flex items-center gap-2">
-            <Sparkles className="w-6 h-6 text-primary" />
+          <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-5 flex items-center gap-2">
+            <Sparkles className="w-5 h-5 text-primary stroke-[1.5px]" />
             Công cụ đầu tư
           </h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div 
               onClick={() => handleQuickAction('search')}
-              className="group relative overflow-hidden rounded-2xl p-8 bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 shadow-sm hover:shadow-xl transition-all cursor-pointer"
+              className="group relative overflow-hidden rounded-xl p-6 bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 shadow-sm hover:shadow-md transition-all cursor-pointer"
             >
-              <div className="absolute top-0 right-0 w-32 h-32 bg-blue-50 dark:bg-blue-900/20 rounded-bl-full -mr-8 -mt-8 transition-transform group-hover:scale-110"></div>
+              <div className="absolute top-0 right-0 w-24 h-24 bg-blue-50 dark:bg-blue-900/20 rounded-bl-full -mr-6 -mt-6 transition-transform group-hover:scale-110"></div>
               <div className="relative z-10">
-                <div className="w-12 h-12 bg-blue-100 dark:bg-blue-900/50 text-blue-600 dark:text-blue-400 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
-                  <Search className="w-6 h-6" />
+                <div className="w-10 h-10 bg-blue-50 dark:bg-blue-900/50 text-blue-600 dark:text-blue-400 rounded-lg flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                  <Search className="w-5 h-5 stroke-[1.5px]" />
                 </div>
-                <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-2">Tìm kiếm thông minh</h3>
-                <p className="text-slate-500 dark:text-slate-400 mb-4">Lọc dự án theo khoảng giá, khu vực, pháp lý và chủ đầu tư uy tín.</p>
-                <div className="flex items-center text-blue-600 dark:text-blue-400 font-semibold group-hover:translate-x-2 transition-transform">
-                  Khám phá ngay <ArrowRight className="w-4 h-4 ml-2" />
+                <h3 className="text-base font-bold text-slate-900 dark:text-white mb-1">Tìm kiếm thông minh</h3>
+                <p className="text-sm text-slate-500 dark:text-slate-400 mb-3 line-clamp-2">Lọc dự án theo khoảng giá, khu vực, pháp lý và chủ đầu tư uy tín.</p>
+                <div className="flex items-center text-sm text-blue-600 dark:text-blue-400 font-semibold group-hover:translate-x-1 transition-transform">
+                  Khám phá ngay <ArrowRight className="w-3.5 h-3.5 ml-1.5" />
                 </div>
               </div>
             </div>
 
             <div 
               onClick={() => handleQuickAction('calculator')}
-              className="group relative overflow-hidden rounded-2xl p-8 bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 shadow-sm hover:shadow-xl transition-all cursor-pointer"
+              className="group relative overflow-hidden rounded-xl p-6 bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 shadow-sm hover:shadow-md transition-all cursor-pointer"
             >
-              <div className="absolute top-0 right-0 w-32 h-32 bg-amber-50 dark:bg-amber-900/20 rounded-bl-full -mr-8 -mt-8 transition-transform group-hover:scale-110"></div>
+              <div className="absolute top-0 right-0 w-24 h-24 bg-amber-50 dark:bg-amber-900/20 rounded-bl-full -mr-6 -mt-6 transition-transform group-hover:scale-110"></div>
               <div className="relative z-10">
-                <div className="w-12 h-12 bg-amber-100 dark:bg-amber-900/50 text-amber-600 dark:text-amber-400 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
-                  <TrendingUp className="w-6 h-6" />
+                <div className="w-10 h-10 bg-amber-50 dark:bg-amber-900/50 text-amber-600 dark:text-amber-400 rounded-lg flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                  <TrendingUp className="w-5 h-5 stroke-[1.5px]" />
                 </div>
-                <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-2">Tính toán dòng tiền</h3>
-                <p className="text-slate-500 dark:text-slate-400 mb-4">Dự phóng lợi nhuận, tính lịch trả nợ và phân tích hiệu quả đầu tư.</p>
-                <div className="flex items-center text-amber-600 dark:text-amber-400 font-semibold group-hover:translate-x-2 transition-transform">
-                  Tính ngay <ArrowRight className="w-4 h-4 ml-2" />
+                <h3 className="text-base font-bold text-slate-900 dark:text-white mb-1">Tính toán dòng tiền</h3>
+                <p className="text-sm text-slate-500 dark:text-slate-400 mb-3 line-clamp-2">Dự phóng lợi nhuận, tính lịch trả nợ và phân tích hiệu quả đầu tư.</p>
+                <div className="flex items-center text-sm text-amber-600 dark:text-amber-400 font-semibold group-hover:translate-x-1 transition-transform">
+                  Tính ngay <ArrowRight className="w-3.5 h-3.5 ml-1.5" />
                 </div>
               </div>
             </div>
 
             <div 
               onClick={() => handleQuickAction('market')}
-              className="group relative overflow-hidden rounded-2xl p-8 bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 shadow-sm hover:shadow-xl transition-all cursor-pointer"
+              className="group relative overflow-hidden rounded-xl p-6 bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 shadow-sm hover:shadow-md transition-all cursor-pointer"
             >
-              <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-50 dark:bg-emerald-900/20 rounded-bl-full -mr-8 -mt-8 transition-transform group-hover:scale-110"></div>
+              <div className="absolute top-0 right-0 w-24 h-24 bg-emerald-50 dark:bg-emerald-900/20 rounded-bl-full -mr-6 -mt-6 transition-transform group-hover:scale-110"></div>
               <div className="relative z-10">
-                <div className="w-12 h-12 bg-emerald-100 dark:bg-emerald-900/50 text-emerald-600 dark:text-emerald-400 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
-                  <BarChart3 className="w-6 h-6" />
+                <div className="w-10 h-10 bg-emerald-50 dark:bg-emerald-900/50 text-emerald-600 dark:text-emerald-400 rounded-lg flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                  <BarChart3 className="w-5 h-5 stroke-[1.5px]" />
                 </div>
-                <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-2">Dữ liệu thị trường</h3>
-                <p className="text-slate-500 dark:text-slate-400 mb-4">Biểu đồ giá, xu hướng tăng trưởng và phân tích vĩ mô.</p>
-                <div className="flex items-center text-emerald-600 dark:text-emerald-400 font-semibold group-hover:translate-x-2 transition-transform">
-                  Xem dữ liệu <ArrowRight className="w-4 h-4 ml-2" />
+                <h3 className="text-base font-bold text-slate-900 dark:text-white mb-1">Dữ liệu thị trường</h3>
+                <p className="text-sm text-slate-500 dark:text-slate-400 mb-3 line-clamp-2">Biểu đồ giá, xu hướng tăng trưởng và phân tích vĩ mô.</p>
+                <div className="flex items-center text-sm text-emerald-600 dark:text-emerald-400 font-semibold group-hover:translate-x-1 transition-transform">
+                  Xem dữ liệu <ArrowRight className="w-3.5 h-3.5 ml-1.5" />
                 </div>
               </div>
             </div>
@@ -224,19 +222,19 @@ const Home = () => {
       </div>
 
       {/* Featured Projects Section */}
-      <div className="px-4 bg-slate-50 dark:bg-transparent py-16 -mb-10">
+      <div className="px-4 bg-slate-50 dark:bg-transparent py-12 -mb-10">
         <div className="max-w-6xl mx-auto">
-          <div className="flex items-center justify-between mb-8">
+          <div className="flex items-center justify-between mb-6">
             <div>
-              <h2 className="text-3xl font-bold text-slate-900 dark:text-white mb-2">Dự án nổi bật</h2>
-              <p className="text-slate-500 dark:text-slate-400">Các dự án có pháp lý tốt và tiềm năng tăng giá cao nhất</p>
+              <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-1">Dự án nổi bật</h2>
+              <p className="text-sm text-slate-500 dark:text-slate-400">Các dự án có pháp lý tốt và tiềm năng tăng giá cao nhất</p>
             </div>
             <Button 
               variant="ghost" 
               onClick={() => handleQuickAction('projects')}
-              className="text-primary hover:bg-primary/10 font-semibold"
+              className="text-primary hover:bg-primary/10 font-semibold text-sm"
             >
-              Xem tất cả <ArrowRight className="w-4 h-4 ml-2" />
+              Xem tất cả <ArrowRight className="w-3.5 h-3.5 ml-1.5" />
             </Button>
           </div>
           

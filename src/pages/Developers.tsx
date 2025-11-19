@@ -85,21 +85,21 @@ const Developers = () => {
   const getStatusBadge = (legalScore: number) => {
     if (legalScore >= 8) {
       return (
-        <Badge className="bg-success text-white border-0 flex items-center gap-1 shadow-md">
+        <Badge className="bg-success text-white border-0 flex items-center gap-1 shadow-md hover:bg-success/90">
           <CheckCircle2 className="w-3 h-3" />
           Uy tín cao
         </Badge>
       );
     } else if (legalScore >= 6) {
       return (
-        <Badge className="bg-warning text-white border-0 flex items-center gap-1 shadow-md">
+        <Badge className="bg-warning text-white border-0 flex items-center gap-1 shadow-md hover:bg-warning/90">
           <AlertCircle className="w-3 h-3" />
           Trung bình
         </Badge>
       );
     } else {
       return (
-        <Badge className="bg-destructive text-white border-0 flex items-center gap-1 shadow-md">
+        <Badge className="bg-destructive text-white border-0 flex items-center gap-1 shadow-md hover:bg-destructive/90">
           <XCircle className="w-3 h-3" />
           Cần thận trọng
         </Badge>
@@ -110,7 +110,7 @@ const Developers = () => {
   const content = (
     <div className="space-y-8">
       {/* Hero Header */}
-      <div className="relative overflow-hidden rounded-3xl bg-primary p-10 md:p-16 shadow-2xl">
+      <div className="relative overflow-hidden rounded-3xl bg-primary p-10 md:p-16 shadow-2xl dark:shadow-primary/10">
         <div className="absolute top-0 right-0 w-96 h-96 bg-white/5 rounded-full blur-3xl"></div>
         <div className="absolute bottom-0 left-0 w-80 h-80 bg-white/5 rounded-full blur-3xl"></div>
         
@@ -151,7 +151,7 @@ const Developers = () => {
       </div>
 
       {/* Filters */}
-      <Card className="border-0 shadow-xl rounded-2xl bg-white">
+      <Card className="border border-border shadow-xl rounded-2xl bg-card">
         <CardContent className="p-6 md:p-8">
           <div className="space-y-6">
             {/* Search */}
@@ -161,14 +161,14 @@ const Developers = () => {
                 placeholder="Tìm kiếm chủ đầu tư theo tên, mô tả, chuyên môn..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-12 h-14 rounded-xl text-base border-2 focus:border-primary bg-slate-50"
+                className="pl-12 h-14 rounded-xl text-base border-2 focus:border-primary bg-background"
               />
             </div>
 
             {/* Filters Row */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <Select value={sortBy} onValueChange={setSortBy}>
-                <SelectTrigger className="h-12 rounded-xl border-2 bg-slate-50">
+                <SelectTrigger className="h-12 rounded-xl border-2 bg-background">
                   <div className="flex items-center gap-2">
                     <ArrowUpDown className="w-4 h-4 text-primary" />
                     <SelectValue placeholder="Sắp xếp theo" />
@@ -183,7 +183,7 @@ const Developers = () => {
               </Select>
 
               <Select value={filterByStatus} onValueChange={setFilterByStatus}>
-                <SelectTrigger className="h-12 rounded-xl border-2 bg-slate-50">
+                <SelectTrigger className="h-12 rounded-xl border-2 bg-background">
                   <div className="flex items-center gap-2">
                     <Filter className="w-4 h-4 text-primary" />
                     <SelectValue placeholder="Lọc theo uy tín" />
@@ -198,7 +198,7 @@ const Developers = () => {
               </Select>
 
               <Select value={filterBySpecialty} onValueChange={setFilterBySpecialty}>
-                <SelectTrigger className="h-12 rounded-xl border-2 bg-slate-50">
+                <SelectTrigger className="h-12 rounded-xl border-2 bg-background">
                   <div className="flex items-center gap-2">
                     <Building2 className="w-4 h-4 text-primary" />
                     <SelectValue placeholder="Lọc theo chuyên môn" />
@@ -269,7 +269,7 @@ const Developers = () => {
             return (
               <Card 
                 key={developer.id} 
-                className="border-2 border-amber-200 bg-gradient-to-br from-amber-50 to-orange-50 shadow-lg group cursor-pointer hover:shadow-2xl hover:border-primary transition-all duration-300 rounded-2xl overflow-hidden"
+                className="border border-border/50 bg-card shadow-lg group cursor-pointer hover:shadow-2xl hover:border-primary/50 transition-all duration-300 rounded-2xl overflow-hidden"
                 onClick={() => handleDeveloperClick(developer)}
               >
                 <CardContent className="p-6 md:p-8">
@@ -277,14 +277,14 @@ const Developers = () => {
                     {/* Avatar Section */}
                     <div className="flex-shrink-0">
                       <div className="relative">
-                        <Avatar className="w-24 h-24 md:w-32 md:h-32 ring-4 ring-slate-100 shadow-xl">
+                        <Avatar className="w-24 h-24 md:w-32 md:h-32 ring-4 ring-muted shadow-xl">
                           <AvatarImage src={developer.logo} alt={developer.name} />
                           <AvatarFallback className="text-3xl font-black bg-primary text-white">
                             {developer.name.substring(0, 2).toUpperCase()}
                           </AvatarFallback>
                         </Avatar>
                         {developer.avgLegalScore >= 8 && (
-                          <div className="absolute -bottom-2 -right-2 bg-success text-white rounded-full p-2.5 shadow-lg ring-4 ring-white">
+                          <div className="absolute -bottom-2 -right-2 bg-success text-white rounded-full p-2.5 shadow-lg ring-4 ring-card">
                             <Award className="w-5 h-5" />
                           </div>
                         )}
@@ -309,7 +309,7 @@ const Developers = () => {
                       {/* Contact Info */}
                       <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                         {developer.hotline && (
-                          <div className="flex items-center gap-3 p-3.5 bg-slate-50 rounded-xl border border-slate-200">
+                          <div className="flex items-center gap-3 p-3.5 bg-muted/30 rounded-xl border border-border/50">
                             <div className="flex-shrink-0 w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center">
                               <Phone className="w-5 h-5 text-primary" />
                             </div>
@@ -317,7 +317,7 @@ const Developers = () => {
                           </div>
                         )}
                         {developer.email && (
-                          <div className="flex items-center gap-3 p-3.5 bg-slate-50 rounded-xl border border-slate-200">
+                          <div className="flex items-center gap-3 p-3.5 bg-muted/30 rounded-xl border border-border/50">
                             <div className="flex-shrink-0 w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center">
                               <Mail className="w-5 h-5 text-primary" />
                             </div>
@@ -325,7 +325,7 @@ const Developers = () => {
                           </div>
                         )}
                         {developer.website && (
-                          <div className="flex items-center gap-3 p-3.5 bg-slate-50 rounded-xl border border-slate-200">
+                          <div className="flex items-center gap-3 p-3.5 bg-muted/30 rounded-xl border border-border/50">
                             <div className="flex-shrink-0 w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center">
                               <Globe className="w-5 h-5 text-primary" />
                             </div>
@@ -338,12 +338,12 @@ const Developers = () => {
                       {developer.specialties && developer.specialties.length > 0 && (
                         <div className="flex flex-wrap gap-2">
                           {developer.specialties.slice(0, 4).map((specialty, index) => (
-                            <Badge key={index} variant="outline" className="text-xs bg-slate-50 border-slate-300 rounded-lg px-3 py-1.5 font-semibold">
+                            <Badge key={index} variant="outline" className="text-xs bg-muted/30 border-border rounded-lg px-3 py-1.5 font-semibold">
                               {specialty}
                             </Badge>
                           ))}
                           {developer.specialties.length > 4 && (
-                            <Badge variant="outline" className="text-xs bg-slate-100 border-slate-300 rounded-lg px-3 py-1.5 font-semibold">
+                            <Badge variant="outline" className="text-xs bg-muted/30 border-border rounded-lg px-3 py-1.5 font-semibold">
                               +{developer.specialties.length - 4} khác
                             </Badge>
                           )}
@@ -352,20 +352,20 @@ const Developers = () => {
                     </div>
                     
                     {/* Stats Section */}
-                    <div className="flex md:flex-col gap-3 md:w-52 border-t md:border-t-0 md:border-l border-slate-200 pt-4 md:pt-0 md:pl-6">
-                      <div className="flex-1 text-center p-4 bg-blue-50 border border-blue-200 rounded-xl">
+                    <div className="flex md:flex-col gap-3 md:w-52 border-t md:border-t-0 md:border-l border-border pt-4 md:pt-0 md:pl-6">
+                      <div className="flex-1 text-center p-4 bg-blue-50/50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-900/50 rounded-xl">
                         <div className="text-3xl font-black text-primary mb-1">{developer.totalProjects}</div>
                         <div className="text-xs text-muted-foreground font-semibold uppercase tracking-wide">Dự án</div>
                       </div>
-                      <div className="flex-1 text-center p-4 bg-green-50 border border-green-200 rounded-xl">
+                      <div className="flex-1 text-center p-4 bg-green-50/50 dark:bg-green-950/30 border border-green-200 dark:border-green-900/50 rounded-xl">
                         <div className="text-3xl font-black text-success mb-1">{stats.totalUnits.toLocaleString()}</div>
                         <div className="text-xs text-muted-foreground font-semibold uppercase tracking-wide">Căn hộ</div>
                       </div>
-                      <div className="flex-1 text-center p-4 bg-amber-50 border border-amber-200 rounded-xl">
+                      <div className="flex-1 text-center p-4 bg-amber-50/50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-900/50 rounded-xl">
                         <div className="text-3xl font-black text-warning mb-1">{developer.avgLegalScore}<span className="text-lg">/10</span></div>
                         <div className="text-xs text-muted-foreground font-semibold uppercase tracking-wide">Pháp lý</div>
                       </div>
-                      <div className="flex-1 text-center p-4 bg-purple-50 border border-purple-200 rounded-xl">
+                      <div className="flex-1 text-center p-4 bg-purple-50/50 dark:bg-purple-950/30 border border-purple-200 dark:border-purple-900/50 rounded-xl">
                         <div className="text-3xl font-black text-accent mb-1">{developer.avgRating}<span className="text-lg">/5</span></div>
                         <div className="text-xs text-muted-foreground font-semibold uppercase tracking-wide">Rating</div>
                       </div>
@@ -376,13 +376,13 @@ const Developers = () => {
             );
           })
         ) : (
-          <Card className="border-0 shadow-xl rounded-2xl bg-white">
+          <Card className="border border-border shadow-xl rounded-2xl bg-card">
             <CardContent className="p-12 text-center">
               <div className="max-w-md mx-auto space-y-6">
                 <div className="w-24 h-24 bg-primary/10 rounded-3xl flex items-center justify-center mx-auto">
                   <Users className="w-12 h-12 text-primary" />
                 </div>
-                <h3 className="text-2xl font-black">Không tìm thấy chủ đầu tư</h3>
+                <h3 className="text-2xl font-black text-foreground">Không tìm thấy chủ đầu tư</h3>
                 <p className="text-muted-foreground text-lg">
                   Không có chủ đầu tư nào phù hợp với tiêu chí tìm kiếm của bạn
                 </p>
@@ -412,7 +412,7 @@ const Developers = () => {
           description="Khám phá thông tin chi tiết về các chủ đầu tư uy tín trong thị trường bất động sản Việt Nam. Xem điểm pháp lý, dự án và đánh giá."
           keywords="chủ đầu tư, developer, bất động sản, pháp lý, dự án"
         />
-        <div className="min-h-screen bg-slate-50 pb-20">
+        <div className="min-h-screen bg-background pb-20">
           <div className="p-4">
             {content}
           </div>

@@ -70,9 +70,9 @@ const Calculator = () => {
 
   const content = (
     <div className="space-y-6">
-        <Card className="rounded-2xl shadow-lg border-0 bg-white">
-          <CardHeader className="bg-gradient-to-r from-slate-50 to-blue-50/30 rounded-t-2xl border-b border-slate-200/50 pb-4">
-            <CardTitle className="text-lg flex items-center gap-2 text-slate-900">
+        <Card className="rounded-2xl shadow-lg border-0 bg-card">
+          <CardHeader className="bg-gradient-to-r from-slate-50 to-blue-50/30 dark:from-slate-900 dark:to-blue-900/20 rounded-t-2xl border-b border-border/50 pb-4">
+            <CardTitle className="text-lg flex items-center gap-2 text-foreground">
               <Sparkles className="w-5 h-5 text-primary" />
               Thông tin căn hộ & tài chính
             </CardTitle>
@@ -80,21 +80,21 @@ const Calculator = () => {
           <CardContent className="p-6 space-y-5">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
               <div className="space-y-2">
-                <Label htmlFor="propertyPrice" className="text-sm font-semibold text-slate-700">Giá trị căn hộ (VNĐ)</Label>
+                <Label htmlFor="propertyPrice" className="text-sm font-semibold text-muted-foreground">Giá trị căn hộ (VNĐ)</Label>
                 <Input
                   id="propertyPrice"
                   type="number"
                   placeholder="3000000000"
                   value={formData.propertyPrice}
                   onChange={(e) => setFormData({ ...formData, propertyPrice: e.target.value })}
-                  className="h-12 rounded-xl border-2 focus:border-primary"
+                  className="h-12 rounded-xl border-2 focus:border-primary bg-background"
                 />
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="downPayment" className="text-sm font-semibold text-slate-700">Trả trước (%)</Label>
+                <Label htmlFor="downPayment" className="text-sm font-semibold text-muted-foreground">Trả trước (%)</Label>
                 <Select value={formData.downPayment} onValueChange={(value) => setFormData({ ...formData, downPayment: value })}>
-                  <SelectTrigger className="h-12 rounded-xl border-2">
+                  <SelectTrigger className="h-12 rounded-xl border-2 bg-background">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent className="rounded-xl">
@@ -107,21 +107,21 @@ const Calculator = () => {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="interestRate" className="text-sm font-semibold text-slate-700">Lãi suất (%/năm)</Label>
+                <Label htmlFor="interestRate" className="text-sm font-semibold text-muted-foreground">Lãi suất (%/năm)</Label>
                 <Input
                   id="interestRate"
                   type="number"
                   step="0.1"
                   value={formData.interestRate}
                   onChange={(e) => setFormData({ ...formData, interestRate: e.target.value })}
-                  className="h-12 rounded-xl border-2 focus:border-primary"
+                  className="h-12 rounded-xl border-2 focus:border-primary bg-background"
                 />
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="loanTerm" className="text-sm font-semibold text-slate-700">Thời hạn vay (năm)</Label>
+                <Label htmlFor="loanTerm" className="text-sm font-semibold text-muted-foreground">Thời hạn vay (năm)</Label>
                 <Select value={formData.loanTerm} onValueChange={(value) => setFormData({ ...formData, loanTerm: value })}>
-                  <SelectTrigger className="h-12 rounded-xl border-2">
+                  <SelectTrigger className="h-12 rounded-xl border-2 bg-background">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent className="rounded-xl">
@@ -135,21 +135,21 @@ const Calculator = () => {
               </div>
 
               <div className="space-y-2 md:col-span-2">
-                <Label htmlFor="monthlyIncome" className="text-sm font-semibold text-slate-700">Thu nhập hàng tháng (VNĐ)</Label>
+                <Label htmlFor="monthlyIncome" className="text-sm font-semibold text-muted-foreground">Thu nhập hàng tháng (VNĐ)</Label>
                 <Input
                   id="monthlyIncome"
                   type="number"
                   placeholder="50000000"
                   value={formData.monthlyIncome}
                   onChange={(e) => setFormData({ ...formData, monthlyIncome: e.target.value })}
-                  className="h-12 rounded-xl border-2 focus:border-primary"
+                  className="h-12 rounded-xl border-2 focus:border-primary bg-background"
                 />
               </div>
             </div>
 
             <Button 
               onClick={calculateLoan} 
-              className="w-full h-14 text-base font-bold rounded-xl shadow-lg hover:shadow-xl transition-all" 
+              className="w-full h-14 text-base font-bold rounded-xl shadow-lg hover:shadow-xl transition-all btn-primary" 
               disabled={!formData.propertyPrice}
             >
               <CalculatorIcon className="w-5 h-5 mr-2" />
@@ -161,10 +161,10 @@ const Calculator = () => {
         {results && (
           <div className="space-y-6 animate-fade-in">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <Card className="rounded-2xl shadow-lg border-0 bg-gradient-to-br from-blue-50 to-indigo-50">
+              <Card className="rounded-2xl shadow-lg border-0 bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-950/40 dark:to-indigo-950/40">
                 <CardContent className="p-6">
                   <div className="text-center">
-                    <div className="text-sm text-slate-600 mb-2 font-medium">Trả hàng tháng</div>
+                    <div className="text-sm text-muted-foreground mb-2 font-medium">Trả hàng tháng</div>
                     <div className="text-3xl font-bold text-primary">
                       {formatCurrency(results.monthlyPayment)}
                     </div>
@@ -172,11 +172,11 @@ const Calculator = () => {
                 </CardContent>
               </Card>
 
-              <Card className="rounded-2xl shadow-lg border-0 bg-gradient-to-br from-emerald-50 to-teal-50">
+              <Card className="rounded-2xl shadow-lg border-0 bg-gradient-to-br from-emerald-50 to-teal-50 dark:from-emerald-950/40 dark:to-teal-950/40">
                 <CardContent className="p-6">
                   <div className="text-center">
-                    <div className="text-sm text-slate-600 mb-2 font-medium">Trả trước</div>
-                    <div className="text-3xl font-bold text-emerald-600">
+                    <div className="text-sm text-muted-foreground mb-2 font-medium">Trả trước</div>
+                    <div className="text-3xl font-bold text-emerald-600 dark:text-emerald-400">
                       {formatCurrency(results.downPaymentAmount)}
                     </div>
                   </div>
@@ -184,9 +184,9 @@ const Calculator = () => {
               </Card>
             </div>
 
-            <Card className="rounded-2xl shadow-lg border-0 bg-white">
-              <CardHeader className="bg-gradient-to-r from-slate-50 to-blue-50/30 rounded-t-2xl border-b border-slate-200/50 pb-4">
-                <CardTitle className="flex items-center gap-2 text-base text-slate-900">
+            <Card className="rounded-2xl shadow-lg border-0 bg-card">
+              <CardHeader className="bg-gradient-to-r from-slate-50 to-blue-50/30 dark:from-slate-900 dark:to-blue-900/20 rounded-t-2xl border-b border-border/50 pb-4">
+                <CardTitle className="flex items-center gap-2 text-base text-foreground">
                   <div className="p-1.5 bg-primary/10 rounded-xl">
                     <TrendingUp className="w-4 h-4 text-primary" />
                   </div>
@@ -195,31 +195,31 @@ const Calculator = () => {
               </CardHeader>
               <CardContent className="p-6 space-y-4">
                 <div className="flex justify-between text-base">
-                  <span className="text-slate-600">Số tiền vay:</span>
-                  <span className="font-bold text-slate-900">{formatCurrency(results.loanAmount)}</span>
+                  <span className="text-muted-foreground">Số tiền vay:</span>
+                  <span className="font-bold text-foreground">{formatCurrency(results.loanAmount)}</span>
                 </div>
                 <div className="flex justify-between text-base">
-                  <span className="text-slate-600">Tổng tiền phải trả:</span>
-                  <span className="font-bold text-slate-900">{formatCurrency(results.totalPayment)}</span>
+                  <span className="text-muted-foreground">Tổng tiền phải trả:</span>
+                  <span className="font-bold text-foreground">{formatCurrency(results.totalPayment)}</span>
                 </div>
                 <div className="flex justify-between text-base">
-                  <span className="text-slate-600">Tổng tiền lãi:</span>
-                  <span className="font-bold text-amber-600">{formatCurrency(results.totalInterest)}</span>
+                  <span className="text-muted-foreground">Tổng tiền lãi:</span>
+                  <span className="font-bold text-amber-600 dark:text-amber-500">{formatCurrency(results.totalInterest)}</span>
                 </div>
                 
                 {formData.monthlyIncome && (
-                  <div className="mt-4 p-4 bg-gradient-to-br from-slate-50 to-blue-50 rounded-xl">
+                  <div className="mt-4 p-4 bg-gradient-to-br from-slate-50 to-blue-50 dark:from-slate-900 dark:to-blue-900/30 rounded-xl">
                     <div className="flex justify-between text-base mb-2">
-                      <span className="text-slate-700 font-medium">Tỷ lệ trả nợ/thu nhập:</span>
+                      <span className="text-muted-foreground font-medium">Tỷ lệ trả nợ/thu nhập:</span>
                       <span className={`font-bold ${
                         (results.monthlyPayment / parseFloat(formData.monthlyIncome)) > 0.5 
-                          ? "text-red-600" 
-                          : "text-emerald-600"
+                          ? "text-red-600 dark:text-red-400" 
+                          : "text-emerald-600 dark:text-emerald-400"
                       }`}>
                         {((results.monthlyPayment / parseFloat(formData.monthlyIncome)) * 100).toFixed(1)}%
                       </span>
                     </div>
-                    <div className="text-sm text-slate-600">
+                    <div className="text-sm text-muted-foreground">
                       Khuyến nghị: Dưới 50% thu nhập
                     </div>
                   </div>
@@ -227,7 +227,7 @@ const Calculator = () => {
               </CardContent>
             </Card>
 
-            <Button variant="outline" className="w-full h-12 rounded-xl border-2 hover:bg-slate-50 transition-all">
+            <Button variant="outline" className="w-full h-12 rounded-xl border-2 hover:bg-accent transition-all">
               <Download className="w-4 h-4 mr-2" />
               Tải xuống bảng tính
             </Button>
@@ -238,16 +238,16 @@ const Calculator = () => {
 
   if (isMobile) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-slate-100 pb-20">
-        <div className="bg-white/80 backdrop-blur-xl border-b border-slate-200/50 shadow-sm">
+      <div className="min-h-screen bg-background pb-20">
+        <div className="bg-card border-b border-border shadow-sm">
           <div className="p-6">
             <div className="flex items-center gap-4">
               <div className="p-3 bg-gradient-to-br from-primary to-accent rounded-2xl shadow-lg">
                 <CalculatorIcon className="w-8 h-8 text-white" />
               </div>
               <div>
-                <h1 className="text-2xl font-bold text-slate-900">Tính toán dòng tiền</h1>
-                <p className="text-slate-600 text-sm mt-1">Tính toán chi phí và khả năng thanh toán</p>
+                <h1 className="text-2xl font-bold text-foreground">Tính toán dòng tiền</h1>
+                <p className="text-muted-foreground text-sm mt-1">Tính toán chi phí và khả năng thanh toán</p>
               </div>
             </div>
           </div>

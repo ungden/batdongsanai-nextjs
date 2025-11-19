@@ -307,7 +307,7 @@ const MarketOverview = () => {
                               setSortBy("pricePerSqm");
                               setSortOrder(sortOrder === "desc" ? "asc" : "desc");
                             }}
-                            className="h-auto p-0 hover:bg-transparent font-bold"
+                            className="h-auto p-0 hover:bg-transparent font-bold text-foreground"
                           >
                             Giá/m²
                             {sortBy === "pricePerSqm" && (
@@ -326,7 +326,7 @@ const MarketOverview = () => {
                               setSortBy("legalScore");
                               setSortOrder(sortOrder === "desc" ? "asc" : "desc");
                             }}
-                            className="h-auto p-0 hover:bg-transparent font-bold"
+                            className="h-auto p-0 hover:bg-transparent font-bold text-foreground"
                           >
                             Đánh giá
                             {sortBy === "legalScore" && (

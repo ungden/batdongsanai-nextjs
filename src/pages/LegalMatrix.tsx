@@ -46,10 +46,10 @@ const LegalMatrix = () => {
   ];
 
   const legalCategories = [
-    { id: "licenses", name: "Giấy phép & Pháp lý", icon: Gavel, color: "text-blue-600" },
-    { id: "financial", name: "Tài chính & Bảo lãnh", icon: DollarSign, color: "text-green-600" },
-    { id: "technical", name: "Kỹ thuật & Xây dựng", icon: Building, color: "text-orange-600" },
-    { id: "legal", name: "Tuân thủ pháp luật", icon: Shield, color: "text-purple-600" },
+    { id: "licenses", name: "Giấy phép & Pháp lý", icon: Gavel, color: "text-blue-600 dark:text-blue-400" },
+    { id: "financial", name: "Tài chính & Bảo lãnh", icon: DollarSign, color: "text-green-600 dark:text-green-400" },
+    { id: "technical", name: "Kỹ thuật & Xây dựng", icon: Building, color: "text-orange-600 dark:text-orange-400" },
+    { id: "legal", name: "Tuân thủ pháp luật", icon: Shield, color: "text-purple-600 dark:text-purple-400" },
   ];
 
   const legalCriteria = [
@@ -294,11 +294,11 @@ const LegalMatrix = () => {
   const getRiskBadge = (riskLevel: string) => {
     switch (riskLevel) {
       case "low":
-        return <Badge className="bg-success/10 text-success border-success/20">Thấp</Badge>;
+        return <Badge className="bg-success/10 text-success border-success/20 hover:bg-success/20">Thấp</Badge>;
       case "medium":
-        return <Badge className="bg-warning/10 text-warning border-warning/20">Trung bình</Badge>;
+        return <Badge className="bg-warning/10 text-warning border-warning/20 hover:bg-warning/20">Trung bình</Badge>;
       case "high":
-        return <Badge className="bg-destructive/10 text-destructive border-destructive/20">Cao</Badge>;
+        return <Badge className="bg-destructive/10 text-destructive border-destructive/20 hover:bg-destructive/20">Cao</Badge>;
       default:
         return <Badge variant="secondary">Chưa xác định</Badge>;
     }
@@ -594,7 +594,7 @@ const LegalMatrix = () => {
           <Card>
             <CardContent className="p-4">
               <div className="flex items-center justify-between mb-3">
-                <h4 className="font-semibold text-sm">Rủi ro thấp</h4>
+                <h4 className="font-semibold text-sm text-muted-foreground">Rủi ro thấp</h4>
                 <CheckCircle className="w-4 h-4 text-success" />
               </div>
               <div className="text-2xl font-bold text-success">{riskStats.low}</div>
@@ -605,7 +605,7 @@ const LegalMatrix = () => {
           <Card>
             <CardContent className="p-4">
               <div className="flex items-center justify-between mb-3">
-                <h4 className="font-semibold text-sm">Rủi ro trung bình</h4>
+                <h4 className="font-semibold text-sm text-muted-foreground">Rủi ro trung bình</h4>
                 <Clock className="w-4 h-4 text-warning" />
               </div>
               <div className="text-2xl font-bold text-warning">{riskStats.medium}</div>
@@ -616,7 +616,7 @@ const LegalMatrix = () => {
           <Card>
             <CardContent className="p-4">
               <div className="flex items-center justify-between mb-3">
-                <h4 className="font-semibold text-sm">Rủi ro cao</h4>
+                <h4 className="font-semibold text-sm text-muted-foreground">Rủi ro cao</h4>
                 <AlertTriangle className="w-4 h-4 text-destructive" />
               </div>
               <div className="text-2xl font-bold text-destructive">{riskStats.high}</div>
@@ -627,7 +627,7 @@ const LegalMatrix = () => {
           <Card>
             <CardContent className="p-4">
               <div className="flex items-center justify-between mb-3">
-                <h4 className="font-semibold text-sm">Tổng tiêu chí</h4>
+                <h4 className="font-semibold text-sm text-muted-foreground">Tổng tiêu chí</h4>
                 <FileText className="w-4 h-4 text-primary" />
               </div>
               <div className="text-2xl font-bold text-primary">{legalCriteria.length}</div>
@@ -648,7 +648,7 @@ const LegalMatrix = () => {
             ))}
           </TabsList>
 
-          <TabsContent value="all" className="space-y-6">
+          <TabsContent value="all" className="space-y-6 mt-6">
             {/* Category Summary */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
               {categoryStats.map((category) => (
@@ -727,7 +727,7 @@ const LegalMatrix = () => {
 
           {/* Individual Category Tabs */}
           {legalCategories.map((category) => (
-            <TabsContent key={category.id} value={category.id} className="space-y-4">
+            <TabsContent key={category.id} value={category.id} className="space-y-4 mt-6">
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                 {legalCriteria
                   .filter(c => c.category === category.id)

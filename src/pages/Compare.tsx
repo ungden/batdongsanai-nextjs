@@ -70,7 +70,7 @@ const Compare = () => {
         {/* Header */}
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-bold">So sánh ({compareList.length})</h1>
+            <h1 className="text-2xl font-bold text-foreground">So sánh ({compareList.length})</h1>
           </div>
           <div className="flex gap-2">
             <Button variant="ghost" size="sm" onClick={clearCompare} className="text-destructive hover:bg-destructive/10">
@@ -83,15 +83,15 @@ const Compare = () => {
         </div>
 
         {/* Comparison Table Container */}
-        <ScrollArea className="w-full border rounded-xl bg-card shadow-sm flex-1">
+        <ScrollArea className="w-full border border-border rounded-xl bg-card shadow-sm flex-1">
           <div className="min-w-max pb-4">
             {/* Sticky Header Row (Projects) */}
-            <div className="flex sticky top-0 z-10 bg-card shadow-sm">
-              <div className="w-32 sm:w-48 p-4 font-bold bg-muted/5 border-b border-r flex items-center">
+            <div className="flex sticky top-0 z-10 bg-card shadow-sm border-b border-border">
+              <div className="w-32 sm:w-48 p-4 font-bold bg-muted/10 border-r border-border flex items-center text-foreground">
                 Tiêu chí
               </div>
               {compareList.map((project) => (
-                <div key={project.id} className="w-48 sm:w-64 p-3 border-b border-r last:border-r-0 relative group">
+                <div key={project.id} className="w-48 sm:w-64 p-3 border-r border-border last:border-r-0 relative group bg-card">
                   <Button
                     variant="ghost"
                     size="icon"
@@ -110,7 +110,7 @@ const Compare = () => {
                   </div>
                   
                   <h3 
-                    className="font-bold text-sm line-clamp-2 h-10 cursor-pointer hover:text-primary"
+                    className="font-bold text-sm line-clamp-2 h-10 cursor-pointer hover:text-primary text-foreground"
                     onClick={() => navigate(`/projects/${project.id}`)}
                   >
                     {project.name}
@@ -119,7 +119,7 @@ const Compare = () => {
               ))}
               {/* Add Placeholder Slot */}
               {compareList.length < 4 && (
-                <div className="w-48 sm:w-64 p-3 border-b flex flex-col items-center justify-center text-muted-foreground gap-2 cursor-pointer hover:bg-muted/50 transition-colors"
+                <div className="w-48 sm:w-64 p-3 flex flex-col items-center justify-center text-muted-foreground gap-2 cursor-pointer hover:bg-muted/50 transition-colors"
                      onClick={() => navigate('/explore')}>
                   <div className="h-12 w-12 rounded-full border-2 border-dashed border-muted-foreground/30 flex items-center justify-center">
                     <Plus className="h-6 w-6" />
@@ -130,10 +130,10 @@ const Compare = () => {
             </div>
 
             {/* Data Rows */}
-            <div className="divide-y">
+            <div className="divide-y divide-border">
               {comparisonFields.map((field) => (
                 <div key={field.key} className="flex">
-                  <div className="w-32 sm:w-48 p-3 sm:p-4 text-sm font-medium text-muted-foreground bg-muted/5 border-r flex items-center gap-2 sticky left-0">
+                  <div className="w-32 sm:w-48 p-3 sm:p-4 text-sm font-medium text-muted-foreground bg-muted/5 border-r border-border flex items-center gap-2 sticky left-0">
                     <field.icon className="h-4 w-4 shrink-0" />
                     <span className="truncate">{field.label}</span>
                   </div>
@@ -143,11 +143,11 @@ const Compare = () => {
                     const isWinner = field.highlight && val === priceWinner;
                     
                     return (
-                      <div key={project.id} className={`w-48 sm:w-64 p-3 sm:p-4 text-sm border-r flex items-center ${isWinner ? 'bg-green-50/50' : ''}`}>
+                      <div key={project.id} className={`w-48 sm:w-64 p-3 sm:p-4 text-sm border-r border-border flex items-center ${isWinner ? 'bg-green-50/50 dark:bg-green-900/20' : ''}`}>
                         {field.renderBadge && val ? (
                            <Badge variant="secondary" className="font-normal">{field.format(val)}</Badge>
                         ) : (
-                           <span className={isWinner ? 'font-bold text-green-700' : ''}>
+                           <span className={isWinner ? 'font-bold text-green-700 dark:text-green-400' : 'text-foreground'}>
                              {field.format(val)}
                              {isWinner && <Star className="inline-block w-3 h-3 ml-1 fill-current" />}
                            </span>

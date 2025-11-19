@@ -2,81 +2,73 @@
 
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
-import { Building2, TrendingUp, Clock, CheckCircle, BarChart3, Award } from "lucide-react";
+import { Building2, TrendingUp, Clock, RefreshCw, BarChart3 } from "lucide-react";
 
 interface MarketTabsProps {
   activeTab: string;
   onTabChange: (value: string) => void;
   counts: {
     all: number;
-    active: number;
+    selling: number;
+    secondary: number;
     upcoming: number;
-    completed: number;
   };
 }
 
 const MarketTabs = ({ activeTab, onTabChange, counts }: MarketTabsProps) => {
   return (
     <Tabs value={activeTab} onValueChange={onTabChange} className="w-full">
-      <TabsList className="w-full justify-start h-auto p-1 bg-muted/30 rounded-xl border-2 border-border/50">
+      <TabsList className="w-full justify-start h-auto p-1 bg-muted/30 rounded-xl border border-border overflow-x-auto flex-nowrap">
         <TabsTrigger 
           value="all" 
-          className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground rounded-lg px-4 py-2.5 font-semibold text-sm transition-all"
+          className="data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm rounded-lg px-4 py-2 font-semibold text-sm transition-all flex-shrink-0"
         >
-          <Building2 className="w-4 h-4 mr-2" />
-          Tất cả dự án
-          <Badge variant="secondary" className="ml-2 text-xs">
+          <Building2 className="w-4 h-4 mr-2 text-muted-foreground" />
+          Tất cả
+          <Badge variant="secondary" className="ml-2 text-[10px] h-5 px-1.5 bg-muted-foreground/10 text-muted-foreground">
             {counts.all}
           </Badge>
         </TabsTrigger>
 
         <TabsTrigger 
-          value="active" 
-          className="data-[state=active]:bg-success data-[state=active]:text-white rounded-lg px-4 py-2.5 font-semibold text-sm transition-all"
+          value="selling" 
+          className="data-[state=active]:bg-amber-500 data-[state=active]:text-white rounded-lg px-4 py-2 font-semibold text-sm transition-all flex-shrink-0"
         >
           <TrendingUp className="w-4 h-4 mr-2" />
-          Đang mở bán
-          <Badge variant="secondary" className="ml-2 text-xs">
-            {counts.active}
+          Hàng CĐT (Sơ cấp)
+          <Badge variant="secondary" className="ml-2 text-[10px] h-5 px-1.5 bg-white/20 text-white">
+            {counts.selling}
+          </Badge>
+        </TabsTrigger>
+
+        <TabsTrigger 
+          value="secondary" 
+          className="data-[state=active]:bg-purple-600 data-[state=active]:text-white rounded-lg px-4 py-2 font-semibold text-sm transition-all flex-shrink-0"
+        >
+          <RefreshCw className="w-4 h-4 mr-2" />
+          Chuyển nhượng (Thứ cấp)
+          <Badge variant="secondary" className="ml-2 text-[10px] h-5 px-1.5 bg-white/20 text-white">
+            {counts.secondary}
           </Badge>
         </TabsTrigger>
 
         <TabsTrigger 
           value="upcoming" 
-          className="data-[state=active]:bg-warning data-[state=active]:text-white rounded-lg px-4 py-2.5 font-semibold text-sm transition-all"
+          className="data-[state=active]:bg-blue-500 data-[state=active]:text-white rounded-lg px-4 py-2 font-semibold text-sm transition-all flex-shrink-0"
         >
           <Clock className="w-4 h-4 mr-2" />
           Sắp mở bán
-          <Badge variant="secondary" className="ml-2 text-xs">
+          <Badge variant="secondary" className="ml-2 text-[10px] h-5 px-1.5 bg-white/20 text-white">
             {counts.upcoming}
           </Badge>
         </TabsTrigger>
 
         <TabsTrigger 
-          value="completed" 
-          className="data-[state=active]:bg-accent data-[state=active]:text-white rounded-lg px-4 py-2.5 font-semibold text-sm transition-all"
-        >
-          <CheckCircle className="w-4 h-4 mr-2" />
-          Đã bàn giao
-          <Badge variant="secondary" className="ml-2 text-xs">
-            {counts.completed}
-          </Badge>
-        </TabsTrigger>
-
-        <TabsTrigger 
           value="stats" 
-          className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground rounded-lg px-4 py-2.5 font-semibold text-sm transition-all"
+          className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground rounded-lg px-4 py-2 font-semibold text-sm transition-all flex-shrink-0 ml-auto"
         >
           <BarChart3 className="w-4 h-4 mr-2" />
           Thống kê
-        </TabsTrigger>
-
-        <TabsTrigger 
-          value="premium" 
-          className="data-[state=active]:bg-gradient-primary data-[state=active]:text-white rounded-lg px-4 py-2.5 font-semibold text-sm transition-all"
-        >
-          <Award className="w-4 h-4 mr-2" />
-          CĐT uy tín
         </TabsTrigger>
       </TabsList>
     </Tabs>

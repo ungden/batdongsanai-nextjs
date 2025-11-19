@@ -3,8 +3,9 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import FavoriteButton from "./FavoriteButton";
 import { Project } from "@/types/project";
-import { MapPin, User, TrendingUp, TrendingDown, Calendar, Star, Flame, Sparkles, Award, ArrowRight } from "lucide-react";
+import { MapPin, User, TrendingUp, TrendingDown, Calendar, ArrowRight, Minus, Building } from "lucide-react";
 import { getProjectBadges } from "@/utils/projectBadges";
+import { getProjectPhase, getPriceTrendColor } from "@/utils/projectPhases";
 
 interface ProjectGridCardProps {
   project: Project;
@@ -12,8 +13,8 @@ interface ProjectGridCardProps {
 }
 
 const ProjectGridCard = ({ project, onClick }: ProjectGridCardProps) => {
-  const formatPrice = (price: number) => new Intl.NumberFormat("vi-VN").format(price);
-
+  const { label: phaseLabel, color: phaseColor, phase } = getProjectPhase(project);
+  
   const soldPercentage = project.totalUnits && project.soldUnits
     ? Math.round((project.soldUnits / project.totalUnits) * 100)
     : undefined;
@@ -25,11 +26,17 @@ const ProjectGridCard = ({ project, onClick }: ProjectGridCardProps) => {
     return latest > previous ? "up" : latest < previous ? "down" : "stable";
   })();
 
+  const trendColorClass = getPriceTrendColor(priceTrend);
+
   const completionProgress = (() => {
     if (project.completionDate === "Đã hoàn thành") return 100;
     if (!project.launchDate) return 0;
     const currentDate = new Date();
-    const targetDate = new Date(project.completionDate.replace(/Q\d\//, "12/31/"));
+    // Handle generic formats slightly better
+    const yearMatch = project.completionDate.match(/\d{4}/);
+    const targetYear = yearMatch ? parseInt(yearMatch[0]) : currentDate.getFullYear() + 2;
+    
+    const targetDate = new Date(targetYear, 11, 31);
     const launchDate = new Date(project.launchDate);
     const totalDuration = targetDate.getTime() - launchDate.getTime();
     const elapsed = currentDate.getTime() - launchDate.getTime();
@@ -41,10 +48,10 @@ const ProjectGridCard = ({ project, onClick }: ProjectGridCardProps) => {
   return (
     <Card
       onClick={() => onClick(project.id)}
-      className="group overflow-hidden cursor-pointer bg-card border border-border shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 rounded-2xl"
+      className="group overflow-hidden cursor-pointer bg-card border border-border/60 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 rounded-2xl"
     >
-      {/* Image with gradient overlays */}
-      <div className="relative h-[240px] overflow-hidden bg-muted">
+      {/* Image Section */}
+      <div className="relative h-[220px] overflow-hidden bg-muted">
         <img
           src={project.image}
           alt={project.name}
@@ -52,98 +59,101 @@ const ProjectGridCard = ({ project, onClick }: ProjectGridCardProps) => {
           className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
         />
         
-        {/* Gradient overlay for text readability */}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-80" />
+        {/* Gradient overlay */}
+        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-90" />
         
-        {/* Status/Sold badge */}
-        <div className="absolute top-4 left-4 flex items-center gap-2">
-          {typeof soldPercentage === "number" && soldPercentage > 0 ? (
-            <Badge className="bg-emerald-500/90 hover:bg-emerald-600 text-white border-0 backdrop-blur-md shadow-sm font-semibold px-2.5">
-              <TrendingUp className="w-3.5 h-3.5 mr-1.5" />
-              {soldPercentage}% đã bán
-            </Badge>
-          ) : null}
+        {/* Phase Badge (Top Left) */}
+        <div className="absolute top-3 left-3 z-10">
+          <Badge className={`${phaseColor} border-0 shadow-md px-2.5 py-1 text-xs font-bold uppercase tracking-wider`}>
+            {phaseLabel}
+          </Badge>
         </div>
 
-        {/* Favorite with backdrop */}
-        <div className="absolute top-4 right-4 z-10" onClick={(e) => e.stopPropagation()}>
-           <div className="bg-black/30 hover:bg-black/50 backdrop-blur-md rounded-full p-1 transition-colors">
-             <FavoriteButton projectId={project.id} projectName={project.name} className="text-white hover:text-white" />
+        {/* Favorite (Top Right) */}
+        <div className="absolute top-3 right-3 z-10" onClick={(e) => e.stopPropagation()}>
+           <div className="bg-black/20 hover:bg-black/40 backdrop-blur-md rounded-full p-1.5 transition-colors border border-white/10">
+             <FavoriteButton projectId={project.id} projectName={project.name} className="text-white hover:text-white h-5 w-5" />
            </div>
         </div>
 
         {/* Bottom Info Over Image */}
         <div className="absolute bottom-4 left-4 right-4 text-white">
-           <h3 className="text-xl font-bold leading-snug mb-1 shadow-black/50 drop-shadow-md line-clamp-1">
+           <h3 className="text-lg font-bold leading-snug mb-1 shadow-black/50 drop-shadow-md line-clamp-1 group-hover:text-primary-foreground transition-colors">
             {project.name}
           </h3>
-           <div className="flex items-center text-sm text-white/90">
-              <MapPin className="w-3.5 h-3.5 mr-1.5" />
-              <span className="truncate font-medium">{project.location}</span>
+           <div className="flex items-center text-xs text-white/90 font-medium">
+              <MapPin className="w-3.5 h-3.5 mr-1.5 shrink-0" />
+              <span className="truncate">{project.location}</span>
             </div>
         </div>
       </div>
 
       {/* Content */}
-      <div className="p-5 space-y-5">
-        {/* Meta Info */}
-        <div className="flex items-center justify-between text-sm">
-            <div className="flex items-center text-muted-foreground">
-              <User className="w-4 h-4 mr-2" />
-              <span className="font-medium truncate max-w-[140px]">{project.developer}</span>
+      <div className="p-4 space-y-4">
+        {/* Developer & Progress Row */}
+        <div className="flex items-center justify-between text-xs">
+            <div className="flex items-center text-muted-foreground bg-muted/50 px-2 py-1 rounded-md">
+              <User className="w-3.5 h-3.5 mr-1.5" />
+              <span className="font-medium truncate max-w-[100px]">{project.developer}</span>
             </div>
-             <div className="flex items-center text-muted-foreground">
-                <Calendar className="w-4 h-4 mr-2" />
-                <span className="font-medium">{project.completionDate}</span>
-            </div>
+            {typeof soldPercentage === 'number' && (
+               <div className="flex items-center gap-2">
+                  <span className="text-muted-foreground font-medium">Đã bán:</span>
+                  <span className="text-primary font-bold">{soldPercentage}%</span>
+                  <div className="w-12 h-1.5 bg-muted rounded-full overflow-hidden">
+                    <div className="h-full bg-primary" style={{ width: `${soldPercentage}%` }} />
+                  </div>
+               </div>
+            )}
         </div>
 
-        {/* Pricing Section */}
-        <div className="flex items-center justify-between bg-muted/40 rounded-xl p-3 border border-border/50">
+        {/* Pricing Section - Highlighted */}
+        <div className="flex items-center justify-between py-2 border-b border-dashed border-border/60">
             <div>
-                <p className="text-xs text-muted-foreground font-medium uppercase mb-0.5">Giá bán</p>
-                <div className="text-xl font-bold text-primary">
-                    {project.priceRange}
+                <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-wide mb-0.5">Giá tham khảo</p>
+                <div className="text-lg font-black text-primary">
+                    {project.priceRange.split(' ')[0]} <span className="text-sm font-normal text-muted-foreground">tỷ</span>
                 </div>
             </div>
              <div className="text-right">
-                 <p className="text-xs text-muted-foreground font-medium uppercase mb-0.5">Đơn giá</p>
-                 <div className="text-sm font-semibold text-foreground">
-                    {new Intl.NumberFormat('vi-VN', { maximumFractionDigits: 1 }).format(project.pricePerSqm / 1000000)} tr/m²
+                 <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-wide mb-0.5">Đơn giá / m²</p>
+                 <div className="text-sm font-bold text-foreground">
+                    {new Intl.NumberFormat('vi-VN', { maximumFractionDigits: 1 }).format(project.pricePerSqm / 1000000)} tr
                  </div>
             </div>
         </div>
 
-        {/* Progress */}
-        <div className="space-y-2">
-          <div className="flex items-center justify-between text-xs">
-            <span className="text-muted-foreground font-medium">Tiến độ xây dựng</span>
-            <span className="font-bold text-primary">{Math.round(completionProgress)}%</span>
-          </div>
-          <Progress value={completionProgress} className="h-1.5 bg-muted" />
+        {/* Price Trend & Legal Status */}
+        <div className="flex items-center justify-between">
+           {/* Price Trend Badge */}
+           {priceTrend ? (
+              <div className={`flex items-center gap-1.5 px-2 py-1 rounded-md border text-xs font-semibold ${trendColorClass}`}>
+                {priceTrend === 'up' ? <TrendingUp className="w-3.5 h-3.5" /> : 
+                 priceTrend === 'down' ? <TrendingDown className="w-3.5 h-3.5" /> : 
+                 <Minus className="w-3.5 h-3.5" />}
+                <span>
+                  {priceTrend === 'up' ? 'Tăng nhẹ' : 
+                   priceTrend === 'down' ? 'Giảm giá' : 'Ổn định'}
+                </span>
+              </div>
+           ) : (
+             <div className="text-xs text-muted-foreground font-medium">Chưa có dữ liệu giá</div>
+           )}
+           
+           {/* Legal Score */}
+           <div className={`flex items-center gap-1.5 text-xs font-bold ${
+             project.legalScore >= 8 ? "text-emerald-600" : 
+             project.legalScore >= 5 ? "text-amber-600" : "text-rose-600"
+           }`}>
+              <Building className="w-3.5 h-3.5" />
+              PL: {project.legalScore}/10
+           </div>
         </div>
 
-        {/* Badges & Action */}
-        <div className="flex items-center justify-between pt-2">
-           <div className="flex gap-1.5">
-              {badges.slice(0, 2).map((b) => (
-                <Badge 
-                  key={b} 
-                  variant="secondary"
-                  className="text-[10px] px-2 py-0.5 bg-muted text-muted-foreground border-border"
-                >
-                  {b === 'hot' ? 'Hot' : b === 'new' ? 'Mới' : b === 'discount' ? 'Giảm giá' : 'Nổi bật'}
-                </Badge>
-              ))}
-              {project.legalScore >= 8 && (
-                 <Badge variant="outline" className="text-[10px] px-2 py-0.5 text-emerald-600 border-emerald-200 bg-emerald-50 dark:bg-emerald-900/20 dark:border-emerald-800">
-                    Pháp lý tốt
-                 </Badge>
-              )}
-           </div>
-           
-           <div className="group/btn flex items-center text-sm font-bold text-primary">
-             Xem chi tiết <ArrowRight className="w-4 h-4 ml-1 transition-transform group-hover/btn:translate-x-1" />
+        {/* Footer Action */}
+        <div className="pt-1">
+           <div className="w-full py-2 flex items-center justify-center text-sm font-bold text-primary bg-primary/5 hover:bg-primary/10 rounded-lg transition-colors">
+             Xem chi tiết <ArrowRight className="w-4 h-4 ml-1.5 transition-transform group-hover:translate-x-1" />
            </div>
         </div>
       </div>

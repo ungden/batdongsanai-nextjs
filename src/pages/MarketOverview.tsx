@@ -12,7 +12,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Progress } from "@/components/ui/progress";
 import BottomNavigation from "@/components/layout/BottomNavigation";
 import DesktopLayout from "@/components/layout/DesktopLayout";
-import ProjectCard from "@/components/project/ProjectCard";
+import ProjectGridCard from "@/components/project/ProjectGridCard";
 import SEOHead from "@/components/seo/SEOHead";
 import MarketTabs from "@/components/market/MarketTabs";
 import QuickFilters from "@/components/market/QuickFilters";
@@ -21,11 +21,13 @@ import MarketStatsCard from "@/components/market/MarketStatsCard";
 import PriceChangeIndicator from "@/components/market/PriceChangeIndicator";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { projectsData } from "@/data/projectsData";
+import { getProjectPhase } from "@/utils/projectPhases";
 import { 
   Search, Download, Building2, MapPin, 
   Eye, Home, Building, Store, Landmark,
-  ChevronUp, ChevronDown, TrendingUp
+  ChevronUp, ChevronDown, TrendingUp, Grid, List
 } from "lucide-react";
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 
 interface FilterTag {
   id: string;
@@ -40,6 +42,7 @@ const MarketOverview = () => {
   
   const [searchQuery, setSearchQuery] = useState(searchParams.get('search') || "");
   const [activeTab, setActiveTab] = useState("all");
+  const [viewMode, setViewMode] = useState<"grid" | "table">("grid");
   const [selectedQuickFilters, setSelectedQuickFilters] = useState<string[]>([]);
   const [selectedFilterTags, setSelectedFilterTags] = useState<FilterTag[]>([]);
   const [sortBy, setSortBy] = useState("pricePerSqm");
@@ -81,22 +84,21 @@ const MarketOverview = () => {
     setSearchQuery("");
   };
 
-  // Filter projects based on active tab
-  const filteredProjects = useMemo(() => {
-    let filtered = projectsData;
+  // Enrich projects with phase data for filtering
+  const enrichedProjects = useMemo(() => {
+    return projectsData.map(p => ({
+      ...p,
+      phase: getProjectPhase(p).phase
+    }));
+  }, []);
 
-    // Filter by tab
-    if (activeTab === "active") {
-      filtered = filtered.filter(p => p.completionDate !== "Đã hoàn thành" && p.status === "good");
-    } else if (activeTab === "upcoming") {
-      filtered = filtered.filter(p => {
-        const completionYear = parseInt(p.completionDate.match(/\d{4}/)?.[0] || "0");
-        return completionYear > new Date().getFullYear();
-      });
-    } else if (activeTab === "completed") {
-      filtered = filtered.filter(p => p.completionDate === "Đã hoàn thành");
-    } else if (activeTab === "premium") {
-      filtered = filtered.filter(p => p.legalScore >= 8);
+  // Filter projects based on active tab and phase
+  const filteredProjects = useMemo(() => {
+    let filtered = enrichedProjects;
+
+    // Filter by Phase Tab
+    if (activeTab !== "all" && activeTab !== "stats") {
+      filtered = filtered.filter(p => p.phase === activeTab);
     }
 
     // Filter by search
@@ -134,17 +136,17 @@ const MarketOverview = () => {
       
       return sortOrder === "desc" ? (bValue as number) - (aValue as number) : (aValue as number) - (bValue as number);
     });
-  }, [activeTab, searchQuery, sortBy, sortOrder]);
+  }, [activeTab, searchQuery, sortBy, sortOrder, enrichedProjects]);
 
-  const tabCounts = {
-    all: projectsData.length,
-    active: projectsData.filter(p => p.completionDate !== "Đã hoàn thành" && p.status === "good").length,
-    upcoming: projectsData.filter(p => {
-      const completionYear = parseInt(p.completionDate.match(/\d{4}/)?.[0] || "0");
-      return completionYear > new Date().getFullYear();
-    }).length,
-    completed: projectsData.filter(p => p.completionDate === "Đã hoàn thành").length,
-  };
+  // Calculate counts for tabs
+  const tabCounts = useMemo(() => {
+    return {
+      all: enrichedProjects.length,
+      selling: enrichedProjects.filter(p => p.phase === "selling").length,
+      secondary: enrichedProjects.filter(p => p.phase === "secondary").length,
+      upcoming: enrichedProjects.filter(p => p.phase === "upcoming").length,
+    };
+  }, [enrichedProjects]);
 
   const getStatusVariant = (status: string) => {
     switch (status) {
@@ -159,28 +161,37 @@ const MarketOverview = () => {
     return (
       <div className="min-h-screen bg-background pb-20">
         <div className="p-4 space-y-4">
-          <h1 className="text-2xl font-bold text-foreground">Tổng quan thị trường</h1>
+          <h1 className="text-2xl font-bold text-foreground">Thị trường</h1>
+          <MarketTabs 
+              activeTab={activeTab} 
+              onTabChange={setActiveTab}
+              counts={tabCounts}
+          />
           
-          <MarketStatsCard projects={projectsData} />
-          
-          <div className="space-y-4">
-            <h2 className="font-semibold text-foreground">Dự án tiêu biểu</h2>
-            {filteredProjects.slice(0, 5).map((project) => (
-              <div key={project.id} className="animate-fade-in">
-                <ProjectCard 
-                  project={project} 
-                  onClick={() => navigate(`/projects/${project.id}`)} 
-                />
-              </div>
-            ))}
-          </div>
+          {activeTab === "stats" ? (
+            <MarketStatsCard projects={projectsData} />
+          ) : (
+            <div className="space-y-4 mt-4">
+              {filteredProjects.map((project) => (
+                <div key={project.id} className="animate-fade-in">
+                   <ProjectGridCard 
+                    project={project} 
+                    onClick={() => navigate(`/projects/${project.id}`)} 
+                  />
+                </div>
+              ))}
+              {filteredProjects.length === 0 && (
+                <div className="text-center py-8 text-muted-foreground">Không có dự án nào</div>
+              )}
+            </div>
+          )}
         </div>
         <BottomNavigation />
       </div>
     );
   }
 
-  // Desktop layout - Refined
+  // Desktop layout
   return (
     <>
       <SEOHead
@@ -190,7 +201,7 @@ const MarketOverview = () => {
       />
       <DesktopLayout title="Tổng quan thị trường" subtitle={`${filteredProjects.length} dự án`}>
         <div className="space-y-6">
-          {/* Search and Tabs - Compact */}
+          {/* Search and Tabs */}
           <Card className="border-none shadow-sm bg-card rounded-xl">
             <div className="p-3 space-y-3">
               <div className="flex items-center justify-between gap-4">
@@ -204,6 +215,10 @@ const MarketOverview = () => {
                   />
                 </div>
                 <div className="flex items-center gap-2">
+                   <ToggleGroup type="single" value={viewMode} onValueChange={(v) => v && setViewMode(v as any)} className="border rounded-lg p-1 bg-muted/30">
+                      <ToggleGroupItem value="grid" size="sm" className="h-8 w-8 p-0"><Grid className="h-4 w-4" /></ToggleGroupItem>
+                      <ToggleGroupItem value="table" size="sm" className="h-8 w-8 p-0"><List className="h-4 w-4" /></ToggleGroupItem>
+                   </ToggleGroup>
                    <Button variant="outline" size="sm" className="h-10 rounded-lg border-border text-muted-foreground hover:text-foreground">
                       <Download className="w-4 h-4 mr-2" /> Xuất báo cáo
                    </Button>
@@ -234,152 +249,153 @@ const MarketOverview = () => {
             </div>
           </Card>
 
-          {/* Stats or Table */}
+          {/* Stats View */}
           {activeTab === "stats" ? (
             <MarketStatsCard projects={projectsData} />
           ) : (
-            <Card className="border-none shadow-sm bg-card rounded-xl overflow-hidden">
-              <CardContent className="p-0">
-                <div className="overflow-x-auto">
-                  <Table>
-                    <TableHeader>
-                      <TableRow className="bg-muted/40 hover:bg-muted/40 border-b border-border">
-                        <TableHead className="font-bold text-xs py-3 pl-4 text-muted-foreground uppercase tracking-wider">Dự án</TableHead>
-                        <TableHead className="font-bold text-xs py-3 text-muted-foreground uppercase tracking-wider">Vị trí</TableHead>
-                        <TableHead className="text-right font-bold text-xs py-3 text-muted-foreground uppercase tracking-wider">
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => {
-                              setSortBy("pricePerSqm");
-                              setSortOrder(sortOrder === "desc" ? "asc" : "desc");
-                            }}
-                            className="h-auto p-0 hover:bg-transparent font-bold text-xs text-muted-foreground uppercase tracking-wider"
-                          >
-                            Giá/m²
-                            {sortBy === "pricePerSqm" && (
-                              sortOrder === "desc" ? <ChevronDown className="w-3 h-3 ml-1" /> : <ChevronUp className="w-3 h-3 ml-1" />
-                            )}
-                          </Button>
-                        </TableHead>
-                        <TableHead className="text-right font-bold text-xs py-3 text-muted-foreground uppercase tracking-wider">Tổng giá</TableHead>
-                        <TableHead className="text-right font-bold text-xs py-3 text-muted-foreground uppercase tracking-wider">Biến động</TableHead>
-                        <TableHead className="text-center font-bold text-xs py-3 text-muted-foreground uppercase tracking-wider">Đã bán</TableHead>
-                        <TableHead className="text-center font-bold text-xs py-3 text-muted-foreground uppercase tracking-wider">
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => {
-                              setSortBy("legalScore");
-                              setSortOrder(sortOrder === "desc" ? "asc" : "desc");
-                            }}
-                            className="h-auto p-0 hover:bg-transparent font-bold text-xs text-muted-foreground uppercase tracking-wider"
-                          >
-                            Pháp lý
-                            {sortBy === "legalScore" && (
-                              sortOrder === "desc" ? <ChevronDown className="w-3 h-3 ml-1" /> : <ChevronUp className="w-3 h-3 ml-1" />
-                            )}
-                          </Button>
-                        </TableHead>
-                        <TableHead className="text-center font-bold text-xs py-3 pr-4 text-muted-foreground uppercase tracking-wider">Bàn giao</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {filteredProjects.map((project) => {
-                        const soldPct = project.totalUnits && project.soldUnits ?
-                          Math.round((project.soldUnits / project.totalUnits) * 100) : 0;
-                        
-                        return (
-                          <TableRow 
-                            key={project.id}
-                            className="cursor-pointer hover:bg-muted/30 transition-colors group border-b border-border last:border-0 h-14"
-                            onClick={() => navigate(`/projects/${project.id}`)}
-                          >
-                            <TableCell className="py-2 pl-4">
-                              <div className="flex items-center gap-3">
-                                <Avatar className="w-10 h-10 border border-border rounded-lg">
-                                  <AvatarImage src={project.image} alt={project.name} className="object-cover" />
-                                  <AvatarFallback className="text-xs font-bold bg-primary/10 text-primary rounded-lg">
-                                    {project.name.slice(0, 2).toUpperCase()}
-                                  </AvatarFallback>
-                                </Avatar>
-                                <div className="flex-1 min-w-0">
-                                  <div className="font-bold text-sm leading-tight text-foreground group-hover:text-primary transition-colors truncate max-w-[180px]">
-                                    {project.name}
-                                  </div>
-                                  <div className="text-[11px] text-muted-foreground mt-0.5 truncate max-w-[180px]">
-                                    {project.developer}
-                                  </div>
-                                </div>
-                              </div>
-                            </TableCell>
-                            
-                            <TableCell className="py-2">
-                              <div className="flex items-center gap-1.5">
-                                <MapPin className="w-3.5 h-3.5 text-muted-foreground flex-shrink-0" />
-                                <div>
-                                  <div className="font-medium text-xs text-foreground">{project.district}</div>
-                                  <div className="text-[10px] text-muted-foreground">{project.city === "TP. Hồ Chí Minh" ? "HCM" : project.city}</div>
-                                </div>
-                              </div>
-                            </TableCell>
-                            
-                            <TableCell className="text-right py-2">
-                              <div className="font-bold text-primary text-sm">
-                                {formatPrice(project.pricePerSqm)}
-                              </div>
-                              <div className="text-[10px] text-muted-foreground">/m²</div>
-                            </TableCell>
+            <>
+               {/* Grid View */}
+               {viewMode === "grid" && (
+                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                   {filteredProjects.map((project) => (
+                     <div key={project.id} className="animate-fade-in">
+                        <ProjectGridCard 
+                          project={project} 
+                          onClick={() => navigate(`/projects/${project.id}`)} 
+                        />
+                     </div>
+                   ))}
+                 </div>
+               )}
 
-                            <TableCell className="text-right py-2">
-                              <div className="font-medium text-sm text-foreground">
-                                {project.priceRange.split(' ')[0]} <span className="text-[10px] text-muted-foreground">tỷ</span>
-                              </div>
-                            </TableCell>
-
-                            <TableCell className="text-right py-2">
-                              {project.launchPrice && project.currentPrice ? (
-                                <PriceChangeIndicator
-                                  currentPrice={project.currentPrice}
-                                  launchPrice={project.launchPrice}
-                                  showIcon={false}
-                                  className="text-xs"
-                                />
-                              ) : (
-                                <span className="text-muted-foreground text-xs">—</span>
-                              )}
-                            </TableCell>
-
-                            <TableCell className="text-center py-2">
-                              {soldPct > 0 ? (
-                                <div className="space-y-1">
-                                  <div className="font-bold text-xs text-foreground">{soldPct}%</div>
-                                  <Progress value={soldPct} className="h-1 w-12 mx-auto bg-muted" />
-                                </div>
-                              ) : (
-                                <span className="text-muted-foreground text-xs">—</span>
-                              )}
-                            </TableCell>
-                            
-                            <TableCell className="text-center py-2">
-                              <StatusBadge variant={getStatusVariant(project.status)} className="font-semibold text-[10px] px-2 py-0.5 rounded-full border-0 h-5">
-                                {project.legalScore}/10
-                              </StatusBadge>
-                            </TableCell>
-                            
-                            <TableCell className="text-center pr-4 py-2">
-                              <div className="text-xs font-medium text-muted-foreground">
-                                {project.completionDate.includes('20') ? project.completionDate.substring(project.completionDate.indexOf('20')) : project.completionDate}
-                              </div>
-                            </TableCell>
+               {/* Table View */}
+               {viewMode === "table" && (
+                <Card className="border-none shadow-sm bg-card rounded-xl overflow-hidden">
+                  <CardContent className="p-0">
+                    <div className="overflow-x-auto">
+                      <Table>
+                        <TableHeader>
+                          <TableRow className="bg-muted/40 hover:bg-muted/40 border-b border-border">
+                            <TableHead className="font-bold text-xs py-3 pl-4 text-muted-foreground uppercase tracking-wider">Dự án</TableHead>
+                            <TableHead className="font-bold text-xs py-3 text-muted-foreground uppercase tracking-wider">Giai đoạn</TableHead>
+                            <TableHead className="text-right font-bold text-xs py-3 text-muted-foreground uppercase tracking-wider">
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => {
+                                  setSortBy("pricePerSqm");
+                                  setSortOrder(sortOrder === "desc" ? "asc" : "desc");
+                                }}
+                                className="h-auto p-0 hover:bg-transparent font-bold text-xs text-muted-foreground uppercase tracking-wider"
+                              >
+                                Giá/m²
+                                {sortBy === "pricePerSqm" && (
+                                  sortOrder === "desc" ? <ChevronDown className="w-3 h-3 ml-1" /> : <ChevronUp className="w-3 h-3 ml-1" />
+                                )}
+                              </Button>
+                            </TableHead>
+                            <TableHead className="text-right font-bold text-xs py-3 text-muted-foreground uppercase tracking-wider">Biến động</TableHead>
+                            <TableHead className="text-center font-bold text-xs py-3 text-muted-foreground uppercase tracking-wider">Đã bán</TableHead>
+                            <TableHead className="text-center font-bold text-xs py-3 text-muted-foreground uppercase tracking-wider">
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => {
+                                  setSortBy("legalScore");
+                                  setSortOrder(sortOrder === "desc" ? "asc" : "desc");
+                                }}
+                                className="h-auto p-0 hover:bg-transparent font-bold text-xs text-muted-foreground uppercase tracking-wider"
+                              >
+                                Pháp lý
+                                {sortBy === "legalScore" && (
+                                  sortOrder === "desc" ? <ChevronDown className="w-3 h-3 ml-1" /> : <ChevronUp className="w-3 h-3 ml-1" />
+                                )}
+                              </Button>
+                            </TableHead>
                           </TableRow>
-                        );
-                      })}
-                    </TableBody>
-                  </Table>
-                </div>
-              </CardContent>
-            </Card>
+                        </TableHeader>
+                        <TableBody>
+                          {filteredProjects.map((project) => {
+                            const soldPct = project.totalUnits && project.soldUnits ?
+                              Math.round((project.soldUnits / project.totalUnits) * 100) : 0;
+                            const { label: phaseLabel, color: phaseColor } = getProjectPhase(project);
+                            
+                            return (
+                              <TableRow 
+                                key={project.id}
+                                className="cursor-pointer hover:bg-muted/30 transition-colors group border-b border-border last:border-0 h-14"
+                                onClick={() => navigate(`/projects/${project.id}`)}
+                              >
+                                <TableCell className="py-2 pl-4">
+                                  <div className="flex items-center gap-3">
+                                    <Avatar className="w-10 h-10 border border-border rounded-lg">
+                                      <AvatarImage src={project.image} alt={project.name} className="object-cover" />
+                                      <AvatarFallback className="text-xs font-bold bg-primary/10 text-primary rounded-lg">
+                                        {project.name.slice(0, 2).toUpperCase()}
+                                      </AvatarFallback>
+                                    </Avatar>
+                                    <div className="flex-1 min-w-0">
+                                      <div className="font-bold text-sm leading-tight text-foreground group-hover:text-primary transition-colors truncate max-w-[180px]">
+                                        {project.name}
+                                      </div>
+                                      <div className="text-[11px] text-muted-foreground mt-0.5 truncate max-w-[180px]">
+                                        {project.developer}
+                                      </div>
+                                    </div>
+                                  </div>
+                                </TableCell>
+                                
+                                <TableCell className="py-2">
+                                  <Badge className={`${phaseColor} border-0 font-medium text-[10px] whitespace-nowrap`}>
+                                    {phaseLabel}
+                                  </Badge>
+                                </TableCell>
+                                
+                                <TableCell className="text-right py-2">
+                                  <div className="font-bold text-primary text-sm">
+                                    {formatPrice(project.pricePerSqm)}
+                                  </div>
+                                </TableCell>
+
+                                <TableCell className="text-right py-2">
+                                  {project.launchPrice && project.currentPrice ? (
+                                    <PriceChangeIndicator
+                                      currentPrice={project.currentPrice}
+                                      launchPrice={project.launchPrice}
+                                      showIcon={false}
+                                      className="text-xs justify-end"
+                                    />
+                                  ) : (
+                                    <span className="text-muted-foreground text-xs">—</span>
+                                  )}
+                                </TableCell>
+
+                                <TableCell className="text-center py-2">
+                                  {soldPct > 0 ? (
+                                    <div className="space-y-1">
+                                      <div className="font-bold text-xs text-foreground">{soldPct}%</div>
+                                      <Progress value={soldPct} className="h-1 w-12 mx-auto bg-muted" />
+                                    </div>
+                                  ) : (
+                                    <span className="text-muted-foreground text-xs">—</span>
+                                  )}
+                                </TableCell>
+                                
+                                <TableCell className="text-center py-2">
+                                  <StatusBadge variant={getStatusVariant(project.status)} className="font-semibold text-[10px] px-2 py-0.5 rounded-full border-0 h-5">
+                                    {project.legalScore}/10
+                                  </StatusBadge>
+                                </TableCell>
+                              </TableRow>
+                            );
+                          })}
+                        </TableBody>
+                      </Table>
+                    </div>
+                  </CardContent>
+                </Card>
+               )}
+            </>
           )}
         </div>
       </DesktopLayout>

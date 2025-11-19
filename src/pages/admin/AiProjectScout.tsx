@@ -6,13 +6,15 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Progress } from "@/components/ui/progress";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { UploadCloud, Check, Loader2, FileInput, Building2, MapPin, ArrowRight, Trash2, Save, Plus, AlertCircle } from "lucide-react";
+import { UploadCloud, Check, Loader2, FileInput, Building2, MapPin, ArrowRight, Trash2, Save, Plus } from "lucide-react";
 
 export default function AiProjectScout() {
   const [rawText, setRawText] = useState("");
   const [processing, setProcessing] = useState(false);
+  const [parseProgress, setParseProgress] = useState(0);
   const [parsedProjects, setParsedProjects] = useState<any[]>([]);
   const [importedCount, setImportedCount] = useState(0);
   const [isImporting, setIsImporting] = useState(false);
@@ -23,39 +25,65 @@ export default function AiProjectScout() {
       return;
     }
     
-    const lineCount = rawText.split('\n').filter(line => line.trim().length > 0).length;
-    if (lineCount > 100) {
-      toast.warning(`Bạn đang paste ${lineCount} dòng. AI có thể mất một chút thời gian để xử lý.`);
-    }
+    const allLines = rawText.split('\n').filter(line => line.trim().length > 0);
+    if (allLines.length === 0) return;
 
     setProcessing(true);
-    setParsedProjects([]);
-    
-    try {
-      const { data, error } = await supabase.functions.invoke('research-project', {
-        body: { 
-          raw_content: rawText, 
-          mode: 'batch_extract' // Gọi chế độ extract thuần túy
-        }
-      });
+    setParseProgress(0);
+    setParsedProjects([]); // Reset list
 
-      if (error) throw error;
-      
-      if (data?.data?.projects) {
-        const projects = data.data.projects.map((p: any) => ({
-          ...p,
-          status: 'new',
-          importStatus: 'idle'
-        }));
-        setParsedProjects(projects);
-        toast.success(`Đã trích xuất thành công ${projects.length} dự án!`);
-      } else {
-        toast.info("Không trích xuất được dự án nào. Vui lòng kiểm tra lại định dạng.");
+    // Cấu hình chunk
+    const CHUNK_SIZE = 10; // Xử lý 10 dòng mỗi lần để an toàn
+    const totalChunks = Math.ceil(allLines.length / CHUNK_SIZE);
+    let successCount = 0;
+
+    try {
+      for (let i = 0; i < totalChunks; i++) {
+        // Cắt 1 phần text để gửi đi
+        const chunkLines = allLines.slice(i * CHUNK_SIZE, (i + 1) * CHUNK_SIZE);
+        const chunkText = chunkLines.join('\n');
+
+        try {
+          const { data, error } = await supabase.functions.invoke('research-project', {
+            body: { 
+              raw_content: chunkText, 
+              mode: 'batch_extract' 
+            }
+          });
+
+          if (error) throw error;
+          
+          if (data?.data?.projects) {
+            const newProjects = data.data.projects.map((p: any) => ({
+              ...p,
+              status: 'new',
+              importStatus: 'idle'
+            }));
+            
+            // Cập nhật UI ngay khi có kết quả của chunk này
+            setParsedProjects(prev => [...prev, ...newProjects]);
+            successCount += newProjects.length;
+          }
+        } catch (err) {
+          console.error(`Lỗi chunk ${i + 1}:`, err);
+          toast.error(`Lỗi xử lý nhóm dòng ${i * CHUNK_SIZE + 1} - ${(i + 1) * CHUNK_SIZE}`);
+        }
+
+        // Update progress bar
+        setParseProgress(Math.round(((i + 1) / totalChunks) * 100));
       }
+
+      if (successCount > 0) {
+        toast.success(`Hoàn tất! Đã trích xuất ${successCount} dự án.`);
+      } else {
+        toast.warning("Không trích xuất được dự án nào. Vui lòng kiểm tra định dạng text.");
+      }
+
     } catch (error: any) {
-      toast.error("Lỗi phân tích: " + error.message);
+      toast.error("Lỗi hệ thống: " + error.message);
     } finally {
       setProcessing(false);
+      setParseProgress(0);
     }
   };
 
@@ -70,12 +98,12 @@ export default function AiProjectScout() {
         name: project.name,
         developer: project.developer !== 'Đang cập nhật' ? project.developer : "Đang cập nhật",
         location: project.location !== 'Đang cập nhật' ? project.location : "Đang cập nhật",
-        city: "Hồ Chí Minh", // Mặc định, admin có thể sửa sau
+        city: "Hồ Chí Minh",
         district: "Đang cập nhật",
         status: "upcoming", 
         price_range: "Đang cập nhật",
         price_per_sqm: 0,
-        description: project.raw_text || `Dự án ${project.name}`, // Lưu text gốc vào mô tả để tham chiếu
+        description: project.raw_text || `Dự án ${project.name}`,
         completion_date: "Đang cập nhật",
         legal_score: 0,
       };
@@ -96,11 +124,10 @@ export default function AiProjectScout() {
   const handleImportAll = async () => {
     setIsImporting(true);
     
-    // Xử lý tuần tự để tránh quá tải DB và hiển thị progress
     for (let i = 0; i < parsedProjects.length; i++) {
       if (parsedProjects[i].importStatus !== 'success') {
         await handleImportSingle(i);
-        // Delay nhỏ để UI update mượt mà
+        // Delay nhỏ để tránh rate limit DB và để UI kịp render
         await new Promise(r => setTimeout(r, 50));
       }
     }
@@ -117,15 +144,17 @@ export default function AiProjectScout() {
     setParsedProjects(prev => prev.filter((_, i) => i !== index));
   };
 
+  const lineCount = rawText.split('\n').filter(l => l.trim()).length;
+
   return (
     <div className="h-[calc(100vh-4rem)] flex flex-col gap-4">
       <div className="flex justify-between items-center">
         <div>
            <h1 className="text-2xl font-bold flex items-center gap-2">
             <FileInput className="w-6 h-6 text-primary" />
-            Batch Upload (Trích xuất từ văn bản)
+            Batch Upload (Chunk Processing)
           </h1>
-          <p className="text-muted-foreground">Paste danh sách dự án &rarr; AI tách dữ liệu &rarr; Import hàng loạt</p>
+          <p className="text-muted-foreground">Hệ thống sẽ tự động chia nhỏ danh sách để xử lý ổn định hơn.</p>
         </div>
       </div>
 
@@ -135,32 +164,38 @@ export default function AiProjectScout() {
           <CardHeader>
             <CardTitle>1. Dữ liệu nguồn</CardTitle>
             <CardDescription>
-              Dán danh sách của bạn vào đây. AI sẽ tự động nhận diện tên dự án, chủ đầu tư và vị trí từ từng dòng.
+              Dán danh sách dự án (1 dự án/dòng). Không giới hạn số lượng.
             </CardDescription>
           </CardHeader>
           <CardContent className="flex-1 flex flex-col gap-4 min-h-0">
             <Textarea 
-              placeholder={`Paste danh sách dự án của bạn vào đây (mỗi dự án một dòng). Ví dụ:
-1. Vinhomes Grand Park - Quận 9 - Vingroup
-2. The Global City - Quận 2 - Masterise Homes
-3. Eaton Park - Gamuda Land
-4. Sycamore Bình Dương - CapitalLand
-...`} 
+              placeholder={`Ví dụ:\n1. Vinhomes Grand Park - Quận 9 - Vingroup\n2. The Global City - Quận 2 - Masterise\n3. Eaton Park - Thủ Đức - Gamuda Land\n...`} 
               value={rawText}
               onChange={(e) => setRawText(e.target.value)}
               className="flex-1 font-mono text-sm resize-none p-4 bg-muted/10 leading-relaxed"
             />
-            <div className="flex items-center justify-between text-xs text-muted-foreground px-1">
-               <span>{rawText.split('\n').filter(l => l.trim()).length} dòng được phát hiện</span>
-               <span>AI Parser Mode</span>
+            
+            <div className="space-y-2">
+               <div className="flex items-center justify-between text-xs text-muted-foreground px-1">
+                  <span>{lineCount} dòng được phát hiện</span>
+                  <span>Batch Size: 10 items/req</span>
+               </div>
+               
+               {processing && (
+                 <div className="space-y-1">
+                   <Progress value={parseProgress} className="h-2" />
+                   <p className="text-xs text-center text-muted-foreground">Đang xử lý... {parseProgress}%</p>
+                 </div>
+               )}
+
+               <Button onClick={handleParse} disabled={processing || !rawText} size="lg" className="w-full">
+                {processing ? (
+                  <><Loader2 className="w-4 h-4 animate-spin mr-2" /> Đang phân tích...</>
+                ) : (
+                  <><ArrowRight className="w-4 h-4 mr-2" /> Phân tích & Trích xuất</>
+                )}
+              </Button>
             </div>
-            <Button onClick={handleParse} disabled={processing || !rawText} size="lg" className="w-full">
-              {processing ? (
-                <><Loader2 className="w-4 h-4 animate-spin mr-2" /> Đang trích xuất...</>
-              ) : (
-                <><ArrowRight className="w-4 h-4 mr-2" /> Phân tích & Trích xuất danh sách</>
-              )}
-            </Button>
           </CardContent>
         </Card>
 
@@ -169,8 +204,8 @@ export default function AiProjectScout() {
           <CardHeader className="border-b bg-card">
             <div className="flex justify-between items-center">
               <div>
-                <CardTitle>2. Kết quả trích xuất ({parsedProjects.length})</CardTitle>
-                <CardDescription>Kiểm tra danh sách trước khi lưu vào Database</CardDescription>
+                <CardTitle>2. Kết quả ({parsedProjects.length})</CardTitle>
+                <CardDescription>Review trước khi lưu vào Database</CardDescription>
               </div>
               {parsedProjects.length > 0 && (
                 <Button 
@@ -190,30 +225,29 @@ export default function AiProjectScout() {
               {parsedProjects.length === 0 ? (
                 <div className="h-full flex flex-col items-center justify-center text-muted-foreground opacity-50">
                   <UploadCloud className="w-16 h-16 mb-4" />
-                  <p className="text-center">Danh sách sau khi trích xuất sẽ hiện ở đây.<br/>Bạn có thể kiểm tra và xóa các mục sai.</p>
+                  <p>Danh sách dự án sẽ hiện ở đây sau khi phân tích.</p>
                 </div>
               ) : (
                 <div className="space-y-3">
                   {parsedProjects.map((p, idx) => {
                     const isImported = p.importStatus === 'success';
                     const isLoading = p.importStatus === 'loading';
+                    const isError = p.importStatus === 'error';
                     
                     return (
                       <div key={idx} className={`
                         flex items-center justify-between p-3 bg-card border rounded-lg transition-all
-                        ${isImported ? 'border-green-200 bg-green-50 opacity-80' : 'hover:shadow-md'}
+                        ${isImported ? 'border-green-200 bg-green-50 opacity-80' : isError ? 'border-red-200 bg-red-50' : 'hover:shadow-md'}
                       `}>
                         <div className="flex-1 min-w-0 mr-4">
                           <div className="flex items-center gap-2 mb-1">
-                            <div className="font-bold text-sm truncate text-foreground">{p.name}</div>
+                            <h4 className="font-bold text-sm truncate">{p.name}</h4>
                             <Badge variant="outline" className="text-[10px] h-5 font-normal">{p.type || 'N/A'}</Badge>
                           </div>
                           <div className="flex items-center gap-4 text-xs text-muted-foreground">
                             <span className="flex items-center gap-1 truncate max-w-[150px]" title={p.developer}><Building2 className="w-3 h-3" /> {p.developer}</span>
                             <span className="flex items-center gap-1 truncate max-w-[150px]" title={p.location}><MapPin className="w-3 h-3" /> {p.location}</span>
                           </div>
-                          {/* Debug raw text if needed */}
-                          {/* <div className="text-[10px] text-muted-foreground/50 truncate mt-1">{p.raw_text}</div> */}
                         </div>
                         
                         <div className="flex items-center gap-2">

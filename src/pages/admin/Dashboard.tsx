@@ -15,8 +15,9 @@ import NewsManagement from '@/components/admin/NewsManagement';
 import SystemHealthMonitor from '@/components/admin/SystemHealthMonitor';
 import RealTimeAnalytics from '@/components/admin/RealTimeAnalytics';
 import DeveloperManagement from '@/components/admin/DeveloperManagement';
+import DataManagement from '@/pages/admin/DataManagement';
 import { Button } from '@/components/ui/button';
-import { Shield, BarChart3, Activity, Users, Settings, FileText, AlertTriangle, Newspaper } from 'lucide-react';
+import { Shield, BarChart3, Activity, Users, Settings, FileText, AlertTriangle, Newspaper, Database } from 'lucide-react';
 
 const AdminDashboard = () => {
   const { user } = useAuth();
@@ -63,52 +64,47 @@ const AdminDashboard = () => {
       <SystemHealthMonitor />
 
       <Tabs defaultValue="analytics" className="w-full">
-        <TabsList className="grid w-full grid-cols-10 h-10">
-          <TabsTrigger value="analytics" className="flex items-center gap-1 text-xs">
-            <BarChart3 className="w-4 h-4" />
-            Phân tích
+        <TabsList className="flex w-full h-auto p-1 bg-muted overflow-x-auto flex-nowrap justify-start">
+          <TabsTrigger value="analytics" className="flex items-center gap-1 text-xs whitespace-nowrap px-3 py-2">
+            <BarChart3 className="w-4 h-4" /> Phân tích
           </TabsTrigger>
-          <TabsTrigger value="consultations" className="flex items-center gap-1 text-xs">
-            <Activity className="w-4 h-4" />
-            Tư vấn
+          <TabsTrigger value="data" className="flex items-center gap-1 text-xs whitespace-nowrap px-3 py-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
+            <Database className="w-4 h-4" /> Dữ liệu & Seed
           </TabsTrigger>
-          <TabsTrigger value="users" className="flex items-center gap-1 text-xs">
-            <Users className="w-4 h-4" />
-            Người dùng
+          <TabsTrigger value="projects" className="flex items-center gap-1 text-xs whitespace-nowrap px-3 py-2">
+            <FileText className="w-4 h-4" /> Dự án
           </TabsTrigger>
-          <TabsTrigger value="developers" className="flex items-center gap-1 text-xs">
-            <Users className="w-4 h-4" />
-            Chủ đầu tư
+          <TabsTrigger value="developers" className="flex items-center gap-1 text-xs whitespace-nowrap px-3 py-2">
+            <Users className="w-4 h-4" /> Chủ đầu tư
           </TabsTrigger>
-          <TabsTrigger value="projects" className="flex items-center gap-1 text-xs">
-            <FileText className="w-4 h-4" />
-            Dự án
+          <TabsTrigger value="consultations" className="flex items-center gap-1 text-xs whitespace-nowrap px-3 py-2">
+            <Activity className="w-4 h-4" /> Tư vấn
           </TabsTrigger>
-          <TabsTrigger value="content" className="flex items-center gap-1 text-xs">
-            <FileText className="w-4 h-4" />
-            Nội dung
+          <TabsTrigger value="content" className="flex items-center gap-1 text-xs whitespace-nowrap px-3 py-2">
+            <FileText className="w-4 h-4" /> Nội dung
           </TabsTrigger>
-          <TabsTrigger value="news" className="flex items-center gap-1 text-xs">
-            <Newspaper className="w-4 h-4" />
-            Tin tức
+          <TabsTrigger value="news" className="flex items-center gap-1 text-xs whitespace-nowrap px-3 py-2">
+            <Newspaper className="w-4 h-4" /> Tin tức
           </TabsTrigger>
-          <TabsTrigger value="settings" className="flex items-center gap-1 text-xs">
-            <Settings className="w-4 h-4" />
-            Cài đặt
+          <TabsTrigger value="users" className="flex items-center gap-1 text-xs whitespace-nowrap px-3 py-2">
+            <Users className="w-4 h-4" /> Người dùng
           </TabsTrigger>
-          <TabsTrigger value="logs" className="flex items-center gap-1 text-xs">
-            <Shield className="w-4 h-4" />
-            Nhật ký
+          <TabsTrigger value="settings" className="flex items-center gap-1 text-xs whitespace-nowrap px-3 py-2">
+            <Settings className="w-4 h-4" /> Cài đặt
           </TabsTrigger>
-          <TabsTrigger value="system" className="flex items-center gap-1 text-xs">
-            <Activity className="w-4 h-4" />
-            Hệ thống
+          <TabsTrigger value="logs" className="flex items-center gap-1 text-xs whitespace-nowrap px-3 py-2">
+            <Shield className="w-4 h-4" /> Nhật ký
           </TabsTrigger>
         </TabsList>
 
-        <TabsContent value="analytics" className="mt-4">
+        <TabsContent value="analytics" className="mt-4 space-y-4">
           <RealTimeAnalytics />
           <WebsiteAnalytics />
+        </TabsContent>
+
+        {/* New Data Management Tab */}
+        <TabsContent value="data" className="mt-4">
+          <DataManagement />
         </TabsContent>
 
         <TabsContent value="consultations" className="mt-4">
@@ -157,47 +153,6 @@ const AdminDashboard = () => {
 
         <TabsContent value="logs" className="mt-4">
           <AdminLogs logs={adminLogs} />
-        </TabsContent>
-
-        <TabsContent value="system" className="mt-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <Card>
-              <CardHeader className="pb-3">
-                <CardTitle className="text-base">Tình trạng hệ thống</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-2">
-                <div className="flex justify-between text-sm">
-                  <span>Database</span>
-                  <Badge variant="default" className="text-xs">Hoạt động</Badge>
-                </div>
-                <div className="flex justify-between text-sm">
-                  <span>API Services</span>
-                  <Badge variant="default" className="text-xs">Hoạt động</Badge>
-                </div>
-                <div className="flex justify-between text-sm">
-                  <span>Cache System</span>
-                  <Badge variant="default" className="text-xs">Hoạt động</Badge>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader className="pb-3">
-                <CardTitle className="text-base">Bảo trì hệ thống</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-2">
-                <Button variant="outline" size="sm" className="w-full h-9">
-                  Xóa cache
-                </Button>
-                <Button variant="outline" size="sm" className="w-full h-9">
-                  Backup database
-                </Button>
-                <Button variant="destructive" size="sm" className="w-full h-9">
-                  Bảo trì hệ thống
-                </Button>
-              </CardContent>
-            </Card>
-          </div>
         </TabsContent>
       </Tabs>
     </div>

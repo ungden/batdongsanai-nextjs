@@ -121,32 +121,34 @@ const ProjectDetail = () => {
       
       <BreadcrumbSchema items={breadcrumbItems} />
 
-      <div className="min-h-screen bg-gradient-to-br from-background via-muted/20 to-background">
+      {/* Use clean background in light mode, darker in dark mode */}
+      <div className="min-h-screen bg-slate-50/50 dark:bg-background">
         <ProjectHero project={project} />
 
         <div className="container mx-auto px-4 md:px-6 py-8 pb-24">
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             {/* Left Column - Main Content */}
-            <div className="lg:col-span-2 space-y-6">
-              {/* Price Card */}
-              <Card className="card-elevated border-primary/10 bg-gradient-to-br from-card via-blue-50/10 to-muted/50">
+            <div className="lg:col-span-2 space-y-8">
+              {/* Price Card - Clean & Elevated */}
+              <Card className="card-elevated border-primary/10 overflow-hidden">
+                <div className="h-1.5 w-full bg-gradient-to-r from-primary to-blue-400" />
                 <CardContent className="p-6">
                   <div className="flex items-center justify-between">
                     <div>
                       <div className="text-sm text-muted-foreground mb-1 font-medium">Giá bán dự án</div>
-                      <div className="text-3xl md:text-4xl font-bold text-foreground mb-2">
+                      <div className="text-3xl md:text-4xl font-bold text-foreground mb-1 tracking-tight">
                         {project.priceRange}
                       </div>
-                      <div className="text-base text-muted-foreground">
-                        {formatCurrency(project.pricePerSqm)} VNĐ/m²
+                      <div className="text-base text-muted-foreground font-medium">
+                        ~{formatCurrency(project.pricePerSqm)} /m²
                       </div>
                     </div>
-                    <div className="text-right space-y-2">
+                    <div className="text-right">
                       <Button 
                         onClick={handleCalculate}
-                        className="bg-gradient-to-r from-primary to-blue-600 text-white shadow-lg hover:shadow-xl transition-all"
+                        className="h-12 px-6 rounded-xl bg-primary hover:bg-primary/90 text-white shadow-lg shadow-blue-500/20 transition-all hover:-translate-y-0.5"
                       >
-                        <Calculator className="w-4 h-4 mr-2" />
+                        <Calculator className="w-5 h-5 mr-2" />
                         Tính toán vay
                       </Button>
                     </div>
@@ -154,23 +156,23 @@ const ProjectDetail = () => {
                 </CardContent>
               </Card>
 
-              {/* VIP Analysis CTA */}
-              <Card className="rounded-2xl shadow-lg border border-amber-200/30 bg-gradient-to-br from-amber-50/50 via-orange-50/30 to-purple-50/30 dark:from-amber-950/20 dark:to-purple-950/20 overflow-hidden relative">
-                <div className="absolute top-0 right-0 w-48 h-48 bg-gradient-to-br from-amber-500/10 to-purple-500/10 rounded-full blur-3xl pointer-events-none" />
-                <CardContent className="relative p-6">
-                  <div className="flex items-center gap-4">
-                    <div className="p-4 bg-gradient-to-br from-amber-500 to-purple-600 rounded-2xl shadow-xl shrink-0">
+              {/* VIP Analysis CTA - Modern Gradient */}
+              <Card className="rounded-2xl shadow-strong border border-white/20 dark:border-border overflow-hidden relative bg-gradient-to-br from-violet-600 to-indigo-600 text-white">
+                <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full blur-3xl pointer-events-none -translate-y-1/2 translate-x-1/2" />
+                <CardContent className="relative p-6 sm:p-8">
+                  <div className="flex flex-col sm:flex-row items-center gap-6">
+                    <div className="p-4 bg-white/10 rounded-2xl backdrop-blur-sm border border-white/20 shadow-inner shrink-0">
                       <FileText className="w-8 h-8 text-white" />
                     </div>
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-2">
-                        <h3 className="text-xl font-bold text-foreground">Báo cáo phân tích chuyên sâu</h3>
-                        {!isVIP && <Crown className="w-5 h-5 text-amber-500" />}
+                    <div className="flex-1 text-center sm:text-left">
+                      <div className="flex items-center justify-center sm:justify-start gap-2 mb-2">
+                        <h3 className="text-xl font-bold">Báo cáo phân tích chuyên sâu</h3>
+                        {!isVIP && <Crown className="w-5 h-5 text-yellow-300 animate-pulse" />}
                       </div>
-                      <p className="text-sm text-muted-foreground mb-3">
-                        Phân tích tài chính, pháp lý, thị trường và kỹ thuật chi tiết
+                      <p className="text-blue-100 text-sm mb-4 leading-relaxed max-w-lg">
+                        Mở khóa dữ liệu: Phân tích dòng tiền, pháp lý chi tiết, quy hoạch hạ tầng và rủi ro tiềm ẩn.
                       </p>
-                      <AnalysisButton projectId={project.id} className="w-full md:w-auto" />
+                      <AnalysisButton projectId={project.id} className="w-full sm:w-auto bg-white text-indigo-600 hover:bg-blue-50 border-0 font-bold shadow-lg" />
                     </div>
                   </div>
                 </CardContent>
@@ -178,44 +180,36 @@ const ProjectDetail = () => {
 
               {/* Gallery */}
               {project.gallery && project.gallery.length > 0 && (
-                <Card className="overflow-hidden rounded-2xl shadow-lg border-0">
+                <Card className="overflow-hidden rounded-2xl shadow-medium border-0">
                   <ProjectImageGallery gallery={project.gallery} projectName={project.name} />
                 </Card>
               )}
 
-              {/* Components based on Tabs but rendered as sections for better SEO/UX in this layout structure */}
-              {/* (Or keep Tabs if preferred, but styles needed fixing) */}
-              
-              <Card className="rounded-2xl shadow-lg border-border bg-card">
+              {/* Main Content Tabs */}
+              <Card className="rounded-2xl shadow-medium border-border bg-card overflow-hidden">
                 <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-                  <div className="border-b border-border bg-muted/30">
-                    <TabsList className="w-full h-auto p-3 bg-transparent justify-start overflow-x-auto no-scrollbar">
-                      <TabsTrigger value="overview" className="data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow-sm rounded-xl px-5 py-3 font-semibold text-sm transition-all whitespace-nowrap">
-                        <Info className="w-4 h-4 mr-2" />
-                        Tổng quan
+                  <div className="border-b border-border bg-muted/20">
+                    <TabsList className="w-full h-auto p-2 bg-transparent justify-start overflow-x-auto no-scrollbar gap-2">
+                      <TabsTrigger value="overview" className="data-[state=active]:bg-white dark:data-[state=active]:bg-muted data-[state=active]:shadow-sm rounded-lg px-4 py-2.5 font-semibold text-sm transition-all">
+                        <Info className="w-4 h-4 mr-2" /> Tổng quan
                       </TabsTrigger>
-                      <TabsTrigger value="market" className="data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow-sm rounded-xl px-5 py-3 font-semibold text-sm transition-all whitespace-nowrap">
-                        <TrendingUp className="w-4 h-4 mr-2" />
-                        <span className="hidden sm:inline">Market Analysis</span>
-                        <span className="sm:hidden">Market</span>
+                      <TabsTrigger value="market" className="data-[state=active]:bg-white dark:data-[state=active]:bg-muted data-[state=active]:shadow-sm rounded-lg px-4 py-2.5 font-semibold text-sm transition-all">
+                        <TrendingUp className="w-4 h-4 mr-2" /> Thị trường
                       </TabsTrigger>
-                      <TabsTrigger value="legal" className="data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow-sm rounded-xl px-5 py-3 font-semibold text-sm transition-all whitespace-nowrap">
-                        <Shield className="w-4 h-4 mr-2" />
-                        Pháp lý
+                      <TabsTrigger value="legal" className="data-[state=active]:bg-white dark:data-[state=active]:bg-muted data-[state=active]:shadow-sm rounded-lg px-4 py-2.5 font-semibold text-sm transition-all">
+                        <Shield className="w-4 h-4 mr-2" /> Pháp lý
                       </TabsTrigger>
-                      <TabsTrigger value="payment" className="data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow-sm rounded-xl px-5 py-3 font-semibold text-sm transition-all whitespace-nowrap">
-                        <DollarSign className="w-4 h-4 mr-2" />
-                        Thanh toán
+                      <TabsTrigger value="payment" className="data-[state=active]:bg-white dark:data-[state=active]:bg-muted data-[state=active]:shadow-sm rounded-lg px-4 py-2.5 font-semibold text-sm transition-all">
+                        <DollarSign className="w-4 h-4 mr-2" /> Thanh toán
                       </TabsTrigger>
-                      <TabsTrigger value="progress" className="data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow-sm rounded-xl px-5 py-3 font-semibold text-sm transition-all whitespace-nowrap">
-                        <Activity className="w-4 h-4 mr-2" />
-                        Tiến độ
+                      <TabsTrigger value="progress" className="data-[state=active]:bg-white dark:data-[state=active]:bg-muted data-[state=active]:shadow-sm rounded-lg px-4 py-2.5 font-semibold text-sm transition-all">
+                        <Activity className="w-4 h-4 mr-2" /> Tiến độ
                       </TabsTrigger>
                     </TabsList>
                   </div>
                   
-                  <div className="p-6">
-                    <TabsContent value="overview" className="mt-0 space-y-8">
+                  <div className="p-6 bg-card">
+                    <TabsContent value="overview" className="mt-0 space-y-8 animate-fade-in">
                       <ProjectOverview
                         project={project}
                         onConsultationClick={() => setShowConsultationForm(true)}
@@ -234,7 +228,7 @@ const ProjectDetail = () => {
                       />
                     </TabsContent>
 
-                    <TabsContent value="market" className="mt-0 space-y-8">
+                    <TabsContent value="market" className="mt-0 space-y-8 animate-fade-in">
                       <StockStyleDashboard
                         projectId={project.id}
                         projectName={project.name}
@@ -256,11 +250,11 @@ const ProjectDetail = () => {
                       />
                     </TabsContent>
 
-                    <TabsContent value="legal" className="mt-0">
+                    <TabsContent value="legal" className="mt-0 animate-fade-in">
                       <ProjectLegalTab project={project} />
                     </TabsContent>
 
-                    <TabsContent value="payment" className="mt-0 space-y-8">
+                    <TabsContent value="payment" className="mt-0 space-y-8 animate-fade-in">
                       <ProjectPaymentTab project={project} />
                       <ROICalculator
                         pricePerSqm={project.pricePerSqm}
@@ -271,7 +265,7 @@ const ProjectDetail = () => {
                       <PaymentPoliciesCard projectId={project.id} />
                     </TabsContent>
 
-                    <TabsContent value="progress" className="mt-0 space-y-8">
+                    <TabsContent value="progress" className="mt-0 space-y-8 animate-fade-in">
                       <ProjectProgressTab project={project} />
                       <ProjectTimeline
                         completionDate={project.completionDate}
@@ -284,8 +278,8 @@ const ProjectDetail = () => {
               </Card>
 
               {/* FAQ Section */}
-              <Card className="rounded-2xl shadow-lg border-border bg-card">
-                <CardHeader className="bg-muted/20 rounded-t-2xl border-b border-border/50">
+              <Card className="rounded-2xl shadow-medium border-border bg-card">
+                <CardHeader className="border-b border-border/50 pb-4">
                   <CardTitle className="text-lg flex items-center gap-2 text-foreground">
                     <Info className="w-5 h-5 text-primary" />
                     Câu hỏi thường gặp
@@ -310,53 +304,55 @@ const ProjectDetail = () => {
                 <ProjectAgents projectId={project.id} projectName={project.name} />
 
                 {/* Key Metrics */}
-                <Card className="card-elevated">
-                  <CardHeader className="bg-muted/30 rounded-t-2xl border-b border-border/50 pb-3">
+                <Card className="card-elevated border-border/60">
+                  <CardHeader className="bg-muted/30 border-b border-border/50 pb-4">
                     <CardTitle className="text-base flex items-center gap-2 text-foreground">
                       <BarChart3 className="w-4 h-4 text-primary" />
                       Chỉ số quan trọng
                     </CardTitle>
                   </CardHeader>
-                  <CardContent className="p-4 space-y-3">
-                    <div className="flex justify-between items-center p-4 bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-950/30 dark:to-indigo-950/30 rounded-xl shadow-sm border border-blue-100 dark:border-blue-900">
-                      <span className="text-sm font-medium flex items-center gap-2 text-muted-foreground">
-                        <Star className="w-4 h-4 text-primary" />
+                  <CardContent className="p-5 space-y-4">
+                    <div className="flex justify-between items-center p-4 bg-blue-50 dark:bg-blue-900/20 rounded-xl border border-blue-100 dark:border-blue-800/30">
+                      <span className="text-sm font-medium flex items-center gap-2 text-blue-700 dark:text-blue-300">
+                        <Star className="w-4 h-4" />
                         Điểm pháp lý
                       </span>
-                      <span className="font-bold text-xl text-primary">{project.legalScore}/10</span>
+                      <span className="font-black text-xl text-blue-700 dark:text-blue-400">{project.legalScore}/10</span>
                     </div>
                     
-                    {[
-                      { label: "Số tầng", value: project.floors || 'N/A', icon: Building2 },
-                      { label: "Tổng căn hộ", value: project.totalUnits || 'N/A', icon: Home },
-                      { label: "Đã bán", value: project.soldUnits || 'N/A', icon: Users },
-                      { label: "Bàn giao", value: project.completionDate, icon: Calendar }
-                    ].map((item, index) => (
-                      <div key={index} className="flex justify-between items-center p-3 bg-muted/30 rounded-xl hover:bg-muted/50 transition-all duration-200">
-                        <span className="text-sm flex items-center gap-2 text-muted-foreground">
-                          <item.icon className="w-4 h-4" />
-                          {item.label}
-                        </span>
-                        <span className="font-semibold text-foreground">{item.value}</span>
-                      </div>
-                    ))}
+                    <div className="space-y-3">
+                      {[
+                        { label: "Số tầng", value: project.floors || 'N/A', icon: Building2 },
+                        { label: "Tổng căn hộ", value: project.totalUnits || 'N/A', icon: Home },
+                        { label: "Đã bán", value: project.soldUnits || 'N/A', icon: Users },
+                        { label: "Bàn giao", value: project.completionDate, icon: Calendar }
+                      ].map((item, index) => (
+                        <div key={index} className="flex justify-between items-center p-3 rounded-lg hover:bg-muted/50 transition-colors border border-transparent hover:border-border/50">
+                          <span className="text-sm flex items-center gap-2.5 text-muted-foreground font-medium">
+                            <item.icon className="w-4 h-4 opacity-70" />
+                            {item.label}
+                          </span>
+                          <span className="font-semibold text-foreground text-sm">{item.value}</span>
+                        </div>
+                      ))}
+                    </div>
                   </CardContent>
                 </Card>
 
                 {/* Legal Warnings */}
                 {project.warnings.length > 0 && (
-                  <Card className="card-elevated bg-gradient-to-br from-amber-50/50 via-orange-50/30 to-yellow-50/30 dark:from-amber-950/20 dark:to-yellow-950/10">
-                    <CardHeader className="pb-3 border-b border-amber-200/20">
-                      <CardTitle className="text-base text-amber-600 dark:text-amber-400 flex items-center gap-2">
+                  <Card className="card-elevated border-amber-200/50 dark:border-amber-800/50 bg-amber-50/30 dark:bg-amber-950/10">
+                    <CardHeader className="pb-3 border-b border-amber-100/50 dark:border-amber-900/30">
+                      <CardTitle className="text-base text-amber-700 dark:text-amber-400 flex items-center gap-2">
                         <AlertTriangle className="w-4 h-4" />
                         Cảnh báo pháp lý
                       </CardTitle>
                     </CardHeader>
                     <CardContent className="p-4 space-y-2">
                       {project.warnings.slice(0, 3).map((warning, index) => (
-                        <div key={index} className="flex items-start gap-2 p-3 bg-background/60 backdrop-blur-sm rounded-xl shadow-sm border border-border/50">
-                          <div className="w-2 h-2 bg-amber-500 rounded-full mt-2 flex-shrink-0" />
-                          <span className="text-sm leading-relaxed text-foreground">{warning}</span>
+                        <div key={index} className="flex items-start gap-2.5 p-3 bg-white/60 dark:bg-black/20 rounded-xl border border-amber-100/50 dark:border-amber-900/30">
+                          <div className="w-1.5 h-1.5 bg-amber-500 rounded-full mt-2 flex-shrink-0 shadow-sm" />
+                          <span className="text-sm leading-relaxed text-amber-900 dark:text-amber-200/90 font-medium">{warning}</span>
                         </div>
                       ))}
                     </CardContent>

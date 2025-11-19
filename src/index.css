@@ -4,24 +4,27 @@
 
 @layer base {
   :root {
-    /* LIGHT MODE - Clean, Professional, Airy */
-    --background: 210 40% 98%; /* Slate 50 */
-    --foreground: 222 47% 11%; /* Slate 900 */
+    /* LIGHT MODE - Clean, Professional, Modern */
+    /* Background: Cool White/Slate tint instead of plain white */
+    --background: 210 40% 98%; 
+    --foreground: 222 47% 11%; 
 
+    /* Card: Pure White to pop against background */
     --card: 0 0% 100%;
     --card-foreground: 222 47% 11%;
 
     --popover: 0 0% 100%;
     --popover-foreground: 222 47% 11%;
 
-    --primary: 221 83% 53%; /* Blue 600 */
+    /* Primary: Deep Professional Blue (Trustworthy) */
+    --primary: 221 83% 53%; 
     --primary-foreground: 210 40% 98%;
 
     --secondary: 210 40% 96.1%;
     --secondary-foreground: 222 47% 11.2%;
 
     --muted: 210 40% 96.1%;
-    --muted-foreground: 215 16% 45%;
+    --muted-foreground: 215 16% 47%;
 
     --accent: 210 40% 96.1%;
     --accent-foreground: 222 47% 11.2%;
@@ -48,20 +51,39 @@
     --sidebar-accent-foreground: 240 5.9% 10%;
     --sidebar-border: 220 13% 91%;
     --sidebar-ring: 217 91% 60%;
+
+    /* SHADOW VARIABLES (Missing previously) */
+    /* Light mode shadows are bluish-gray for a cleaner look */
+    --shadow-subtle: 0 1px 2px 0 rgb(15 23 42 / 0.05);
+    --shadow-medium: 0 4px 6px -1px rgb(15 23 42 / 0.06), 0 2px 4px -2px rgb(15 23 42 / 0.06);
+    --shadow-strong: 0 10px 15px -3px rgb(15 23 42 / 0.08), 0 4px 6px -4px rgb(15 23 42 / 0.08);
+    --shadow-floating: 0 20px 25px -5px rgb(15 23 42 / 0.1), 0 8px 10px -6px rgb(15 23 42 / 0.1);
+    --shadow-glow: 0 0 15px rgba(37, 99, 235, 0.2);
+    --shadow-intense: 0 25px 50px -12px rgb(15 23 42 / 0.25);
+
+    /* GRADIENT VARIABLES */
+    --gradient-primary: linear-gradient(135deg, hsl(221 83% 53%), hsl(217 91% 60%));
+    --gradient-accent: linear-gradient(135deg, hsl(262 83% 58%), hsl(292 84% 61%));
+    --gradient-hero: linear-gradient(135deg, hsl(221 83% 53%), hsl(262 83% 58%));
+    --gradient-subtle: linear-gradient(135deg, hsl(0 0% 100%), hsl(210 40% 98%));
+    --gradient-glass: linear-gradient(135deg, rgba(255, 255, 255, 0.8), rgba(255, 255, 255, 0.4));
+    --gradient-card: linear-gradient(180deg, rgba(255, 255, 255, 1) 0%, rgba(248, 250, 252, 1) 100%);
+    --gradient-blue-light: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+    --gradient-blue-main: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
   }
 
   .dark {
     /* DARK MODE - Deep Blue/Slate, High Contrast Text */
-    --background: 224 71% 4%; /* Deepest Blue/Black */
+    --background: 224 71% 4%; 
     --foreground: 213 31% 91%;
 
-    --card: 224 71% 6%; /* Slightly lighter than bg */
+    --card: 224 71% 6%;
     --card-foreground: 213 31% 91%;
 
     --popover: 224 71% 6%;
     --popover-foreground: 213 31% 91%;
 
-    --primary: 217 91% 60%; /* Lighter Blue for dark mode */
+    --primary: 217 91% 60%;
     --primary-foreground: 222 47% 11%;
 
     --secondary: 215 27.9% 16.9%;
@@ -89,6 +111,21 @@
     --sidebar-accent-foreground: 240 4.8% 95.9%;
     --sidebar-border: 215 27.9% 16.9%;
     --sidebar-ring: 217 91% 60%;
+
+    /* Dark Mode Shadows - Subtle but present */
+    --shadow-subtle: 0 1px 2px 0 rgb(0 0 0 / 0.3);
+    --shadow-medium: 0 4px 6px -1px rgb(0 0 0 / 0.4);
+    --shadow-strong: 0 10px 15px -3px rgb(0 0 0 / 0.5);
+    --shadow-floating: 0 20px 25px -5px rgb(0 0 0 / 0.6);
+    --shadow-glow: 0 0 20px rgba(59, 130, 246, 0.15);
+    --shadow-intense: 0 25px 50px -12px rgb(0 0 0 / 0.7);
+
+    /* Dark Mode Gradients */
+    --gradient-subtle: linear-gradient(135deg, hsl(224 71% 6%), hsl(224 71% 10%));
+    --gradient-card: linear-gradient(180deg, hsl(224 71% 6%) 0%, hsl(224 71% 8%) 100%);
+    --gradient-glass: linear-gradient(135deg, rgba(15, 23, 42, 0.8), rgba(15, 23, 42, 0.4));
+    --gradient-blue-light: linear-gradient(135deg, #172554 0%, #1e3a8a 100%);
+    --gradient-blue-main: linear-gradient(135deg, #1d4ed8 0%, #1e40af 100%);
   }
 }
 
@@ -103,15 +140,15 @@
 
 @layer components {
   .card-modern {
-    @apply bg-card border border-border/50 shadow-sm hover:shadow-md transition-all duration-300 rounded-xl hover:border-primary/30;
+    @apply bg-card border border-border/60 shadow-subtle hover:shadow-medium transition-all duration-300 rounded-xl hover:border-primary/30;
   }
 
   .card-elevated {
-    @apply bg-card border border-border shadow-sm hover:shadow-lg transition-all duration-300 rounded-xl dark:shadow-none dark:hover:bg-accent/10;
+    @apply bg-card border border-border/60 shadow-medium hover:shadow-strong transition-all duration-300 rounded-xl dark:shadow-none dark:hover:bg-accent/10;
   }
 
   .card-hero {
-    @apply bg-gradient-to-br from-blue-600 to-indigo-700 dark:from-blue-900 dark:to-indigo-900 shadow-xl;
+    @apply bg-gradient-hero shadow-strong text-white;
   }
 
   .btn-modern {
@@ -119,7 +156,7 @@
   }
   
   .btn-primary {
-    @apply btn-modern bg-primary text-primary-foreground hover:bg-primary/90 shadow-sm hover:shadow;
+    @apply btn-modern bg-primary text-primary-foreground hover:bg-primary/90 shadow-sm hover:shadow-md;
   }
   
   .btn-ghost {
@@ -127,7 +164,7 @@
   }
 
   .btn-gradient {
-    @apply bg-gradient-to-r from-primary to-blue-600 text-white hover:opacity-90 shadow-lg hover:shadow-xl transition-all rounded-xl h-12 px-8 font-bold;
+    @apply bg-gradient-primary text-white hover:opacity-90 shadow-lg hover:shadow-xl transition-all rounded-xl h-12 px-8 font-bold;
   }
 
   .text-headline-1 {
@@ -157,17 +194,16 @@
   .hover-lift {
     @apply transition-transform duration-300 hover:-translate-y-1;
   }
-
-  /* Gradient Utilities that work in both modes */
-  .bg-gradient-primary {
-    @apply bg-gradient-to-r from-blue-600 to-indigo-600 dark:from-blue-500 dark:to-indigo-500;
-  }
   
-  .bg-gradient-subtle {
-    @apply bg-gradient-to-br from-white to-slate-50 dark:from-slate-950 dark:to-slate-900;
+  /* Custom Scrollbar */
+  .custom-scrollbar::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
   }
-  
-  .bg-gradient-accent {
-    @apply bg-gradient-to-r from-purple-600 to-pink-600 dark:from-purple-500 dark:to-pink-500;
+  .custom-scrollbar::-webkit-scrollbar-track {
+    @apply bg-transparent;
+  }
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    @apply bg-muted-foreground/20 rounded-full hover:bg-muted-foreground/40 transition-colors;
   }
 }

@@ -4,9 +4,9 @@
 
 @layer base {
   :root {
-    /* Modern Clean Palette - Inspired by Vercel/Linear */
-    --background: 0 0% 100%;
-    --foreground: 222 47% 11%; /* Deep Navy for text */
+    /* LIGHT MODE - Clean, Professional, Off-white */
+    --background: 0 0% 100%; /* White */
+    --foreground: 222 47% 11%; /* Slate 900 */
 
     --card: 0 0% 100%;
     --card-foreground: 222 47% 11%;
@@ -14,15 +14,14 @@
     --popover: 0 0% 100%;
     --popover-foreground: 222 47% 11%;
 
-    /* Primary: Professional Blue (Intercom/Stripe style) */
-    --primary: 221 83% 53%; /* #2563eb */
+    --primary: 221 83% 53%; /* Blue 600 */
     --primary-foreground: 210 40% 98%;
 
-    --secondary: 210 40% 96.1%;
+    --secondary: 210 40% 96.1%; /* Slate 100 */
     --secondary-foreground: 222 47% 11.2%;
 
     --muted: 210 40% 96.1%;
-    --muted-foreground: 215 16% 47%;
+    --muted-foreground: 215 16% 47%; /* Slate 500 */
 
     --accent: 210 40% 96.1%;
     --accent-foreground: 222 47% 11.2%;
@@ -30,18 +29,18 @@
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 210 40% 98%;
 
-    --border: 214 32% 91%;
+    --border: 214 32% 91%; /* Slate 200 */
     --input: 214 32% 91%;
     --ring: 221 83% 53%;
 
     --radius: 0.75rem;
 
-    /* Semantic Colors */
-    --success: 142 76% 36%;
-    --warning: 38 92% 50%;
+    /* Semantic Colors - Light */
+    --success: 142 76% 36%; /* Green 600 */
+    --warning: 38 92% 50%;  /* Amber 500 */
     
-    /* Sidebar */
-    --sidebar-background: 222 47% 11%; /* Dark Navy Sidebar */
+    /* Sidebar - Light */
+    --sidebar-background: 222 47% 11%; /* Dark Navy Sidebar for contrast */
     --sidebar-foreground: 210 40% 98%;
     --sidebar-primary: 221 83% 53%;
     --sidebar-primary-foreground: 0 0% 100%;
@@ -52,9 +51,48 @@
   }
 
   .dark {
-    --background: 222 47% 11%;
-    --foreground: 210 40% 98%;
-    /* ... dark mode values ... */
+    /* DARK MODE - Deep Navy/Black, High Contrast */
+    --background: 222 47% 11%; /* Slate 950 */
+    --foreground: 210 40% 98%; /* Slate 50 */
+
+    --card: 222 47% 11%; /* Slate 950 */
+    --card-foreground: 210 40% 98%;
+
+    --popover: 222 47% 11%;
+    --popover-foreground: 210 40% 98%;
+
+    --primary: 217 91% 60%; /* Blue 500 - Lighter for dark mode */
+    --primary-foreground: 222 47% 11%;
+
+    --secondary: 217 33% 17%; /* Slate 800 */
+    --secondary-foreground: 210 40% 98%;
+
+    --muted: 217 33% 17%;
+    --muted-foreground: 215 20% 65%; /* Slate 400 */
+
+    --accent: 217 33% 17%;
+    --accent-foreground: 210 40% 98%;
+
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 210 40% 98%;
+
+    --border: 217 33% 17%; /* Slate 800 */
+    --input: 217 33% 17%;
+    --ring: 224 76% 48%;
+
+    /* Semantic Colors - Dark */
+    --success: 142 70% 50%; /* Green 500 */
+    --warning: 48 96% 53%;  /* Yellow 500 */
+
+    /* Sidebar - Dark */
+    --sidebar-background: 222 47% 11%;
+    --sidebar-foreground: 210 40% 98%;
+    --sidebar-primary: 221 83% 53%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 217 33% 17%;
+    --sidebar-accent-foreground: 210 40% 98%;
+    --sidebar-border: 217 33% 20%;
+    --sidebar-ring: 221 83% 53%;
   }
 }
 
@@ -63,39 +101,48 @@
     @apply border-border;
   }
   body {
-    @apply bg-slate-50 text-foreground font-sans antialiased; /* Slight off-white background */
+    @apply bg-background text-foreground font-sans antialiased;
   }
 }
 
 @layer components {
   /* Modern Card */
   .card-modern {
-    @apply bg-white border border-border/60 shadow-sm hover:shadow-md transition-all duration-200 rounded-xl;
+    @apply bg-card border border-border shadow-sm hover:shadow-md transition-all duration-200 rounded-xl;
   }
 
   /* Clean Button */
   .btn-primary {
-    @apply bg-primary text-white hover:bg-primary/90 shadow-sm transition-all duration-200 font-medium rounded-lg;
+    @apply bg-primary text-primary-foreground hover:bg-primary/90 shadow-sm transition-all duration-200 font-medium rounded-lg;
   }
   
   .btn-outline {
-    @apply bg-white border border-border hover:bg-slate-50 text-foreground transition-all duration-200 font-medium rounded-lg;
+    @apply bg-background border border-border hover:bg-accent hover:text-accent-foreground transition-all duration-200 font-medium rounded-lg;
   }
 
   /* Typography */
   .h1-title {
-    @apply text-3xl md:text-4xl font-bold tracking-tight text-slate-900;
+    @apply text-3xl md:text-4xl font-bold tracking-tight text-foreground;
   }
   
   .h2-title {
-    @apply text-2xl font-bold tracking-tight text-slate-900;
+    @apply text-2xl font-bold tracking-tight text-foreground;
   }
   
   .h3-title {
-    @apply text-lg font-semibold text-slate-900;
+    @apply text-lg font-semibold text-foreground;
   }
 
   .text-subtle {
-    @apply text-sm text-slate-500;
+    @apply text-sm text-muted-foreground;
+  }
+  
+  /* Custom Gradients that work in both modes */
+  .bg-gradient-primary {
+    @apply bg-gradient-to-r from-blue-600 to-indigo-600 dark:from-blue-500 dark:to-indigo-500;
+  }
+  
+  .bg-gradient-subtle {
+    @apply bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800;
   }
 }

@@ -1,5 +1,3 @@
-/* eslint-disable */
-// @ts-ignore
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts"
 
 const corsHeaders = {
@@ -168,7 +166,6 @@ serve(async (req: Request) => {
       }
 
       // Gọi Gemini với Search Tool (cần dùng endpoint có tool)
-      // Lưu ý: Đoạn code cũ dùng fetch trực tiếp với tool config
       const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
       const payload = {
         contents: [{ parts: [{ text: systemPrompt + "\n\n" + userPrompt }] }],

@@ -15,29 +15,22 @@ declare const Deno: {
 
 const MODEL_FORMAT = "gemini-2.0-flash";
 
-// Hàm trích xuất JSON an toàn từ văn bản AI trả về
 function extractJSON(text: string): any {
   try {
-    // 1. Thử parse trực tiếp
     return JSON.parse(text);
   } catch (e) {
-    // 2. Tìm block JSON trong markdown
     const match = text.match(/```(?:json)?\s*([\s\S]*?)\s*```/);
     if (match && match[1]) {
-      try { return JSON.parse(match[1]); } catch (e2) { /* tiếp tục thử */ }
+      try { return JSON.parse(match[1]); } catch (e2) { /* continue */ }
     }
-    
-    // 3. Tìm cặp ngoặc nhọn { } ngoài cùng
     const firstOpen = text.indexOf('{');
     const lastClose = text.lastIndexOf('}');
     if (firstOpen !== -1 && lastClose !== -1) {
-      try { 
-        return JSON.parse(text.substring(firstOpen, lastClose + 1)); 
-      } catch (e3) { 
-        console.error("JSON extraction failed:", e3);
-      }
+      try { return JSON.parse(text.substring(firstOpen, lastClose + 1)); } catch (e3) { /* continue */ }
     }
-    throw new Error("Không thể định dạng JSON từ phản hồi của AI.");
+    // Return empty object instead of crashing if JSON fails
+    console.error("JSON parse failed, returning empty object");
+    return {};
   }
 }
 
@@ -47,8 +40,7 @@ async function callGemini(apiKey: string, prompt: string) {
     contents: [{ parts: [{ text: prompt }] }],
     generationConfig: {
       temperature: 0.1,
-      responseMimeType: "application/json", // Ép kiểu JSON ngay từ model
-      maxOutputTokens: 8192,
+      responseMimeType: "application/json",
     }
   };
 
@@ -71,6 +63,15 @@ serve(async (req: Request) => {
 
   try {
     const { content, type } = await req.json()
+    
+    // Kiểm tra nếu bước trước bị fail
+    if (content && typeof content === 'string' && content.startsWith("RAW_DATA_NOT_FOUND")) {
+       return new Response(JSON.stringify({ data: {} }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 200,
+      })
+    }
+
     const apiKey = Deno.env.get('GEMINI_API_KEY')
     if (!apiKey) throw new Error('GEMINI_API_KEY not set')
 
@@ -78,58 +79,35 @@ serve(async (req: Request) => {
 
     if (type === 'project_detail') {
       prompt = `
-      Nhiệm vụ: Chuyển đổi thông tin BĐS sau thành JSON chuẩn.
-      
-      DỮ LIỆU ĐẦU VÀO:
+      Convert this Real Estate Data into standard JSON.
+      INPUT:
       """
       ${content}
       """
       
-      QUY TẮC QUAN TRỌNG:
-      1. Chỉ lấy con số (Ví dụ: "5 tỷ" -> 5000000000, "60tr/m2" -> 60000000).
-      2. Nếu không tìm thấy thông tin, hãy để null. Đừng bịa đặt.
-      3. Đảm bảo JSON hợp lệ, không thêm chú thích.
+      RULES:
+      1. Extract numbers strictly (e.g. "5 billion" -> 5000000000).
+      2. If data is missing, use null.
+      3. Output valid JSON only.
       
-      JSON SCHEMA:
+      SCHEMA:
       {
-        "overview": {
-          "description": "string (tóm tắt ngắn gọn)",
-          "developer": "string",
-          "location": "string",
-          "city": "string",
-          "district": "string"
-        },
-        "specs": {
-          "total_units": number,
-          "total_floors": number,
-          "blocks": number,
-          "density_construction": number,
-          "handover_standard": "string"
-        },
-        "pricing": {
-          "price_per_sqm": number,
-          "launch_price": number,
-          "price_range": "string"
-        },
-        "legal": {
-          "legal_status": "string",
-          "completion_date": "string"
-        },
+        "overview": { "description": "string", "developer": "string", "location": "string", "city": "string", "district": "string" },
+        "specs": { "total_units": number, "total_floors": number, "blocks": number, "density_construction": number, "handover_standard": "string" },
+        "pricing": { "price_per_sqm": number, "launch_price": number, "price_range": "string" },
+        "legal": { "legal_status": "string", "completion_date": "string" },
         "amenities": ["string"]
       }`;
     }
     else if (type === 'project_list') {
-      prompt = `Extract list of real estate projects to JSON. Input: ${content}`;
+      prompt = `Extract list to JSON array. Input: ${content}`;
     }
     else if (type === 'raw_list') {
-      prompt = `Convert list to JSON Array. Input: ${content}`;
-    }
-    else {
-      throw new Error("Invalid type");
+      prompt = `Convert to JSON array. Input: ${content}`;
     }
 
     const jsonString = await callGemini(apiKey, prompt);
-    const data = extractJSON(jsonString); // Sử dụng hàm trích xuất an toàn
+    const data = extractJSON(jsonString);
 
     return new Response(JSON.stringify({ data }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },

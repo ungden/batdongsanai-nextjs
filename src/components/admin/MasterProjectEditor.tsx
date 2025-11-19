@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Save, Loader2, ScanSearch, Sparkles, Play, CheckCircle2 } from "lucide-react";
+import { Save, Loader2, ScanSearch, Sparkles, Play, CheckCircle2, AlertCircle } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 
 interface MasterEditorProps {
@@ -22,10 +22,8 @@ interface MasterEditorProps {
 const safeParseInt = (val: any): number | null => {
   if (val === null || val === undefined) return null;
   if (typeof val === 'number') return isNaN(val) ? null : val;
-  
-  // Xử lý string: "5000 căn", "30.5"
-  const str = String(val).replace(/,/g, ''); // Xóa dấu phẩy
-  const num = parseInt(str.replace(/\D/g, '')); // Chỉ lấy số
+  const str = String(val).replace(/,/g, '');
+  const num = parseInt(str.replace(/\D/g, ''));
   return isNaN(num) ? null : num;
 };
 
@@ -40,7 +38,6 @@ const safeParseFloat = (val: any): number | null => {
 const mapAiDataToFields = (aiData: any, section: string, currentData: any) => {
   const newData = { ...currentData };
   
-  // Hàm tìm kiếm linh hoạt trong JSON AI trả về
   const find = (keys: string[]) => {
     for (const k of keys) {
       if (aiData[k] !== undefined && aiData[k] !== null) return aiData[k];
@@ -100,7 +97,6 @@ const mapAiDataToFields = (aiData: any, section: string, currentData: any) => {
     const date = find(['completion_date']);
     if (date) newData.completion_date = date;
 
-    // Logic tự động chấm điểm pháp lý đơn giản
     if (newData.legal_status?.toLowerCase().includes('sổ') || newData.legal_status?.toLowerCase().includes('hđmb')) {
        if (!newData.legal_score) newData.legal_score = 8;
     }
@@ -111,7 +107,6 @@ const mapAiDataToFields = (aiData: any, section: string, currentData: any) => {
     if (amenities && Array.isArray(amenities)) {
       const existing = Array.isArray(newData.amenities) ? newData.amenities : [];
       const combined = [...existing, ...amenities];
-      // Deduplicate
       newData.amenities = [...new Set(combined)];
     }
   }
@@ -124,7 +119,6 @@ export default function MasterProjectEditor({ projectId, onSave }: MasterEditorP
   const [saving, setSaving] = useState(false);
   const [data, setData] = useState<any>({});
   
-  // Audit State
   const [auditStatus, setAuditStatus] = useState<'idle' | 'running' | 'completed'>('idle');
   const [currentStep, setCurrentStep] = useState<string>("");
   const [progress, setProgress] = useState(0);
@@ -165,23 +159,28 @@ export default function MasterProjectEditor({ projectId, onSave }: MasterEditorP
     if (!isAuto) setAuditStatus('running');
     
     try {
-      // 1. Research (Deep Scan)
+      // 1. Research
       const { data: resData, error: resError } = await supabase.functions.invoke('research-project', {
         body: { query: data.name, mode: 'deep_scan', section }
       });
       if (resError) throw resError;
       
-      // 2. Structure to JSON
+      // Check raw text error
+      if (resData.data && typeof resData.data === 'string' && resData.data.startsWith("RAW_DATA_NOT_FOUND")) {
+         throw new Error("AI không tìm thấy thông tin hoặc bị từ chối (Conversational Response)");
+      }
+      
+      // 2. Structure
       const { data: structData, error: structError } = await supabase.functions.invoke('structure-data', {
         body: { content: resData.data, type: 'project_detail' }
       });
       if (structError) throw structError;
 
-      // 3. Apply & Save
+      // 3. Apply
       const newData = mapAiDataToFields(structData.data, section, data);
       setData(newData);
       
-      // Auto save to DB to persist progress
+      // Auto save
       await supabase.from('projects').update(newData).eq('id', projectId);
 
       if (!isAuto) {
@@ -215,6 +214,8 @@ export default function MasterProjectEditor({ projectId, onSave }: MasterEditorP
       { id: 'amenities', label: 'Tiện ích' }
     ];
 
+    let failCount = 0;
+
     for (let i = 0; i < sections.length; i++) {
       const sec = sections[i];
       setCurrentStep(sec.label);
@@ -229,18 +230,21 @@ export default function MasterProjectEditor({ projectId, onSave }: MasterEditorP
           return newLogs;
         });
       } else {
-        setLogs(prev => [...prev, `❌ Thất bại: ${sec.label}`]);
+        failCount++;
+        setLogs(prev => [...prev, `⚠️ Không tìm thấy dữ liệu: ${sec.label}`]);
       }
       
-      // Delay nhẹ để tránh rate limit
-      await new Promise(r => setTimeout(r, 1000));
-      
+      await new Promise(r => setTimeout(r, 1500)); // Delay
       setProgress(Math.round(((i + 1) / sections.length) * 100));
     }
 
     setAuditStatus('completed');
     setTimeout(() => setAuditStatus('idle'), 3000);
-    toast.success("Đã hoàn thành Audit toàn diện!");
+    if (failCount === 0) {
+      toast.success("Đã hoàn thành Audit toàn diện!");
+    } else {
+      toast.warning(`Hoàn thành với ${failCount} cảnh báo. Vui lòng kiểm tra log.`);
+    }
   };
 
   if (loading) return <div className="p-8 text-center"><Loader2 className="w-8 h-8 animate-spin mx-auto" /></div>;
@@ -279,15 +283,15 @@ export default function MasterProjectEditor({ projectId, onSave }: MasterEditorP
       </div>
 
       {/* Logs Area (Only show when running) */}
-      {auditStatus !== 'idle' && (
+      {logs.length > 0 && (
         <div className="bg-slate-900 text-green-400 p-3 rounded-lg font-mono text-xs space-y-1 max-h-32 overflow-y-auto shadow-inner">
-          {logs.map((log, i) => <div key={i}>{log}</div>)}
+          {logs.map((log, i) => <div key={i} className={log.includes("⚠️") ? "text-yellow-400" : ""}>{log}</div>)}
         </div>
       )}
 
       {/* Tabs Form */}
       <Tabs defaultValue="overview" className="w-full">
-        <TabsList className="w-full justify-start h-auto p-1 bg-muted/50 border-b overflow-x-auto">
+        <TabsList className="w-full justify-start h-12 bg-muted/50 p-1 border-b overflow-x-auto">
           <TabsTrigger value="overview" className="px-4 py-2">Tổng quan</TabsTrigger>
           <TabsTrigger value="specs" className="px-4 py-2">Thông số</TabsTrigger>
           <TabsTrigger value="financial" className="px-4 py-2">Giá & TC</TabsTrigger>

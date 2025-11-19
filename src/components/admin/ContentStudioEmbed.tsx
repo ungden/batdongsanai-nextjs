@@ -21,6 +21,7 @@ interface Props {
 export default function ContentStudioEmbed({ project, onSuccess }: Props) {
   const [contentType, setContentType] = useState("news");
   const [topic, setTopic] = useState("");
+  const [customInstructions, setCustomInstructions] = useState("");
   const [generating, setGenerating] = useState(false);
   const [result, setResult] = useState<any>(null);
 
@@ -32,19 +33,24 @@ export default function ContentStudioEmbed({ project, onSuccess }: Props) {
 
     setGenerating(true);
     try {
-      const contextData = `
+      const projectContext = `
 DỰ ÁN: ${project.name}
 VỊ TRÍ: ${project.location} (${project.district})
 CHỦ ĐẦU TƯ: ${project.developer}
 GIÁ: ${project.priceRange}
       `.trim();
 
+      // Ghép thêm instructions vào context
+      const fullContext = customInstructions 
+        ? `${projectContext}\n\nLƯU Ý ĐẶC BIỆT CỦA NGƯỜI DÙNG: ${customInstructions}`
+        : projectContext;
+
       const { data, error } = await supabase.functions.invoke('generate-content', {
         body: {
           action: 'generate',
           topic: topic,
           type: contentType,
-          context: contextData,
+          context: fullContext,
           tone: "chuyên nghiệp",
           language: 'vi-VN'
         }
@@ -77,6 +83,7 @@ GIÁ: ${project.priceRange}
       if (onSuccess) onSuccess();
       setResult(null);
       setTopic("");
+      setCustomInstructions("");
     } catch (error: any) {
       toast.error("Lỗi lưu: " + error.message);
     }
@@ -109,6 +116,19 @@ GIÁ: ${project.priceRange}
               onChange={(e) => setTopic(e.target.value)}
               placeholder="VD: Tiềm năng tăng giá, Cập nhật tiến độ..."
             />
+          </div>
+
+          <div className="space-y-2">
+            <Label>Ghi chú thêm cho AI (Tùy chọn)</Label>
+            <Textarea 
+              value={customInstructions}
+              onChange={(e) => setCustomInstructions(e.target.value)}
+              placeholder="VD: Nhấn mạnh vào view sông, đề cập đến chính sách chiết khấu 5%..."
+              rows={3}
+            />
+            <p className="text-xs text-muted-foreground">
+              Cung cấp thêm các điểm nhấn (Key selling points) để bài viết sát thực tế hơn.
+            </p>
           </div>
 
           <Button onClick={handleGenerate} disabled={generating} className="w-full">

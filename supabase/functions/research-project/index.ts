@@ -52,7 +52,6 @@ async function callGeminiSearch(apiKey: string, prompt: string) {
     "tôi sẽ tìm thấy", "tôi có thể giúp", "as an ai", "là một ai"
   ];
 
-  // Nếu text quá ngắn (< 100 ký tự) VÀ chứa từ khóa cấm -> Coi là lỗi
   const lowerText = text.toLowerCase();
   if (text.length < 150 && bannedPhrases.some(phrase => lowerText.includes(phrase))) {
      return `RAW_DATA_NOT_FOUND: AI returned conversational filler: "${text}"`; 
@@ -65,7 +64,7 @@ serve(async (req: Request) => {
   if (req.method === 'OPTIONS') return new Response(null, { headers: corsHeaders })
 
   try {
-    const { query, mode, raw_content, section } = await req.json()
+    const { query, mode, raw_content, section, context } = await req.json()
     const apiKey = Deno.env.get('GEMINI_API_KEY')
     if (!apiKey) throw new Error('GEMINI_API_KEY not set')
 
@@ -74,59 +73,41 @@ serve(async (req: Request) => {
     if (mode === 'deep_scan') {
       let searchInstructions = "";
 
-      // VIỆT HÓA TOÀN BỘ HƯỚNG DẪN ĐỂ AI HIỂU NGỮ CẢNH VIỆT NAM
+      // Logic hướng dẫn AI
       switch (section) {
         case 'overview':
-          searchInstructions = `
-          YÊU CẦU DỮ LIỆU (Tiếng Việt):
-          - Tên dự án chính thức
-          - Tên Chủ đầu tư đầy đủ
-          - Địa chỉ chính xác (Số, Đường, Phường, Quận, Thành phố)
-          - Mô tả dự án (Vị trí, lợi thế, kết nối giao thông, tổng quan)`;
+          searchInstructions = `YÊU CẦU DỮ LIỆU (Tiếng Việt): Tên dự án, Chủ đầu tư, Địa chỉ, Mô tả tổng quan.`;
           break;
         case 'specs':
-          searchInstructions = `
-          YÊU CẦU DỮ LIỆU (Tiếng Việt):
-          - Tổng diện tích đất (ha/m2)
-          - Mật độ xây dựng (%)
-          - Quy mô: Số Block, Số tầng, Số hầm
-          - Tổng số căn hộ
-          - Diện tích căn hộ (Ví dụ: 50m2 - 100m2)
-          - Tiêu chuẩn bàn giao (Thô/Cơ bản/Cao cấp)`;
+          searchInstructions = `YÊU CẦU DỮ LIỆU (Tiếng Việt): Diện tích đất, Mật độ xây dựng, Quy mô (Block/Tầng), Tổng căn hộ, Diện tích căn hộ, Tiêu chuẩn bàn giao.`;
           break;
         case 'financial':
-          searchInstructions = `
-          YÊU CẦU DỮ LIỆU (Tiếng Việt):
-          - Giá mở bán (đợt đầu) VNĐ/m2
-          - Giá thị trường hiện tại VNĐ/m2
-          - Tổng giá bán (Ví dụ: 3-5 tỷ)
-          - Ngân hàng hỗ trợ
-          - Chính sách thanh toán tóm tắt`;
+          searchInstructions = `YÊU CẦU DỮ LIỆU (Tiếng Việt): Giá mở bán, Giá hiện tại, Tổng giá (khoảng), Chính sách thanh toán, Ngân hàng.`;
           break;
         case 'legal':
-          searchInstructions = `
-          YÊU CẦU DỮ LIỆU (Tiếng Việt):
-          - Pháp lý hiện tại (Sổ hồng/HĐMB/1:500/GPXD)
-          - Tình trạng xây dựng (Đang làm móng/Cất nóc/Đã bàn giao)
-          - Thời gian bàn giao (Dự kiến hoặc Thực tế)`;
+          searchInstructions = `YÊU CẦU DỮ LIỆU (Tiếng Việt): Pháp lý hiện tại (Sổ hồng/GPXD...), Tình trạng xây dựng, Thời gian bàn giao.`;
           break;
         case 'amenities':
-          searchInstructions = `
-          YÊU CẦU DỮ LIỆU (Tiếng Việt):
-          - Tiện ích nội khu (Hồ bơi, Gym, Công viên...)
-          - Tiện ích ngoại khu (Trường học, Bệnh viện gần đó)`;
+          searchInstructions = `YÊU CẦU DỮ LIỆU (Tiếng Việt): Tiện ích nội khu, Tiện ích ngoại khu.`;
           break;
         default:
           searchInstructions = "Tìm kiếm thông tin chi tiết về dự án Bất Động Sản này.";
       }
 
+      // Nếu người dùng cung cấp context (dữ liệu thô), ưu tiên sử dụng nó
+      const contextPrompt = context 
+        ? `DỮ LIỆU ĐẦU VÀO TỪ NGƯỜI DÙNG (ƯU TIÊN SỬ DỤNG THÔNG TIN NÀY TRƯỚC KHI TÌM KIẾM): \n"""${context}"""\n` 
+        : "";
+
       const prompt = `
-      NHIỆM VỤ: TÌM KIẾM VÀ TRÍCH XUẤT DỮ LIỆU THỰC TẾ (FACTUAL DATA extraction).
+      NHIỆM VỤ: TRÍCH XUẤT DỮ LIỆU THỰC TẾ (FACTUAL DATA extraction).
       ĐỐI TƯỢNG: Dự án Bất Động Sản "${query}" tại Việt Nam.
       
+      ${contextPrompt}
+      
       QUY TẮC NGHIÊM NGẶT:
-      1. TUYỆT ĐỐI KHÔNG trả lời các câu như: "Tôi sẽ tìm kiếm...", "Dưới đây là...", "Tôi không tìm thấy...".
-      2. NẾU KHÔNG CÓ DỮ LIỆU: Hãy trả về các thông tin liên quan nhất mà bạn tìm thấy về khu vực hoặc chủ đầu tư.
+      1. TUYỆT ĐỐI KHÔNG trả lời các câu như: "Tôi sẽ tìm kiếm...", "Dưới đây là...".
+      2. Nếu dữ liệu đầu vào có thông tin, hãy trích xuất từ đó. Nếu thiếu, hãy dùng Google Search để bổ sung.
       3. OUTPUT CHỈ LÀ DỮ LIỆU (dạng bullet points hoặc đoạn văn mô tả).
       
       ${searchInstructions}

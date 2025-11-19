@@ -10,9 +10,10 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Save, Loader2, ScanSearch, Sparkles, Terminal, AlertTriangle } from "lucide-react";
+import { Save, Loader2, ScanSearch, Sparkles, Terminal, FileText, ChevronDown, ChevronUp } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 
 interface MasterEditorProps {
   projectId: string;
@@ -43,20 +44,21 @@ const mapAiDataToFields = (aiData: any, section: string, currentData: any) => {
     return undefined;
   };
 
-  // CHỈ map các trường thuộc section tương ứng
   if (section === 'overview') {
-    const desc = find(['description', 'summary']);
-    // GARBAGE FILTER
-    const isGarbage = desc && (
-      desc.toLowerCase().includes("tôi sẽ") || 
-      desc.toLowerCase().includes("i will") || 
-      desc.toLowerCase().includes("đang tìm kiếm") ||
-      desc.toLowerCase().includes("searching for") ||
-      desc.length < 15
+    const newDesc = find(['description', 'summary']);
+    const currentDesc = currentData.description || "";
+    
+    const isGarbage = newDesc && (
+      newDesc.toLowerCase().includes("tôi sẽ tìm") || 
+      newDesc.toLowerCase().includes("i will search") || 
+      newDesc.toLowerCase().includes("đang tìm kiếm") ||
+      newDesc.length < 20 
     );
 
-    if (desc && !isGarbage) {
-      newData.description = desc;
+    const shouldKeepOld = currentDesc.length > 50 && (isGarbage || newDesc.length < 50);
+
+    if (newDesc && !isGarbage && !shouldKeepOld) {
+      newData.description = newDesc;
     }
 
     const dev = find(['developer', 'chu_dau_tu']);
@@ -104,7 +106,6 @@ const mapAiDataToFields = (aiData: any, section: string, currentData: any) => {
   if (section === 'amenities') {
     const amenities = find(['amenities', 'tien_ich']);
     if (amenities && Array.isArray(amenities)) {
-      // Merge amenities cũ và mới
       const existing = Array.isArray(newData.amenities) ? newData.amenities : [];
       const combined = [...existing, ...amenities];
       newData.amenities = [...new Set(combined)];
@@ -118,6 +119,10 @@ export default function MasterProjectEditor({ projectId, onSave }: MasterEditorP
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [data, setData] = useState<any>({});
+  
+  // AI & Context State
+  const [userContext, setUserContext] = useState("");
+  const [showContext, setShowContext] = useState(true);
   
   const [auditStatus, setAuditStatus] = useState<'idle' | 'running' | 'completed'>('idle');
   const [currentStep, setCurrentStep] = useState<string>("");
@@ -144,7 +149,6 @@ export default function MasterProjectEditor({ projectId, onSave }: MasterEditorP
     setData((prev: any) => ({ ...prev, [field]: value }));
   };
 
-  // Hàm save chấp nhận data tùy chỉnh để dùng trong loop
   const handleSave = async (silent = false, dataToSave = data) => {
     if (!silent) setSaving(true);
     let cleanPayload: any = {};
@@ -171,6 +175,7 @@ export default function MasterProjectEditor({ projectId, onSave }: MasterEditorP
       
       if (!silent) toast.success("Đã lưu dữ liệu thành công");
       if (onSave) onSave();
+      
       if (!silent) setLogs(prev => [...prev, `✅ SAVE SUCCESS`]);
 
     } catch (error: any) {
@@ -185,7 +190,6 @@ export default function MasterProjectEditor({ projectId, onSave }: MasterEditorP
     }
   };
 
-  // Modified to accept currentDataState for chain updates
   const runScanForSection = async (section: string, isAuto = false, currentDataState = data) => {
     if (!isAuto) {
         setAuditStatus('running');
@@ -195,11 +199,18 @@ export default function MasterProjectEditor({ projectId, onSave }: MasterEditorP
     }
     
     try {
-      const currentContext = section === 'overview' && currentDataState.description 
-        ? `Dữ liệu hiện có: ${currentDataState.description}` : "";
+      // Kết hợp userContext vào context gửi đi cho AI
+      let combinedContext = "";
+      if (userContext.trim()) combinedContext += `THÔNG TIN TỪ NGƯỜI DÙNG:\n${userContext}\n\n`;
+      if (currentDataState.description && section === 'overview') combinedContext += `MÔ TẢ HIỆN CÓ:\n${currentDataState.description}`;
 
       const { data: resData, error: resError } = await supabase.functions.invoke('research-project', {
-        body: { query: currentDataState.name, mode: 'deep_scan', section, context: currentContext }
+        body: { 
+          query: currentDataState.name, 
+          mode: 'deep_scan', 
+          section, 
+          context: combinedContext // Gửi context này lên server
+        }
       });
       if (resError) throw resError;
       
@@ -217,13 +228,9 @@ export default function MasterProjectEditor({ projectId, onSave }: MasterEditorP
 
       if (!isAuto) setLastJsonOutput(structData.data);
 
-      // Merge vào state hiện tại (hoặc accumulated state trong loop)
       const newData = mapAiDataToFields(structData.data, section, currentDataState);
-      
-      // Cập nhật UI ngay lập tức
       setData(newData);
       
-      // Save to DB
       await handleSave(true, newData);
 
       if (!isAuto) {
@@ -231,14 +238,14 @@ export default function MasterProjectEditor({ projectId, onSave }: MasterEditorP
         toast.success(`Đã cập nhật: ${section}`);
       }
       
-      return newData; // Trả về dữ liệu mới nhất để vòng lặp dùng tiếp
+      return newData;
     } catch (error: any) {
       console.error(`Error scanning ${section}:`, error);
       if (!isAuto) {
         setAuditStatus('idle');
         toast.error(`Lỗi quét ${section}: ${error.message}`);
       }
-      return null; // Return null on error
+      return null;
     }
   };
 
@@ -258,7 +265,6 @@ export default function MasterProjectEditor({ projectId, onSave }: MasterEditorP
       { id: 'amenities', label: 'Tiện ích' }
     ];
 
-    // QUAN TRỌNG: Dùng biến này để tích lũy dữ liệu qua các vòng lặp
     let accumulatedData = { ...data };
 
     for (let i = 0; i < sections.length; i++) {
@@ -266,11 +272,10 @@ export default function MasterProjectEditor({ projectId, onSave }: MasterEditorP
       setCurrentStep(sec.label);
       setLogs(prev => [...prev, `⏳ Đang quét: ${sec.label}...`]);
       
-      // Truyền accumulatedData vào để đảm bảo tính kế thừa
       const updatedData = await runScanForSection(sec.id, true, accumulatedData);
       
       if (updatedData) {
-        accumulatedData = updatedData; // Cập nhật dữ liệu tích lũy
+        accumulatedData = updatedData;
         setLogs(prev => {
             const newLogs = [...prev];
             newLogs[newLogs.length - 1] = `✅ Hoàn tất: ${sec.label}`;
@@ -287,15 +292,39 @@ export default function MasterProjectEditor({ projectId, onSave }: MasterEditorP
     setAuditStatus('completed');
     setTimeout(() => setAuditStatus('idle'), 3000);
     toast.success("Đã hoàn thành Audit toàn diện!");
-    
-    // Reload cuối cùng để đồng bộ hoàn toàn
     loadProject();
   };
 
   if (loading) return <div className="p-8 text-center"><Loader2 className="w-8 h-8 animate-spin mx-auto" /></div>;
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-6">
+      {/* Context Input Section */}
+      <Collapsible open={showContext} onOpenChange={setShowContext} className="border border-blue-200 bg-blue-50/50 rounded-lg">
+        <div className="flex items-center justify-between p-4">
+          <div className="flex items-center gap-2 text-blue-800 font-semibold">
+             <FileText className="w-5 h-5" />
+             Dữ liệu đầu vào (Optional)
+          </div>
+          <CollapsibleTrigger asChild>
+            <Button variant="ghost" size="sm" className="text-blue-700">
+              {showContext ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+            </Button>
+          </CollapsibleTrigger>
+        </div>
+        <CollapsibleContent className="px-4 pb-4">
+           <Textarea 
+              placeholder="Paste brochure dự án, thông tin giá, hoặc ghi chú thô vào đây để AI sử dụng khi điền dữ liệu..." 
+              value={userContext}
+              onChange={(e) => setUserContext(e.target.value)}
+              className="bg-white min-h-[100px]"
+           />
+           <p className="text-xs text-blue-600 mt-2">
+             * AI sẽ ưu tiên dùng thông tin này để điền vào các ô bên dưới, sau đó mới tự tìm kiếm thêm nếu thiếu.
+           </p>
+        </CollapsibleContent>
+      </Collapsible>
+
       {/* Actions Bar */}
       <div className="flex flex-col md:flex-row justify-between items-center bg-card p-4 rounded-lg border shadow-sm gap-4">
         <div className="flex items-center gap-4 w-full md:w-auto">
@@ -318,7 +347,7 @@ export default function MasterProjectEditor({ projectId, onSave }: MasterEditorP
                   className="border border-purple-200 bg-purple-50 text-purple-700 hover:bg-purple-100"
                 >
                   <Sparkles className="w-4 h-4 mr-2" />
-                  Chạy Full Audit (AI)
+                  AI Auto-Fill & Scan (Dùng dữ liệu trên)
                 </Button>
                 <Button
                   variant="outline"
@@ -326,7 +355,7 @@ export default function MasterProjectEditor({ projectId, onSave }: MasterEditorP
                   onClick={() => setShowDebug(!showDebug)}
                 >
                   <Terminal className="w-4 h-4 mr-2" />
-                  {showDebug ? "Ẩn Console" : "Hiện Console"}
+                  Console
                 </Button>
              </div>
           )}

@@ -119,7 +119,7 @@ serve(async (req: Request) => {
 
       const rawList = await callGemini(apiKey, step1Prompt, MODEL_RESEARCH, false);
       
-      // BƯỚC 2: Định dạng JSON
+      // BƯỚC 2: Định dạng JSON (Có thể dùng JSON Mode ở đây vì không dùng Tools)
       const step2Prompt = `
       Nhiệm vụ: Chuyển danh sách văn bản sau thành JSON Array hợp lệ.
       
@@ -166,22 +166,24 @@ serve(async (req: Request) => {
       
       if (mode === 'scout') {
         systemPrompt = `Bạn là chuyên gia dữ liệu BĐS. Tìm kiếm thông tin mới nhất và trả về JSON.
+        CHÚ Ý: Trả về output dưới dạng JSON Block thuần túy.
         Format: { "projects": [{ "name", "developer", "location", "status", "type", "confidence" }], "summary" }`;
         userPrompt = `Tìm kiếm: ${query}`;
       } else {
         systemPrompt = `Bạn là chuyên gia Thẩm định giá. Tìm kiếm chi tiết dự án và trả về JSON.
+        CHÚ Ý: Trả về output dưới dạng JSON Block thuần túy.
         Format: { "overview": {}, "specs": {}, "pricing": {}, "amenities": [] }`;
         userPrompt = `Deep scan: ${query}`;
       }
 
-      // Với mode có Google Search Tool, vẫn thử dùng MODEL_RESEARCH (Flash cũng hỗ trợ tools)
+      // Với mode có Google Search Tool, KHÔNG ĐƯỢC DÙNG responseMimeType: "application/json"
       const url = `https://generativelanguage.googleapis.com/v1beta/models/${MODEL_RESEARCH}:generateContent?key=${apiKey}`;
       const payload = {
         contents: [{ parts: [{ text: systemPrompt + "\n\n" + userPrompt }] }],
         tools: [{ google_search: {} }],
         generationConfig: { 
           temperature: 0.1, 
-          responseMimeType: "application/json",
+          // responseMimeType: "application/json", // Removed to fix 400 Error with Tools
           maxOutputTokens: MAX_TOKENS 
         }
       };

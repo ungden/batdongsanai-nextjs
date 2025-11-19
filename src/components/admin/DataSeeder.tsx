@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { projectsData } from '@/data/projectsData';
+import { initialProjectsSeed } from '@/data/initialProjectsSeed'; // UPDATED IMPORT
 import { developersData } from '@/data/developersData';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
@@ -75,15 +75,14 @@ export const DataSeeder = () => {
 
   const seedProjects = async () => {
     setLoading(true);
-    log(`🚀 Bắt đầu seed ${projectsData.length} Projects...`);
+    log(`🚀 Bắt đầu seed ${initialProjectsSeed.length} Projects...`);
 
     try {
       let successCount = 0;
       
-      // Chunking data to avoid payload too large if needed, but looping is safer for debugging individual errors
-      for (const project of projectsData) {
+      for (const project of initialProjectsSeed) {
         const dbProject = {
-          id: project.id, // Sử dụng ID đã định nghĩa trong file data
+          id: project.id,
           name: project.name,
           location: project.location,
           city: project.city,
@@ -95,15 +94,6 @@ export const DataSeeder = () => {
           price_range: project.priceRange,
           price_per_sqm: project.pricePerSqm,
           completion_date: project.completionDate,
-          description: project.description,
-          amenities: project.amenities,
-          total_units: project.totalUnits,
-          sold_units: project.soldUnits,
-          floors: project.floors,
-          apartment_types: project.apartmentTypes,
-          launch_price: project.launchPrice,
-          launch_date: project.launchDate,
-          current_price: project.currentPrice,
           updated_at: new Date().toISOString()
         };
 
@@ -113,11 +103,10 @@ export const DataSeeder = () => {
           log(`❌ Lỗi thêm [${project.name}]: ${error.message}`);
         } else {
           successCount++;
-          // log(`✅ Đã thêm: ${project.name}`); // Comment out to reduce noise if list is long
         }
       }
 
-      log(`✅ SEED HOÀN TẤT! Thành công ${successCount}/${projectsData.length} dự án.`);
+      log(`✅ SEED HOÀN TẤT! Thành công ${successCount}/${initialProjectsSeed.length} dự án.`);
       toast.success(`Đã import ${successCount} dự án vào Database`);
     } catch (error: any) {
       log(`🔥 Lỗi nghiêm trọng: ${error.message}`);
@@ -166,7 +155,7 @@ export const DataSeeder = () => {
             className="h-12 bg-primary hover:bg-primary/90"
           >
             <RefreshCw className="mr-2 h-4 w-4" />
-            3. Seed {projectsData.length} Dự án mới
+            3. Seed {initialProjectsSeed.length} Dự án mới
           </Button>
         </div>
 

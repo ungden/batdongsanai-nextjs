@@ -1,48 +1,48 @@
 import { useCompareStore } from '@/stores/compareStore';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import {
   X,
   ArrowRight,
-  TrendingUp,
-  Home,
   MapPin,
   Calendar,
   DollarSign,
   Building2,
   Award,
   Star,
-  Info
+  Info,
+  Plus
 } from 'lucide-react';
 import { formatCurrency } from '@/utils/formatCurrency';
 import { useNavigate } from 'react-router-dom';
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 import SEOHead from '@/components/seo/SEOHead';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 const Compare = () => {
   const { compareList, removeFromCompare, clearCompare } = useCompareStore();
   const navigate = useNavigate();
+  const isMobile = useIsMobile();
 
   if (compareList.length === 0) {
     return (
       <>
-        <SEOHead
-          title="So sánh dự án"
-          description="So sánh chi tiết các dự án bất động sản"
-        />
+        <SEOHead title="So sánh dự án" description="So sánh chi tiết các dự án bất động sản" />
         <div className="container mx-auto px-4 py-8">
-          <div className="flex flex-col items-center justify-center min-h-[60vh] space-y-6">
-            <div className="text-center space-y-4">
-              <Building2 className="h-20 w-20 mx-auto text-muted-foreground/30" />
-              <h1 className="text-3xl font-bold text-foreground">Chưa có dự án để so sánh</h1>
-              <p className="text-muted-foreground max-w-md">
-                Thêm tối đa 4 dự án để so sánh chi tiết về giá, vị trí, tiện ích và nhiều hơn nữa
+          <div className="flex flex-col items-center justify-center min-h-[60vh] space-y-6 text-center">
+            <div className="bg-muted/30 p-6 rounded-full">
+              <Building2 className="h-16 w-16 text-muted-foreground/40" />
+            </div>
+            <div className="space-y-2 max-w-md">
+              <h1 className="text-2xl font-bold text-foreground">Chưa có dự án để so sánh</h1>
+              <p className="text-muted-foreground">
+                Chọn tối đa 4 dự án để so sánh chi tiết về giá, pháp lý và tiềm năng đầu tư.
               </p>
             </div>
-            <Button onClick={() => navigate('/projects')} size="lg">
-              <ArrowRight className="mr-2 h-5 w-5" />
-              Khám phá dự án
+            <Button onClick={() => navigate('/explore')} size="lg" className="rounded-xl">
+              <Plus className="mr-2 h-5 w-5" />
+              Thêm dự án ngay
             </Button>
           </div>
         </div>
@@ -51,228 +51,123 @@ const Compare = () => {
   }
 
   const comparisonFields = [
-    {
-      label: 'Giá/m²',
-      key: 'pricePerSqm',
-      icon: DollarSign,
-      format: (val: any) => formatCurrency(val),
-      highlight: true
-    },
-    {
-      label: 'Vị trí',
-      key: 'location',
-      icon: MapPin,
-      format: (val: any) => val
-    },
-    {
-      label: 'Chủ đầu tư',
-      key: 'developer',
-      icon: Building2,
-      format: (val: any) => val
-    },
-    {
-      label: 'Loại hình',
-      key: 'type',
-      icon: Home,
-      format: (val: any) => val || 'N/A'
-    },
-    {
-      label: 'Tổng số căn',
-      key: 'totalUnits',
-      icon: Building2,
-      format: (val: any) => val?.toLocaleString() || 'N/A'
-    },
-    {
-      label: 'Hoàn thành',
-      key: 'completionDate',
-      icon: Calendar,
-      format: (val: any) => val ? new Date(val).toLocaleDateString('vi-VN') : 'N/A'
-    },
-    {
-      label: 'Diện tích',
-      key: 'area',
-      icon: Home,
-      format: (val: any) => val ? `${val} m²` : 'N/A'
-    },
-    {
-      label: 'Pháp lý',
-      key: 'legalStatus',
-      icon: Award,
-      format: (val: any) => val || 'N/A',
-      renderBadge: true
-    },
+    { label: 'Giá/m²', key: 'pricePerSqm', icon: DollarSign, format: (val: any) => formatCurrency(val), highlight: true },
+    { label: 'Vị trí', key: 'location', icon: MapPin, format: (val: any) => val },
+    { label: 'CĐT', key: 'developer', icon: Building2, format: (val: any) => val },
+    { label: 'Pháp lý', key: 'legalStatus', icon: Award, format: (val: any) => val || 'N/A', renderBadge: true },
+    { label: 'Bàn giao', key: 'completionDate', icon: Calendar, format: (val: any) => val || 'N/A' },
   ];
 
-  // Calculate winner for price (lowest wins)
-  const getPriceWinner = () => {
-    const prices = compareList.map(p => p.pricePerSqm).filter(p => p > 0);
-    if (prices.length === 0) return null;
-    return Math.min(...prices);
-  };
-
-  const priceWinner = getPriceWinner();
+  const priceWinner = compareList.length > 0 
+    ? Math.min(...compareList.map(p => p.pricePerSqm).filter(p => p > 0))
+    : null;
 
   return (
     <>
-      <SEOHead
-        title={`So sánh ${compareList.length} dự án`}
-        description="So sánh chi tiết các dự án bất động sản về giá, vị trí, tiện ích"
-      />
+      <SEOHead title={`So sánh ${compareList.length} dự án`} description="Bảng so sánh chi tiết" />
 
-      <div className="container mx-auto px-4 py-8 space-y-8">
+      <div className="container mx-auto px-4 py-6 space-y-6 h-full flex flex-col">
         {/* Header */}
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold mb-2 text-foreground">
-              So sánh dự án
-            </h1>
-            <p className="text-muted-foreground">
-              Đang so sánh {compareList.length} dự án
-            </p>
+            <h1 className="text-2xl font-bold">So sánh ({compareList.length})</h1>
           </div>
-          <div className="flex gap-3">
-            <Button variant="outline" onClick={clearCompare}>
-              <X className="mr-2 h-4 w-4" />
-              Xóa tất cả
+          <div className="flex gap-2">
+            <Button variant="ghost" size="sm" onClick={clearCompare} className="text-destructive hover:bg-destructive/10">
+              Xóa hết
             </Button>
-            <Button onClick={() => navigate('/projects')}>
-              <ArrowRight className="mr-2 h-4 w-4" />
-              Thêm dự án
+            <Button size="sm" onClick={() => navigate('/explore')} className="hidden sm:flex">
+              <Plus className="mr-2 h-4 w-4" /> Thêm
             </Button>
           </div>
         </div>
 
-        <ScrollArea className="w-full border border-border rounded-xl bg-card shadow-sm">
-          <div className="min-w-max">
-            {/* Project Cards Row */}
-            <div className="grid gap-0 divide-x divide-border bg-muted/30" style={{ gridTemplateColumns: `240px repeat(${compareList.length}, 300px)` }}>
-              
-              {/* Empty Corner Cell */}
-              <div className="p-4 flex items-end pb-6">
-                <span className="font-semibold text-muted-foreground">Dự án</span>
+        {/* Comparison Table Container */}
+        <ScrollArea className="w-full border rounded-xl bg-card shadow-sm flex-1">
+          <div className="min-w-max pb-4">
+            {/* Sticky Header Row (Projects) */}
+            <div className="flex sticky top-0 z-10 bg-card shadow-sm">
+              <div className="w-32 sm:w-48 p-4 font-bold bg-muted/5 border-b border-r flex items-center">
+                Tiêu chí
               </div>
-
               {compareList.map((project) => (
-                <div key={project.id} className="relative p-4 pb-6 flex flex-col gap-4 bg-card">
+                <div key={project.id} className="w-48 sm:w-64 p-3 border-b border-r last:border-r-0 relative group">
                   <Button
                     variant="ghost"
                     size="icon"
-                    className="absolute top-2 right-2 z-10 hover:bg-destructive/10 hover:text-destructive"
+                    className="absolute top-1 right-1 h-6 w-6 rounded-full opacity-0 group-hover:opacity-100 transition-opacity bg-background/80 hover:bg-destructive hover:text-white"
                     onClick={() => removeFromCompare(project.id)}
                   >
-                    <X className="h-4 w-4" />
+                    <X className="h-3 w-3" />
                   </Button>
-
-                  {project.imageUrl ? (
-                    <div className="h-40 overflow-hidden rounded-lg border border-border">
-                      <img
-                        src={project.imageUrl}
-                        alt={project.name}
-                        className="w-full h-full object-cover"
-                      />
-                    </div>
-                  ) : (
-                     <div className="h-40 bg-muted rounded-lg border border-border flex items-center justify-center">
-                       <Building2 className="h-12 w-12 text-muted-foreground/30" />
-                     </div>
-                  )}
-
-                  <div className="space-y-2">
-                    <h3 className="text-lg font-bold line-clamp-2 leading-tight h-12 text-foreground">
-                      {project.name}
-                    </h3>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="w-full"
-                      onClick={() => navigate(`/projects/${project.id}`)}
-                    >
-                      Xem chi tiết
-                    </Button>
+                  
+                  <div className="h-24 w-full rounded-lg overflow-hidden mb-2 bg-muted">
+                    {project.imageUrl ? (
+                      <img src={project.imageUrl} alt={project.name} className="w-full h-full object-cover" />
+                    ) : (
+                      <div className="flex items-center justify-center h-full"><Building2 className="h-8 w-8 opacity-20" /></div>
+                    )}
                   </div>
+                  
+                  <h3 
+                    className="font-bold text-sm line-clamp-2 h-10 cursor-pointer hover:text-primary"
+                    onClick={() => navigate(`/projects/${project.id}`)}
+                  >
+                    {project.name}
+                  </h3>
                 </div>
               ))}
-            </div>
-
-            {/* Comparison Rows */}
-            <div className="divide-y divide-border border-t border-border">
-              {comparisonFields.map((field) => {
-                const Icon = field.icon;
-
-                return (
-                  <div key={field.key} className="grid divide-x divide-border hover:bg-muted/20 transition-colors" style={{ gridTemplateColumns: `240px repeat(${compareList.length}, 300px)` }}>
-                    {/* Field Label */}
-                    <div className="p-4 font-medium text-muted-foreground flex items-center gap-2 bg-muted/5">
-                      <Icon className="h-4 w-4" />
-                      {field.label}
-                    </div>
-
-                    {/* Values */}
-                    {compareList.map((project) => {
-                      const value = project[field.key];
-                      const isWinner = field.highlight && field.key === 'pricePerSqm' && value === priceWinner && value > 0;
-
-                      return (
-                        <div
-                          key={project.id}
-                          className={`p-4 flex items-center ${isWinner ? 'bg-green-50/50 dark:bg-green-950/10' : ''}`}
-                        >
-                          {field.renderBadge && value ? (
-                            <Badge variant={value === 'Sổ đỏ' ? 'default' : 'secondary'}>
-                              {field.format(value)}
-                            </Badge>
-                          ) : (
-                            <span className={`text-sm flex items-center gap-2 ${isWinner ? 'font-bold text-green-600 dark:text-green-400' : 'text-foreground'}`}>
-                              {field.format(value)}
-                              {isWinner && <Star className="h-4 w-4 fill-current" />}
-                            </span>
-                          )}
-                        </div>
-                      );
-                    })}
+              {/* Add Placeholder Slot */}
+              {compareList.length < 4 && (
+                <div className="w-48 sm:w-64 p-3 border-b flex flex-col items-center justify-center text-muted-foreground gap-2 cursor-pointer hover:bg-muted/50 transition-colors"
+                     onClick={() => navigate('/explore')}>
+                  <div className="h-12 w-12 rounded-full border-2 border-dashed border-muted-foreground/30 flex items-center justify-center">
+                    <Plus className="h-6 w-6" />
                   </div>
-                );
-              })}
+                  <span className="text-xs font-medium">Thêm dự án</span>
+                </div>
+              )}
             </div>
 
-            {/* Investment Comparison Row */}
-            <div className="grid divide-x divide-border border-t border-border" style={{ gridTemplateColumns: `240px repeat(${compareList.length}, 300px)` }}>
-               <div className="p-4 font-medium text-muted-foreground flex items-center gap-2 bg-muted/5">
-                 <DollarSign className="h-4 w-4" />
-                 Phân tích đầu tư
-               </div>
-
-               {compareList.map((project) => {
-                 const totalPrice = project.pricePerSqm * (project.area || 70);
-                 const monthlyRent = totalPrice * 0.004; 
-
-                 return (
-                   <div key={project.id} className="p-4 bg-card">
-                     <div className="p-3 bg-muted/30 rounded-lg space-y-2 border border-border">
-                       <div className="flex justify-between text-xs">
-                         <span className="text-muted-foreground">Tổng giá</span>
-                         <span className="font-medium text-foreground">{formatCurrency(totalPrice)}</span>
-                       </div>
-                       <div className="flex justify-between text-xs">
-                         <span className="text-muted-foreground">Thuê/tháng</span>
-                         <span className="font-bold text-green-600">{formatCurrency(monthlyRent)}</span>
-                       </div>
-                     </div>
-                   </div>
-                 );
-               })}
+            {/* Data Rows */}
+            <div className="divide-y">
+              {comparisonFields.map((field) => (
+                <div key={field.key} className="flex">
+                  <div className="w-32 sm:w-48 p-3 sm:p-4 text-sm font-medium text-muted-foreground bg-muted/5 border-r flex items-center gap-2 sticky left-0">
+                    <field.icon className="h-4 w-4 shrink-0" />
+                    <span className="truncate">{field.label}</span>
+                  </div>
+                  
+                  {compareList.map((project) => {
+                    const val = project[field.key];
+                    const isWinner = field.highlight && val === priceWinner;
+                    
+                    return (
+                      <div key={project.id} className={`w-48 sm:w-64 p-3 sm:p-4 text-sm border-r flex items-center ${isWinner ? 'bg-green-50/50' : ''}`}>
+                        {field.renderBadge && val ? (
+                           <Badge variant="secondary" className="font-normal">{field.format(val)}</Badge>
+                        ) : (
+                           <span className={isWinner ? 'font-bold text-green-700' : ''}>
+                             {field.format(val)}
+                             {isWinner && <Star className="inline-block w-3 h-3 ml-1 fill-current" />}
+                           </span>
+                        )}
+                      </div>
+                    );
+                  })}
+                  {compareList.length < 4 && <div className="w-48 sm:w-64" />}
+                </div>
+              ))}
             </div>
           </div>
           <ScrollBar orientation="horizontal" />
         </ScrollArea>
 
-        {/* Add more hint */}
-        {compareList.length < 4 && (
-          <div className="p-4 bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-900 rounded-lg flex items-center gap-3 max-w-2xl mx-auto">
-            <Info className="h-5 w-5 text-blue-600 dark:text-blue-400" />
-            <p className="text-sm text-blue-800 dark:text-blue-300">
-              Mẹo: Bạn có thể thêm <strong>{4 - compareList.length}</strong> dự án nữa để so sánh toàn diện hơn.
-            </p>
+        {/* Helper text for mobile */}
+        {isMobile && (
+          <div className="flex items-center justify-center gap-2 text-xs text-muted-foreground animate-pulse">
+            <ArrowRight className="h-3 w-3" />
+            Vuốt ngang để xem thêm
           </div>
         )}
       </div>

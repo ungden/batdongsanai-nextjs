@@ -8,11 +8,9 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Save, Loader2, ScanSearch, RefreshCw } from "lucide-react";
+import { Save, Loader2, ScanSearch, Eye } from "lucide-react";
 
 interface MasterEditorProps {
   projectId: string;
@@ -47,23 +45,33 @@ export default function MasterProjectEditor({ projectId, onSave }: MasterEditorP
 
   const handleSave = async () => {
     setSaving(true);
-    const { error } = await supabase
-      .from('projects')
-      .update(data)
-      .eq('id', projectId);
+    try {
+      const { error } = await supabase
+        .from('projects')
+        .update(data)
+        .eq('id', projectId);
 
-    if (error) {
-      toast.error("Lỗi lưu dữ liệu: " + error.message);
-    } else {
+      if (error) throw error;
+
       toast.success("Đã cập nhật thông tin dự án");
       if (onSave) onSave();
+    } catch (error: any) {
+      toast.error("Lỗi lưu dữ liệu: " + error.message);
+    } finally {
+      setSaving(false);
     }
-    setSaving(false);
   };
 
   const handleDeepScan = async () => {
+    if (!data.name) {
+      toast.error("Tên dự án đang trống, không thể tìm kiếm.");
+      return;
+    }
+    
     setScanning(true);
     try {
+      toast.info("Đang tìm kiếm thông tin mới nhất...");
+      
       // STEP 1: Research (Text Report)
       const { data: resData, error: resError } = await supabase.functions.invoke('research-project', {
         body: { query: data.name, mode: 'deep_scan' }
@@ -72,27 +80,55 @@ export default function MasterProjectEditor({ projectId, onSave }: MasterEditorP
       if (resError) throw resError;
       const reportText = resData.data;
 
+      toast.info("Đang cấu trúc dữ liệu...");
+
       // STEP 2: Structure (JSON)
       const { data: structData, error: structError } = await supabase.functions.invoke('structure-data', {
         body: { content: reportText, type: 'project_detail' }
       });
 
       if (structError) throw structError;
+      
       const aiData = structData.data;
+      console.log("AI Data Received:", aiData); // Debug log
+
+      if (!aiData || Object.keys(aiData).length === 0) {
+        throw new Error("AI không trả về dữ liệu nào hữu ích.");
+      }
       
       // Merge AI data into form
       const newData = { ...data };
       
-      if (aiData.overview?.description && !newData.description) newData.description = aiData.overview.description;
-      if (aiData.specs?.total_units && !newData.total_units) newData.total_units = aiData.specs.total_units;
-      if (aiData.specs?.total_floors && !newData.floors) newData.floors = aiData.specs.total_floors;
-      if (aiData.pricing?.price_per_sqm && !newData.price_per_sqm) newData.price_per_sqm = aiData.pricing.price_per_sqm;
-      if (aiData.amenities) newData.amenities = Array.from(new Set([...(newData.amenities || []), ...aiData.amenities]));
+      // Mapping logic (cần khớp với output schema của structure-data function)
+      if (aiData.overview?.description) newData.description = aiData.overview.description;
+      
+      if (aiData.specs) {
+        if (aiData.specs.total_units) newData.total_units = aiData.specs.total_units;
+        if (aiData.specs.total_floors) newData.floors = aiData.specs.total_floors;
+      }
+      
+      if (aiData.pricing) {
+        if (aiData.pricing.price_per_sqm) newData.price_per_sqm = aiData.pricing.price_per_sqm;
+        if (aiData.pricing.launch_price) newData.launch_price = aiData.pricing.launch_price;
+        if (aiData.pricing.price_range) newData.price_range = aiData.pricing.price_range;
+      }
+      
+      if (aiData.amenities && Array.isArray(aiData.amenities)) {
+        // Merge amenities arrays uniquely
+        const existing = Array.isArray(newData.amenities) ? newData.amenities : [];
+        const combined = [...existing, ...aiData.amenities];
+        // Deduplicate strings, case-insensitive roughly
+        const unique = combined.filter((item, index) => 
+            combined.findIndex(i => i.toLowerCase() === item.toLowerCase()) === index
+        );
+        newData.amenities = unique;
+      }
 
       setData(newData);
-      toast.success("Đã quét xong! Dữ liệu mới đã được điền vào form.");
+      toast.success("Đã điền dữ liệu từ AI! Vui lòng kiểm tra và bấm Lưu.");
       
     } catch (error: any) {
+      console.error(error);
       toast.error("Lỗi Deep Scan: " + error.message);
     } finally {
       setScanning(false);
@@ -107,22 +143,22 @@ export default function MasterProjectEditor({ projectId, onSave }: MasterEditorP
 
   return (
     <div className="space-y-4">
-      <div className="flex justify-between items-center bg-card p-4 rounded-lg border">
+      <div className="flex justify-between items-center bg-card p-4 rounded-lg border shadow-sm">
         <div className="flex items-center gap-4">
-          <h2 className="text-xl font-bold">{data.name}</h2>
-          <Button variant="outline" size="sm" onClick={handleDeepScan} disabled={scanning} className="border-blue-500 text-blue-600 hover:bg-blue-50">
+          <h2 className="text-xl font-bold text-foreground">{data.name}</h2>
+          <Button variant="secondary" size="sm" onClick={handleDeepScan} disabled={scanning} className="border border-blue-200 bg-blue-50 text-blue-700 hover:bg-blue-100">
             {scanning ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <ScanSearch className="w-4 h-4 mr-2" />}
-            AI Deep Scan (Tự điền)
+            {scanning ? "Đang phân tích..." : "AI Deep Scan (Tự điền)"}
           </Button>
         </div>
-        <Button onClick={handleSave} disabled={saving} className="bg-green-600 hover:bg-green-700">
+        <Button onClick={handleSave} disabled={saving} className="bg-green-600 hover:bg-green-700 text-white font-bold shadow-md">
           {saving ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Save className="w-4 h-4 mr-2" />}
           Lưu thay đổi
         </Button>
       </div>
 
       <Tabs defaultValue="overview" className="w-full">
-        <TabsList className="w-full justify-start h-12 bg-muted/50 p-1">
+        <TabsList className="w-full justify-start h-12 bg-muted/50 p-1 border-b">
           <TabsTrigger value="overview" className="px-6">Tổng quan</TabsTrigger>
           <TabsTrigger value="specs" className="px-6">Thông số & Kỹ thuật</TabsTrigger>
           <TabsTrigger value="financial" className="px-6">Giá & Tài chính</TabsTrigger>
@@ -165,7 +201,8 @@ export default function MasterProjectEditor({ projectId, onSave }: MasterEditorP
                 <Textarea 
                   value={data.description || ''} 
                   onChange={(e) => handleChange('description', e.target.value)} 
-                  rows={5}
+                  rows={8}
+                  className="font-normal leading-relaxed"
                 />
               </div>
             </CardContent>
@@ -182,12 +219,12 @@ export default function MasterProjectEditor({ projectId, onSave }: MasterEditorP
                   <Input type="number" value={data.total_units || ''} onChange={(e) => handleChange('total_units', e.target.value)} />
                 </div>
                 <div className="space-y-2">
-                  <Label>Số tầng</Label>
+                  <Label>Số tầng (Floors)</Label>
                   <Input type="number" value={data.floors || ''} onChange={(e) => handleChange('floors', e.target.value)} />
                 </div>
                 <div className="space-y-2">
-                  <Label>Số block</Label>
-                  <Input placeholder="VD: 5" /> 
+                  <Label>Số Block</Label>
+                  <Input type="number" value={data.blocks || ''} onChange={(e) => handleChange('blocks', e.target.value)} /> 
                 </div>
               </div>
 
@@ -198,7 +235,7 @@ export default function MasterProjectEditor({ projectId, onSave }: MasterEditorP
                 </div>
                  <div className="space-y-2">
                   <Label>Mật độ xây dựng (%)</Label>
-                  <Input type="number" placeholder="VD: 35" /> 
+                  <Input type="number" value={data.density_construction || ''} onChange={(e) => handleChange('density_construction', e.target.value)} /> 
                 </div>
                 <div className="space-y-2">
                   <Label>Thời điểm bàn giao</Label>
@@ -214,6 +251,15 @@ export default function MasterProjectEditor({ projectId, onSave }: MasterEditorP
                     placeholder="1PN, 2PN, 3PN, Penthouse"
                 />
               </div>
+              
+              <div className="space-y-2">
+                <Label>Tiêu chuẩn bàn giao</Label>
+                <Input 
+                    value={data.handover_standard || ''} 
+                    onChange={(e) => handleChange('handover_standard', e.target.value)}
+                    placeholder="Hoàn thiện cơ bản, Full nội thất..."
+                />
+              </div>
             </CardContent>
           </Card>
         </TabsContent>
@@ -224,7 +270,7 @@ export default function MasterProjectEditor({ projectId, onSave }: MasterEditorP
             <CardContent className="p-6 space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label>Giá bán hiện tại (VNĐ/m2)</Label>
+                  <Label className="text-blue-600 font-semibold">Giá bán hiện tại (VNĐ/m2)</Label>
                   <Input type="number" value={data.current_price || data.price_per_sqm || ''} onChange={(e) => handleChange('current_price', e.target.value)} />
                 </div>
                 <div className="space-y-2">
@@ -262,6 +308,15 @@ export default function MasterProjectEditor({ projectId, onSave }: MasterEditorP
                     </Select>
                   </div>
                </div>
+               
+               <div className="space-y-2">
+                 <Label>Tình trạng pháp lý chi tiết</Label>
+                 <Input 
+                    value={data.legal_status || ''} 
+                    onChange={(e) => handleChange('legal_status', e.target.value)} 
+                    placeholder="Đã có sổ hồng, Đang làm móng, HĐMB..."
+                 />
+               </div>
             </CardContent>
            </Card>
         </TabsContent>
@@ -271,11 +326,11 @@ export default function MasterProjectEditor({ projectId, onSave }: MasterEditorP
             <Card>
                 <CardContent className="p-6">
                     <div className="space-y-2">
-                        <Label>Danh sách tiện ích</Label>
+                        <Label>Danh sách tiện ích (Phân cách bằng dấu phẩy)</Label>
                         <Textarea 
                             value={data.amenities?.join(', ') || ''}
                             onChange={(e) => handleChange('amenities', e.target.value.split(',').map((s:string) => s.trim()).filter(Boolean))}
-                            rows={5}
+                            rows={8}
                             placeholder="Hồ bơi, Gym, Công viên, BBQ,..."
                         />
                     </div>

@@ -12,13 +12,12 @@ declare const Deno: {
 };
 
 // Cấu hình Models
-// Sử dụng model mới nhất theo yêu cầu để có quota tốt hơn
 const MODEL_RESEARCH = "gemini-2.5-pro-preview-03-25"; 
 const MODEL_FORMAT = "gemini-2.0-flash";   
 const MAX_TOKENS = 50000;
 
-// Hàm gọi AI cơ bản với tham số model linh hoạt
-async function callGemini(apiKey: string, prompt: string, model: string, jsonMode: boolean = false) {
+// Hàm gọi AI cơ bản đã nâng cấp để hỗ trợ Tool
+async function callGemini(apiKey: string, prompt: string, model: string, jsonMode: boolean = false, useSearch: boolean = false) {
   const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
   
   const payload: any = {
@@ -35,6 +34,10 @@ async function callGemini(apiKey: string, prompt: string, model: string, jsonMod
     payload.generationConfig.responseMimeType = "application/json";
   }
 
+  if (useSearch) {
+    payload.tools = [{ google_search: {} }];
+  }
+
   const response = await fetch(url, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -43,9 +46,8 @@ async function callGemini(apiKey: string, prompt: string, model: string, jsonMod
 
   if (!response.ok) {
     const errText = await response.text();
-    // Xử lý lỗi quota cụ thể để client biết
     if (response.status === 429) {
-      throw new Error(`Google API Quota Exceeded (429). Model ${model} đang quá tải. Vui lòng thử lại sau 1 phút.`);
+      throw new Error(`Google API Quota Exceeded (429). Model ${model} đang quá tải.`);
     }
     throw new Error(`Gemini API Error (${model}): ${errText}`);
   }
@@ -57,10 +59,7 @@ async function callGemini(apiKey: string, prompt: string, model: string, jsonMod
 // Hàm làm sạch JSON
 function cleanAndParseJSON(text: string): any {
   try {
-    // Bước 1: Xóa markdown
     let clean = text.replace(/```json/gi, '').replace(/```/g, '').trim();
-    
-    // Bước 2: Tìm điểm bắt đầu và kết thúc của JSON (Object hoặc Array)
     const firstBrace = clean.indexOf('{');
     const firstBracket = clean.indexOf('[');
     const lastBrace = clean.lastIndexOf('}');
@@ -69,7 +68,6 @@ function cleanAndParseJSON(text: string): any {
     let start = -1; 
     let end = -1;
 
-    // Ưu tiên Array [...] nếu xuất hiện trước hoặc nếu mode batch thường trả về array
     if (firstBracket !== -1 && (firstBrace === -1 || firstBracket < firstBrace)) {
       start = firstBracket;
       end = lastBracket;
@@ -99,114 +97,66 @@ serve(async (req: Request) => {
 
     let resultData;
 
+    // === 1. BATCH EXTRACT ===
     if (mode === 'batch_extract') {
-      // === CHIẾN LƯỢC 2 BƯỚC CHO BATCH IMPORT ===
-      
-      // BƯỚC 1: Trích xuất thô
       const step1Prompt = `
-      Bạn là trợ lý xử lý dữ liệu BĐS.
-      Nhiệm vụ: Đọc văn bản bên dưới và liệt kê lại danh sách các dự án BĐS.
-      
-      Yêu cầu:
-      - Mỗi dự án một dòng.
-      - Định dạng dòng: "Tên Dự Án | Chủ Đầu Tư | Vị Trí"
-      - Nếu thiếu thông tin nào, ghi "Đang cập nhật".
-      - Chỉ trả về danh sách, không lời dẫn.
-      
+      Nhiệm vụ: Đọc văn bản bên dưới và liệt kê danh sách các dự án BĐS.
+      Định dạng dòng: "Tên Dự Án | Chủ Đầu Tư | Vị Trí"
       Văn bản nguồn:
       ${raw_content}
       `;
-
-      const rawList = await callGemini(apiKey, step1Prompt, MODEL_RESEARCH, false);
+      // Step 1: Trích xuất thô (Không search, không JSON)
+      const rawList = await callGemini(apiKey, step1Prompt, MODEL_RESEARCH, false, false);
       
-      // BƯỚC 2: Định dạng JSON (Có thể dùng JSON Mode ở đây vì không dùng Tools)
       const step2Prompt = `
-      Nhiệm vụ: Chuyển danh sách văn bản sau thành JSON Array hợp lệ.
-      
-      Danh sách:
+      Chuyển danh sách sau thành JSON Array:
       ${rawList}
-
-      Output Format (JSON):
-      {
-        "projects": [
-          {
-            "name": "string",
-            "developer": "string",
-            "location": "string",
-            "type": "string (Căn hộ/Nhà phố/Đất nền - tự suy luận)",
-            "raw_text": "string (dòng gốc)"
-          }
-        ]
-      }
+      Output Format: { "projects": [{ "name", "developer", "location", "type", "raw_text" }] }
       `;
-
-      const jsonResult = await callGemini(apiKey, step2Prompt, MODEL_FORMAT, true);
+      // Step 2: Format JSON (Flash, JSON Mode)
+      const jsonResult = await callGemini(apiKey, step2Prompt, MODEL_FORMAT, true, false);
       resultData = cleanAndParseJSON(jsonResult);
-
-      // Fallback thủ công
-      if (!resultData || !resultData.projects) {
-         console.log("Step 2 JSON failed, parsing raw list manually");
-         const lines = rawList.split('\n').filter((l: string) => l.includes('|'));
-         const manualProjects = lines.map((line: string) => {
-            const [name, developer, location] = line.split('|').map((s: string) => s.trim());
-            return {
-                name: name || "Không rõ",
-                developer: developer || "Đang cập nhật",
-                location: location || "Đang cập nhật",
-                type: "Đang cập nhật",
-                raw_text: line
-            };
-         });
-         resultData = { projects: manualProjects };
-      }
-
-    } else if (mode === 'scout' || mode === 'deep_scan') {
-      let systemPrompt = "";
-      let userPrompt = "";
+    } 
+    
+    // === 2. SCOUT & DEEP SCAN (Sử dụng Google Search) ===
+    else if (mode === 'scout' || mode === 'deep_scan') {
       
+      // BƯỚC 1: RESEARCH (Dùng Search Tool, trả về Text tự nhiên)
+      let researchPrompt = "";
       if (mode === 'scout') {
-        systemPrompt = `Bạn là chuyên gia dữ liệu BĐS. Tìm kiếm thông tin mới nhất và trả về JSON.
-        CHÚ Ý: Trả về output dưới dạng JSON Block thuần túy.
-        Format: { "projects": [{ "name", "developer", "location", "status", "type", "confidence" }], "summary" }`;
-        userPrompt = `Tìm kiếm: ${query}`;
+        researchPrompt = `Bạn là chuyên gia dữ liệu BĐS. Hãy tìm kiếm thông tin mới nhất về: "${query}".
+        Liệt kê các dự án BĐS liên quan tìm thấy. Với mỗi dự án, cung cấp: Tên, Chủ đầu tư, Vị trí cụ thể, Trạng thái hiện tại.
+        Trả về báo cáo dạng văn bản chi tiết.`;
       } else {
-        systemPrompt = `Bạn là chuyên gia Thẩm định giá. Tìm kiếm chi tiết dự án và trả về JSON.
-        CHÚ Ý: Trả về output dưới dạng JSON Block thuần túy.
-        Format: { "overview": {}, "specs": {}, "pricing": {}, "amenities": [] }`;
-        userPrompt = `Deep scan: ${query}`;
+        researchPrompt = `Bạn là chuyên gia Thẩm định giá. Hãy tìm kiếm chi tiết (Deep Scan) về dự án: "${query}".
+        Thu thập: Tổng quan, Thông số (số căn, tầng), Giá bán (mở bán, hiện tại, phí QL), Tiện ích, Tình trạng pháp lý.
+        Trả về báo cáo dạng văn bản chi tiết.`;
       }
 
-      // Với mode có Google Search Tool, KHÔNG ĐƯỢC DÙNG responseMimeType: "application/json"
-      const url = `https://generativelanguage.googleapis.com/v1beta/models/${MODEL_RESEARCH}:generateContent?key=${apiKey}`;
-      const payload = {
-        contents: [{ parts: [{ text: systemPrompt + "\n\n" + userPrompt }] }],
-        tools: [{ google_search: {} }],
-        generationConfig: { 
-          temperature: 0.1, 
-          // responseMimeType: "application/json", // Removed to fix 400 Error with Tools
-          maxOutputTokens: MAX_TOKENS 
-        }
-      };
+      const searchResultText = await callGemini(apiKey, researchPrompt, MODEL_RESEARCH, false, true);
 
-      const response = await fetch(url, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
-      });
-      
-      if (!response.ok) {
-          const err = await response.text();
-          if (response.status === 429) throw new Error("Google Search Tool Quota Exceeded. Vui lòng thử lại sau.");
-          throw new Error(err);
+      // BƯỚC 2: FORMATTING (Dùng Flash, JSON Mode, Input là kết quả bước 1)
+      let formatPrompt = "";
+      if (mode === 'scout') {
+        formatPrompt = `Từ báo cáo sau, trích xuất thành JSON:
+        ${searchResultText}
+        
+        Output Schema:
+        { "projects": [{ "name", "developer", "location", "status", "type", "confidence" }], "summary": "string" }`;
+      } else {
+        formatPrompt = `Từ báo cáo sau, trích xuất thành JSON:
+        ${searchResultText}
+        
+        Output Schema:
+        { "overview": {"description"}, "specs": {"total_units", "total_floors"}, "pricing": {"price_per_sqm", "launch_price", "price_range"}, "amenities": ["string"] }`;
       }
 
-      const data = await response.json();
-      const text = data.candidates?.[0]?.content?.parts?.[0]?.text || "";
-      
-      resultData = cleanAndParseJSON(text);
+      const jsonResultText = await callGemini(apiKey, formatPrompt, MODEL_FORMAT, true, false);
+      resultData = cleanAndParseJSON(jsonResultText);
     }
 
     if (!resultData) {
+      // Fallback nếu JSON parse lỗi
       throw new Error("Failed to parse result data.");
     }
 

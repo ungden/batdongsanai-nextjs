@@ -44,20 +44,28 @@ const mapAiDataToFields = (aiData: any, section: string, currentData: any) => {
   };
 
   if (section === 'overview') {
-    const desc = find(['description', 'summary']);
-    // GARBAGE FILTER: Chặn AI trả lời kiểu "Tôi sẽ tìm..." thay vì dữ liệu thật
-    const isGarbage = desc && (
-      desc.toLowerCase().includes("tôi sẽ") || 
-      desc.toLowerCase().includes("i will") || 
-      desc.toLowerCase().includes("đang tìm kiếm") ||
-      desc.toLowerCase().includes("searching for") ||
-      desc.length < 15 // Quá ngắn thì cũng bỏ
+    const newDesc = find(['description', 'summary']);
+    const currentDesc = currentData.description || "";
+    
+    // SMART MERGE FOR DESCRIPTION
+    // 1. Check garbage
+    const isGarbage = newDesc && (
+      newDesc.toLowerCase().includes("tôi sẽ tìm") || 
+      newDesc.toLowerCase().includes("i will search") || 
+      newDesc.toLowerCase().includes("đang tìm kiếm") ||
+      newDesc.length < 20 // Quá ngắn
     );
 
-    if (desc && !isGarbage) {
-      newData.description = desc;
+    // 2. Check quality: Only overwrite if current is empty OR new one is significantly better (longer)
+    // Nếu mô tả cũ đã dài (>50 chars) mà mô tả mới ngắn hơn hoặc là rác -> Giữ nguyên cái cũ
+    const shouldKeepOld = currentDesc.length > 50 && (isGarbage || newDesc.length < 50);
+
+    if (newDesc && !isGarbage && !shouldKeepOld) {
+      newData.description = newDesc;
+    } else if (shouldKeepOld) {
+      console.log("Keeping existing description (better quality or new one is garbage)");
     } else if (isGarbage) {
-      console.warn("AI returned garbage description, ignored:", desc);
+      console.warn("AI returned garbage description, ignored:", newDesc);
     }
 
     const dev = find(['developer', 'chu_dau_tu']);
@@ -146,10 +154,9 @@ export default function MasterProjectEditor({ projectId, onSave }: MasterEditorP
 
   const handleSave = async (silent = false) => {
     if (!silent) setSaving(true);
-    let cleanPayload: any = {}; // Define outside try block for error logging
+    let cleanPayload: any = {};
 
     try {
-      // 1. CLEAN DATA (Sanitize)
       const { id, created_at, updated_at, ...rest } = data;
       
       cleanPayload = {
@@ -178,7 +185,6 @@ export default function MasterProjectEditor({ projectId, onSave }: MasterEditorP
 
     } catch (error: any) {
       console.error("Critical Save Error:", error);
-      
       const errMsg = error.message || "Unknown error";
       const errDetails = error.details || error.hint || "";
       
@@ -206,8 +212,11 @@ export default function MasterProjectEditor({ projectId, onSave }: MasterEditorP
     }
     
     try {
+      // Lấy dữ liệu hiện tại để AI có ngữ cảnh (tránh tìm lại cái đã có nếu không cần thiết)
+      const currentContext = section === 'overview' && data.description ? `Dữ liệu hiện có: ${data.description}` : "";
+
       const { data: resData, error: resError } = await supabase.functions.invoke('research-project', {
-        body: { query: data.name, mode: 'deep_scan', section }
+        body: { query: data.name, mode: 'deep_scan', section, context: currentContext }
       });
       if (resError) throw resError;
       
@@ -215,7 +224,7 @@ export default function MasterProjectEditor({ projectId, onSave }: MasterEditorP
       setLastRawOutput(rawText);
 
       if (rawText.startsWith("RAW_DATA_NOT_FOUND")) {
-        throw new Error(`AI không tìm thấy thông tin cho ${section}`);
+        throw new Error(`AI không tìm thấy thông tin cho ${section} hoặc trả về nội dung rác.`);
       }
 
       const { data: structData, error: structError } = await supabase.functions.invoke('structure-data', {
@@ -225,14 +234,13 @@ export default function MasterProjectEditor({ projectId, onSave }: MasterEditorP
 
       setLastJsonOutput(structData.data);
 
-      // Áp dụng bộ lọc rác tại đây
+      // Merge thông minh: Truyền data hiện tại vào để so sánh
       const newData = mapAiDataToFields(structData.data, section, data);
-      
-      // Cập nhật state React
       setData(newData);
       
-      // Lưu vào DB (Sử dụng newData thay vì data từ state vì state chưa kịp update trong hàm async)
+      // Silent save để lưu từng bước
       const { id, created_at, updated_at, ...updatePayload } = newData;
+      // Clean numbers again just in case
       const cleanUpdate = {
           ...updatePayload,
           price_per_sqm: safeParseInt(updatePayload.price_per_sqm),
@@ -244,8 +252,7 @@ export default function MasterProjectEditor({ projectId, onSave }: MasterEditorP
           legal_score: safeParseInt(updatePayload.legal_score),
       };
 
-      const { error: saveError } = await supabase.from('projects').update(cleanUpdate).eq('id', projectId);
-      if (saveError) throw saveError;
+      await supabase.from('projects').update(cleanUpdate).eq('id', projectId);
 
       if (!isAuto) {
         setAuditStatus('idle');
@@ -279,7 +286,6 @@ export default function MasterProjectEditor({ projectId, onSave }: MasterEditorP
       { id: 'amenities', label: 'Tiện ích' }
     ];
 
-    // Chạy tuần tự để tránh race condition
     for (let i = 0; i < sections.length; i++) {
       const sec = sections[i];
       setCurrentStep(sec.label);
@@ -297,7 +303,7 @@ export default function MasterProjectEditor({ projectId, onSave }: MasterEditorP
         setLogs(prev => [...prev, `❌ Thất bại (hoặc không tìm thấy): ${sec.label}`]);
       }
       
-      await new Promise(r => setTimeout(r, 1500)); // Tăng delay lên 1.5s để an toàn
+      await new Promise(r => setTimeout(r, 1000));
       setProgress(Math.round(((i + 1) / sections.length) * 100));
     }
 
@@ -305,7 +311,6 @@ export default function MasterProjectEditor({ projectId, onSave }: MasterEditorP
     setTimeout(() => setAuditStatus('idle'), 3000);
     toast.success("Đã hoàn thành Audit toàn diện!");
     
-    // Reload data cuối cùng để đảm bảo đồng bộ
     loadProject();
   };
 

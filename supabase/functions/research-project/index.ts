@@ -43,10 +43,19 @@ async function callGeminiSearch(apiKey: string, prompt: string) {
   }
 
   const data = await response.json();
-  const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
+  const text = data.candidates?.[0]?.content?.parts?.[0]?.text || "";
 
-  if (!text || text.length < 50 || text.includes("Tôi sẽ") || text.includes("I will")) {
-     return `RAW_DATA_NOT_FOUND: ${text}`; 
+  // --- FILTER: Chặn các câu trả lời kiểu "Tôi sẽ..." ---
+  const bannedPhrases = [
+    "tôi sẽ tìm kiếm", "i will search", "tôi sẽ cung cấp", "i will provide",
+    "dưới đây là thông tin", "here is the information", "đang tìm kiếm", "searching for",
+    "tôi sẽ tìm thấy", "tôi có thể giúp", "as an ai", "là một ai"
+  ];
+
+  // Nếu text quá ngắn (< 100 ký tự) VÀ chứa từ khóa cấm -> Coi là lỗi
+  const lowerText = text.toLowerCase();
+  if (text.length < 150 && bannedPhrases.some(phrase => lowerText.includes(phrase))) {
+     return `RAW_DATA_NOT_FOUND: AI returned conversational filler: "${text}"`; 
   }
   
   return text;
@@ -73,7 +82,7 @@ serve(async (req: Request) => {
           - Tên dự án chính thức
           - Tên Chủ đầu tư đầy đủ
           - Địa chỉ chính xác (Số, Đường, Phường, Quận, Thành phố)
-          - Mô tả dự án (Vị trí, lợi thế, kết nối giao thông)`;
+          - Mô tả dự án (Vị trí, lợi thế, kết nối giao thông, tổng quan)`;
           break;
         case 'specs':
           searchInstructions = `
@@ -112,19 +121,15 @@ serve(async (req: Request) => {
       }
 
       const prompt = `
-      NHIỆM VỤ: TÌM KIẾM VÀ TRÍCH XUẤT DỮ LIỆU
+      NHIỆM VỤ: TÌM KIẾM VÀ TRÍCH XUẤT DỮ LIỆU THỰC TẾ (FACTUAL DATA extraction).
       ĐỐI TƯỢNG: Dự án Bất Động Sản "${query}" tại Việt Nam.
-      NGÔN NGỮ BẮT BUỘC: TIẾNG VIỆT.
       
-      HƯỚNG DẪN:
-      1. Google Search thông tin mới nhất.
-      2. TRÍCH XUẤT CHÍNH XÁC các mục dữ liệu bên dưới.
-      3. ĐỊNH DẠNG: Danh sách văn bản thô (Bullet points).
-      4. TUYỆT ĐỐI KHÔNG viết câu mở đầu như "Dưới đây là...", "Tôi tìm thấy...". Chỉ trả về dữ liệu.
-
+      QUY TẮC NGHIÊM NGẶT:
+      1. TUYỆT ĐỐI KHÔNG trả lời các câu như: "Tôi sẽ tìm kiếm...", "Dưới đây là...", "Tôi không tìm thấy...".
+      2. NẾU KHÔNG CÓ DỮ LIỆU: Hãy trả về các thông tin liên quan nhất mà bạn tìm thấy về khu vực hoặc chủ đầu tư.
+      3. OUTPUT CHỈ LÀ DỮ LIỆU (dạng bullet points hoặc đoạn văn mô tả).
+      
       ${searchInstructions}
-      
-      BẮT ĐẦU TRẢ VỀ KẾT QUẢ (TIẾNG VIỆT):
       `;
       
       resultText = await callGeminiSearch(apiKey, prompt);

@@ -11,7 +11,7 @@ declare const Deno: {
   env: { get(key: string): string | undefined };
 };
 
-const MODEL_RESEARCH = "gemini-2.0-flash"; // Sử dụng bản Flash cho tốc độ và tool search tốt
+const MODEL_RESEARCH = "gemini-2.0-flash"; 
 
 async function callGeminiSearch(apiKey: string, prompt: string) {
   const url = `https://generativelanguage.googleapis.com/v1beta/models/${MODEL_RESEARCH}:generateContent?key=${apiKey}`;
@@ -21,8 +21,15 @@ async function callGeminiSearch(apiKey: string, prompt: string) {
     tools: [{ google_search: {} }],
     generationConfig: {
       temperature: 0.1,
-      maxOutputTokens: 8192, // Cho phép output dài để chứa chi tiết
-    }
+      maxOutputTokens: 8192,
+    },
+    // Cấu hình an toàn để tránh bị lọc nội dung vô lý
+    safetySettings: [
+      { category: "HARM_CATEGORY_HARASSMENT", threshold: "BLOCK_NONE" },
+      { category: "HARM_CATEGORY_HATE_SPEECH", threshold: "BLOCK_NONE" },
+      { category: "HARM_CATEGORY_SEXUALLY_EXPLICIT", threshold: "BLOCK_NONE" },
+      { category: "HARM_CATEGORY_DANGEROUS_CONTENT", threshold: "BLOCK_NONE" }
+    ]
   };
 
   const response = await fetch(url, {
@@ -33,12 +40,13 @@ async function callGeminiSearch(apiKey: string, prompt: string) {
 
   if (!response.ok) {
     const err = await response.text();
-    if (response.status === 429) throw new Error("Google Search Quota Exceeded.");
+    if (response.status === 429) throw new Error("Google Search Quota Exceeded. Please try again later.");
     throw new Error(`Gemini Search Error: ${err}`);
   }
 
   const data = await response.json();
-  return data.candidates?.[0]?.content?.parts?.[0]?.text || "";
+  // Kiểm tra kỹ xem có nội dung trả về không
+  return data.candidates?.[0]?.content?.parts?.[0]?.text || "Lỗi: AI không trả về dữ liệu (Empty Response).";
 }
 
 async function callGeminiBasic(apiKey: string, prompt: string) {
@@ -69,60 +77,66 @@ serve(async (req: Request) => {
 
     if (mode === 'batch_extract') {
       const prompt = `
-      Nhiệm vụ: Đọc văn bản bên dưới và liệt kê danh sách các dự án BĐS.
-      Định dạng dòng: "Tên Dự Án | Chủ Đầu Tư | Vị Trí"
-      Văn bản nguồn:
+      Nhiệm vụ: Trích xuất danh sách dự án BĐS từ văn bản sau.
+      Chỉ trả về danh sách, mỗi dòng 1 dự án.
+      Văn bản:
       ${raw_content}
       `;
       resultText = await callGeminiBasic(apiKey, prompt);
     } 
     else if (mode === 'scout') {
-      const prompt = `Bạn là chuyên gia dữ liệu BĐS. Tìm kiếm thông tin mới nhất về: "${query}".
-      Liệt kê các dự án BĐS liên quan tìm thấy.
-      `;
+      const prompt = `Tìm kiếm thông tin BĐS mới nhất về: "${query}". Liệt kê các dự án liên quan.`;
       resultText = await callGeminiSearch(apiKey, prompt);
     } 
     else if (mode === 'deep_scan') {
-      // PROMPT CHI TIẾT TỪNG MỤC NHƯ YÊU CẦU NGƯỜI DÙNG
+      // PROMPT ĐƯỢC VIẾT LẠI ĐỂ CẤM CHAT VÀ ÉP BUỘC TRẢ DỮ LIỆU
       const prompt = `
-      Bạn là Chuyên gia Thẩm định Bất động sản cao cấp.
-      Nhiệm vụ: Thực hiện "Audit" toàn diện về dự án: "${query}".
+      NHIỆM VỤ: Thu thập dữ liệu chi tiết (Audit) về dự án Bất động sản: "${query}".
       
-      Yêu cầu: Sử dụng Google Search để tìm dữ liệu số liệu cụ thể. Nếu không tìm thấy chính xác, hãy ước lượng dựa trên dữ liệu khu vực lân cận.
-      
-      Báo cáo phải trình bày rõ ràng theo ĐÚNG cấu trúc sau:
+      QUY TẮC BẮT BUỘC (NGHIÊM NGẶT):
+      1. KHÔNG ĐƯỢC chào hỏi (VD: "Chào bạn...", "Dưới đây là...").
+      2. KHÔNG viết đoạn mở đầu hay kết luận.
+      3. TRẢ LỜI NGAY LẬP TỨC vào các mục dữ liệu bên dưới.
+      4. BẮT BUỘC dùng Google Search để tìm con số chính xác (Giá, Diện tích, Năm).
+      5. Nếu không tìm thấy số liệu chính xác, hãy tìm dự án lân cận để ước lượng và ghi chú "(ước lượng)".
 
-      1. TỔNG QUAN & VỊ TRÍ (Overview):
-         - Tên chính thức:
-         - Chủ đầu tư (Developer):
-         - Địa chỉ chính xác:
-         - Quận/Huyện & Tỉnh/Thành:
-         - Mô tả vị trí (tiềm năng, kết nối giao thông):
+      HÃY ĐIỀN THÔNG TIN VÀO MẪU SAU (Giữ nguyên cấu trúc tiêu đề):
 
-      2. QUY MÔ & THÔNG SỐ (Specs):
-         - Tổng diện tích đất (ha):
-         - Mật độ xây dựng (%):
-         - Tổng số block/tòa:
-         - Số tầng (Floors):
-         - Tổng số căn hộ (Units):
-         - Các loại diện tích (m2):
+      --- BẮT ĐẦU BÁO CÁO ---
 
-      3. GIÁ BÁN & TÀI CHÍNH (Pricing):
-         - Giá mở bán đợt đầu (Launch Price): ... VNĐ/m2 (năm nào?)
-         - Giá thị trường hiện tại (Current Price): ... VNĐ/m2 (trung bình)
-         - Khoảng giá (Price Range): Ví dụ "3 - 5 tỷ"
-         - Chính sách thanh toán nổi bật:
+      1. TỔNG QUAN (Overview)
+      - Tên thương mại chính thức:
+      - Chủ đầu tư (Uy tín/Lịch sử):
+      - Vị trí chính xác (Số nhà, Đường, Phường, Quận):
+      - Mô tả vị trí (Liên kết vùng, Tầm nhìn):
 
-      4. PHÁP LÝ & TIẾN ĐỘ (Legal & Status):
-         - Tình trạng pháp lý (Sổ hồng/HĐMB/Đang hoàn thiện):
-         - Giấy phép xây dựng: (Có/Chưa)
-         - Tình trạng xây dựng hiện tại (Đang làm móng/Cất nóc/Bàn giao):
-         - Thời gian bàn giao (Dự kiến/Thực tế):
+      2. THÔNG SỐ KỸ THUẬT (Specs)
+      - Tổng diện tích đất (ha/m2):
+      - Quy mô (Số tòa, Số tầng):
+      - Tổng số lượng sản phẩm (Căn hộ/Nhà phố):
+      - Mật độ xây dựng (%):
+      - Các loại diện tích căn hộ (chi tiết m2):
+      - Tiêu chuẩn bàn giao (Thô/Cơ bản/Full):
 
-      5. TIỆN ÍCH (Amenities):
-         - Liệt kê ít nhất 10 tiện ích nội khu và ngoại khu quan trọng.
+      3. GIÁ BÁN & TÀI CHÍNH (Pricing)
+      - Giá mở bán (Launch Price): ... VNĐ/m2
+      - Giá thị trường hiện tại (Current Price): ... VNĐ/m2 (Cập nhật mới nhất)
+      - Tổng giá tham khảo (Range): Ví dụ "3 - 7 tỷ/căn"
+      - Chính sách thanh toán nổi bật:
+      - Ngân hàng bảo lãnh/cho vay:
 
-      Hãy đảm bảo số liệu (Giá, Số lượng) là con số cụ thể để có thể trích xuất vào database.
+      4. PHÁP LÝ & TIẾN ĐỘ (Legal)
+      - Tình trạng pháp lý hiện tại (Sổ hồng/HĐMB/Quyết định 1/500):
+      - Giấy phép xây dựng (Đã có/Chưa):
+      - Thời gian khởi công:
+      - Thời gian bàn giao (Dự kiến hoặc Thực tế):
+      - Tình trạng xây dựng thực tế (Mô tả hiện trạng công trường):
+
+      5. TIỆN ÍCH (Amenities)
+      - Nội khu (Liệt kê ít nhất 5 cái):
+      - Ngoại khu (Trường học, Bệnh viện, Mall gần nhất):
+
+      --- KẾT THÚC BÁO CÁO ---
       `;
       resultText = await callGeminiSearch(apiKey, prompt);
     }

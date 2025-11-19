@@ -10,13 +10,13 @@ import { ArrowLeft, Database, Sparkles, Map, PenTool, CheckCircle2 } from "lucid
 import { Badge } from "@/components/ui/badge";
 
 // Import Embedded Tools
-import ResearchFactoryEmbed from "@/components/admin/ResearchFactoryEmbed";
+import MasterProjectEditor from "@/components/admin/MasterProjectEditor";
 import ContentStudioEmbed from "@/components/admin/ContentStudioEmbed";
 
 export default function ProjectWorkspace() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState("analysis");
+  const [activeTab, setActiveTab] = useState("core_data");
 
   const project = projectsData.find(p => p.id === id);
 
@@ -41,13 +41,13 @@ export default function ProjectWorkspace() {
         
         <div className="flex items-center gap-2">
            <div className="text-right mr-4">
-             <div className="text-sm font-medium text-muted-foreground">Tiến độ dữ liệu</div>
+             <div className="text-sm font-medium text-muted-foreground">Chất lượng dữ liệu</div>
              <div className="h-2 w-32 bg-muted rounded-full mt-1 overflow-hidden">
-               <div className="h-full bg-primary w-1/3"></div>
+               <div className="h-full bg-yellow-500 w-1/2"></div>
              </div>
            </div>
            <Button variant="outline" onClick={() => window.open(`/projects/${project.id}`, '_blank')}>
-             Xem trên Web
+             Preview Website
            </Button>
         </div>
       </div>
@@ -55,11 +55,11 @@ export default function ProjectWorkspace() {
       {/* Workspace Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1">
         <TabsList className="grid w-full grid-cols-4 h-14 p-1 bg-muted/50 rounded-xl">
-          <TabsTrigger value="analysis" className="gap-2 data-[state=active]:bg-white data-[state=active]:shadow-sm h-12">
-            <Sparkles className="w-4 h-4" /> 1. Phân tích sâu (Deep Dive)
+          <TabsTrigger value="core_data" className="gap-2 data-[state=active]:bg-white data-[state=active]:shadow-sm h-12">
+            <Database className="w-4 h-4" /> 1. Dữ liệu lõi (Master Data)
           </TabsTrigger>
           <TabsTrigger value="market" className="gap-2 data-[state=active]:bg-white data-[state=active]:shadow-sm h-12">
-            <Map className="w-4 h-4" /> 2. Dữ liệu thị trường
+            <Map className="w-4 h-4" /> 2. Yếu tố thị trường
           </TabsTrigger>
           <TabsTrigger value="content" className="gap-2 data-[state=active]:bg-white data-[state=active]:shadow-sm h-12">
             <PenTool className="w-4 h-4" /> 3. Sáng tạo nội dung
@@ -70,24 +70,23 @@ export default function ProjectWorkspace() {
         </TabsList>
 
         <div className="mt-6">
-            {/* TAB 1: RESEARCH */}
-            <TabsContent value="analysis" className="space-y-4">
-                <div className="bg-blue-50 border border-blue-200 p-4 rounded-lg mb-6 text-sm text-blue-800 flex items-center gap-2">
-                    <Sparkles className="w-4 h-4" />
-                    <strong>Nhiệm vụ:</strong> Tìm kiếm brochure, thông tin pháp lý, hoặc bài review chi tiết về dự án và paste vào đây để AI trích xuất dữ liệu có cấu trúc.
+            {/* TAB 1: MASTER DATA EDITOR */}
+            <TabsContent value="core_data" className="space-y-4">
+                <div className="bg-blue-50 border border-blue-200 p-4 rounded-lg mb-4 text-sm text-blue-800">
+                    <strong>Hướng dẫn:</strong> Đây là nơi quản lý toàn bộ thông tin cứng của dự án. Bạn có thể dùng nút <strong>"AI Deep Scan"</strong> để tự động tìm và điền thông tin còn thiếu.
                 </div>
-                <ResearchFactoryEmbed project={project} onSuccess={() => setActiveTab("market")} />
+                <MasterProjectEditor projectId={project.id} onSave={() => setActiveTab("market")} />
             </TabsContent>
 
-            {/* TAB 2: MARKET (Placeholder for now, connect to Catalyst later) */}
+            {/* TAB 2: MARKET CONTEXT */}
             <TabsContent value="market" className="space-y-4">
                 <div className="bg-amber-50 border border-amber-200 p-4 rounded-lg mb-6 text-sm text-amber-800 flex items-center gap-2">
                     <Map className="w-4 h-4" />
-                    <strong>Nhiệm vụ:</strong> Tìm kiếm các dự án hạ tầng (Cầu, đường, Metro) xung quanh {project.district} để thêm vào hồ sơ.
+                    <strong>Context:</strong> Tìm kiếm hạ tầng (Cầu, đường, Metro) xung quanh {project.district} để làm nổi bật tiềm năng tăng giá.
                 </div>
                 <Card>
                     <CardContent className="py-12 text-center text-muted-foreground">
-                        <p>Tính năng kết nối Catalyst đang được tích hợp...</p>
+                        <p>Module Catalyst Connect đang được tích hợp...</p>
                         <Button className="mt-4" variant="outline" onClick={() => navigate("/admin/catalyst-factory")}>
                             Mở Catalyst Factory (Tab mới)
                         </Button>
@@ -99,7 +98,7 @@ export default function ProjectWorkspace() {
             <TabsContent value="content" className="space-y-4">
                 <div className="bg-purple-50 border border-purple-200 p-4 rounded-lg mb-6 text-sm text-purple-800 flex items-center gap-2">
                     <PenTool className="w-4 h-4" />
-                    <strong>Nhiệm vụ:</strong> Tạo ít nhất 1 bài viết giới thiệu và 1 bài phân tích tiềm năng cho dự án này.
+                    <strong>Writer:</strong> Tạo bài viết chuẩn SEO dựa trên Dữ liệu lõi và Yếu tố thị trường đã nhập ở bước trước.
                 </div>
                 <ContentStudioEmbed project={project} onSuccess={() => {}} />
             </TabsContent>
@@ -108,25 +107,26 @@ export default function ProjectWorkspace() {
              <TabsContent value="review" className="space-y-4">
                 <Card>
                     <CardHeader>
-                        <CardTitle>Tổng quan dữ liệu hiện có</CardTitle>
+                        <CardTitle>Checklist xuất bản</CardTitle>
                     </CardHeader>
                     <CardContent>
                         <div className="space-y-2">
                             <div className="flex justify-between p-3 bg-muted/30 rounded border">
-                                <span>Thông tin cơ bản</span>
-                                <Badge className="bg-green-500">Hoàn tất</Badge>
+                                <span>Dữ liệu tổng quan & thông số</span>
+                                <Badge className="bg-green-500">Đã nhập</Badge>
                             </div>
                              <div className="flex justify-between p-3 bg-muted/30 rounded border">
-                                <span>Báo cáo phân tích (Project Report)</span>
-                                <Badge variant="outline">Đang kiểm tra...</Badge>
+                                <span>Pháp lý & Giá</span>
+                                <Badge variant="outline">Chưa kiểm tra</Badge>
                             </div>
                              <div className="flex justify-between p-3 bg-muted/30 rounded border">
-                                <span>Bài viết (News/Blog)</span>
-                                <Badge variant="outline">Đang kiểm tra...</Badge>
+                                <span>Hình ảnh</span>
+                                <Badge variant="outline">Chưa có</Badge>
                             </div>
                         </div>
-                        <div className="mt-6 flex justify-end">
-                             <Button size="lg">Xuất bản dự án</Button>
+                        <div className="mt-6 flex justify-end gap-3">
+                             <Button variant="outline">Xem trước</Button>
+                             <Button size="lg">Xuất bản ngay</Button>
                         </div>
                     </CardContent>
                 </Card>

@@ -50,6 +50,7 @@ const AdminDevelopers = lazy(() => import('@/pages/admin/AdminDevelopers'));
 const AdminSettings = lazy(() => import('@/pages/admin/AdminSettings'));
 const AdminLogsPage = lazy(() => import('@/pages/admin/AdminLogs'));
 const AdminNews = lazy(() => import('@/pages/admin/AdminNews'));
+const AiProjectScout = lazy(() => import('@/pages/admin/AiProjectScout')); // New
 
 // New Workflow Pages
 const ProjectEnrichment = lazy(() => import('@/pages/admin/ProjectEnrichment'));
@@ -126,14 +127,15 @@ const App = () => (
                 <Route path="enrichment" element={<ProjectEnrichment />} />
                 <Route path="enrichment/:id" element={<ProjectWorkspace />} />
                 
-                <Route path="data-management" element={<DataManagement />} />
-                <Route path="analytics" element={<AnalyticsDashboard />} />
-                
                 {/* AI Tools */}
+                <Route path="ai-scout" element={<AiProjectScout />} />
                 <Route path="research-factory" element={<ResearchFactory />} />
                 <Route path="market-research-factory" element={<MarketResearchFactory />} />
                 <Route path="catalyst-factory" element={<CatalystFactory />} />
                 <Route path="content-studio" element={<ContentStudio />} />
+                
+                <Route path="data-management" element={<DataManagement />} />
+                <Route path="analytics" element={<AnalyticsDashboard />} />
                 
                 {/* Functional Admin Pages */}
                 <Route path="users" element={<AdminUsers />} />

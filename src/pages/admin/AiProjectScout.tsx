@@ -9,7 +9,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Progress } from "@/components/ui/progress";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { UploadCloud, Check, Loader2, FileInput, Building2, MapPin, ArrowRight, Trash2, Save, Plus } from "lucide-react";
+import { UploadCloud, Check, Loader2, FileInput, Building2, MapPin, ArrowRight, Trash2, Save, Plus, AlertCircle } from "lucide-react";
 
 export default function AiProjectScout() {
   const [rawText, setRawText] = useState("");
@@ -19,6 +19,21 @@ export default function AiProjectScout() {
   const [importedCount, setImportedCount] = useState(0);
   const [isImporting, setIsImporting] = useState(false);
 
+  // Hàm tạo slug từ tên dự án để làm ID
+  const generateId = (name: string) => {
+    const slug = name
+      .toLowerCase()
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "") // Bỏ dấu tiếng Việt
+      .replace(/[đĐ]/g, "d")
+      .replace(/[^a-z0-9]+/g, "-") // Thay ký tự đặc biệt bằng dấu gạch ngang
+      .replace(/^-+|-+$/g, ""); // Xóa gạch ngang ở đầu/cuối
+    
+    // Thêm số ngẫu nhiên ngắn để tránh trùng lặp ID nếu tên dự án giống nhau
+    const randomSuffix = Math.floor(Math.random() * 10000);
+    return `${slug}-${randomSuffix}`;
+  };
+
   const handleParse = async () => {
     if (!rawText.trim()) {
       toast.error("Vui lòng paste danh sách dự án vào ô trống");
@@ -27,6 +42,10 @@ export default function AiProjectScout() {
     
     const allLines = rawText.split('\n').filter(line => line.trim().length > 0);
     if (allLines.length === 0) return;
+    
+    if (allLines.length > 100) {
+      toast.warning(`Bạn đang paste ${allLines.length} dòng. AI có thể mất một chút thời gian để xử lý.`);
+    }
 
     setProcessing(true);
     setParseProgress(0);
@@ -94,16 +113,20 @@ export default function AiProjectScout() {
     updateProjectStatus(index, 'loading');
 
     try {
+      // Tạo ID thủ công vì DB không tự sinh
+      const newId = generateId(project.name);
+
       const dbProject = {
+        id: newId, // Fix lỗi: Thêm ID vào payload
         name: project.name,
         developer: project.developer !== 'Đang cập nhật' ? project.developer : "Đang cập nhật",
         location: project.location !== 'Đang cập nhật' ? project.location : "Đang cập nhật",
-        city: "Hồ Chí Minh",
+        city: "Hồ Chí Minh", // Mặc định, admin có thể sửa sau
         district: "Đang cập nhật",
         status: "upcoming", 
         price_range: "Đang cập nhật",
         price_per_sqm: 0,
-        description: project.raw_text || `Dự án ${project.name}`,
+        description: project.raw_text || `Dự án ${project.name} ${project.developer ? `do ${project.developer} phát triển` : ''}.`,
         completion_date: "Đang cập nhật",
         legal_score: 0,
       };
@@ -117,17 +140,18 @@ export default function AiProjectScout() {
     } catch (error: any) {
       console.error(error);
       updateProjectStatus(index, 'error');
-      toast.error(`Lỗi thêm ${project.name}`);
+      toast.error(`Lỗi thêm ${project.name}: ${error.message}`);
     }
   };
 
   const handleImportAll = async () => {
     setIsImporting(true);
     
+    // Xử lý tuần tự để tránh quá tải DB và hiển thị progress
     for (let i = 0; i < parsedProjects.length; i++) {
       if (parsedProjects[i].importStatus !== 'success') {
         await handleImportSingle(i);
-        // Delay nhỏ để tránh rate limit DB và để UI kịp render
+        // Delay nhỏ để UI update mượt mà
         await new Promise(r => setTimeout(r, 50));
       }
     }
@@ -152,9 +176,9 @@ export default function AiProjectScout() {
         <div>
            <h1 className="text-2xl font-bold flex items-center gap-2">
             <FileInput className="w-6 h-6 text-primary" />
-            Batch Upload (Chunk Processing)
+            Batch Upload (AI Parser)
           </h1>
-          <p className="text-muted-foreground">Hệ thống sẽ tự động chia nhỏ danh sách để xử lý ổn định hơn.</p>
+          <p className="text-muted-foreground">Paste danh sách văn bản thô &rarr; AI trích xuất &rarr; Import hàng loạt</p>
         </div>
       </div>
 
@@ -164,15 +188,19 @@ export default function AiProjectScout() {
           <CardHeader>
             <CardTitle>1. Dữ liệu nguồn</CardTitle>
             <CardDescription>
-              Dán danh sách dự án (1 dự án/dòng). Không giới hạn số lượng.
+              Dán danh sách dự án của bạn vào đây (Excel copy, list văn bản, chat log...)
             </CardDescription>
           </CardHeader>
           <CardContent className="flex-1 flex flex-col gap-4 min-h-0">
             <Textarea 
-              placeholder={`Ví dụ:\n1. Vinhomes Grand Park - Quận 9 - Vingroup\n2. The Global City - Quận 2 - Masterise\n3. Eaton Park - Thủ Đức - Gamuda Land\n...`} 
+              placeholder={`Paste danh sách dự án của bạn vào đây (mỗi dự án một dòng). Ví dụ:
+1. Vinhomes Grand Park - Quận 9 - Vingroup
+2. The Global City - Quận 2 - Masterise Homes
+3. Eaton Park - Thủ Đức - Gamuda Land
+...`} 
               value={rawText}
               onChange={(e) => setRawText(e.target.value)}
-              className="flex-1 font-mono text-sm resize-none p-4 bg-muted/10 leading-relaxed"
+              className="flex-1 font-mono text-sm resize-none p-4"
             />
             
             <div className="space-y-2">

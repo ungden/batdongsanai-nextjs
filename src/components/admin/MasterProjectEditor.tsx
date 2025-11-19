@@ -43,29 +43,20 @@ const mapAiDataToFields = (aiData: any, section: string, currentData: any) => {
     return undefined;
   };
 
+  // CHỈ map các trường thuộc section tương ứng
   if (section === 'overview') {
-    const newDesc = find(['description', 'summary']);
-    const currentDesc = currentData.description || "";
-    
-    // SMART MERGE FOR DESCRIPTION
-    // 1. Check garbage
-    const isGarbage = newDesc && (
-      newDesc.toLowerCase().includes("tôi sẽ tìm") || 
-      newDesc.toLowerCase().includes("i will search") || 
-      newDesc.toLowerCase().includes("đang tìm kiếm") ||
-      newDesc.length < 20 // Quá ngắn
+    const desc = find(['description', 'summary']);
+    // GARBAGE FILTER
+    const isGarbage = desc && (
+      desc.toLowerCase().includes("tôi sẽ") || 
+      desc.toLowerCase().includes("i will") || 
+      desc.toLowerCase().includes("đang tìm kiếm") ||
+      desc.toLowerCase().includes("searching for") ||
+      desc.length < 15
     );
 
-    // 2. Check quality: Only overwrite if current is empty OR new one is significantly better (longer)
-    // Nếu mô tả cũ đã dài (>50 chars) mà mô tả mới ngắn hơn hoặc là rác -> Giữ nguyên cái cũ
-    const shouldKeepOld = currentDesc.length > 50 && (isGarbage || newDesc.length < 50);
-
-    if (newDesc && !isGarbage && !shouldKeepOld) {
-      newData.description = newDesc;
-    } else if (shouldKeepOld) {
-      console.log("Keeping existing description (better quality or new one is garbage)");
-    } else if (isGarbage) {
-      console.warn("AI returned garbage description, ignored:", newDesc);
+    if (desc && !isGarbage) {
+      newData.description = desc;
     }
 
     const dev = find(['developer', 'chu_dau_tu']);
@@ -113,6 +104,7 @@ const mapAiDataToFields = (aiData: any, section: string, currentData: any) => {
   if (section === 'amenities') {
     const amenities = find(['amenities', 'tien_ich']);
     if (amenities && Array.isArray(amenities)) {
+      // Merge amenities cũ và mới
       const existing = Array.isArray(newData.amenities) ? newData.amenities : [];
       const combined = [...existing, ...amenities];
       newData.amenities = [...new Set(combined)];
@@ -152,12 +144,13 @@ export default function MasterProjectEditor({ projectId, onSave }: MasterEditorP
     setData((prev: any) => ({ ...prev, [field]: value }));
   };
 
-  const handleSave = async (silent = false) => {
+  // Hàm save chấp nhận data tùy chỉnh để dùng trong loop
+  const handleSave = async (silent = false, dataToSave = data) => {
     if (!silent) setSaving(true);
     let cleanPayload: any = {};
 
     try {
-      const { id, created_at, updated_at, ...rest } = data;
+      const { id, created_at, updated_at, ...rest } = dataToSave;
       
       cleanPayload = {
         ...rest,
@@ -178,32 +171,22 @@ export default function MasterProjectEditor({ projectId, onSave }: MasterEditorP
       
       if (!silent) toast.success("Đã lưu dữ liệu thành công");
       if (onSave) onSave();
-      
-      if (!silent) {
-         setLogs(prev => [...prev, `✅ SAVE SUCCESS: ${new Date().toLocaleTimeString()}`]);
-      }
+      if (!silent) setLogs(prev => [...prev, `✅ SAVE SUCCESS`]);
 
     } catch (error: any) {
-      console.error("Critical Save Error:", error);
-      const errMsg = error.message || "Unknown error";
-      const errDetails = error.details || error.hint || "";
-      
+      console.error("Save Error:", error);
       if (!silent) {
-         toast.error(`Lỗi lưu: ${errMsg}`);
+         toast.error(`Lỗi lưu: ${error.message}`);
          setShowDebug(true);
-         setLogs(prev => [
-           ...prev, 
-           `❌ SAVE ERROR: ${errMsg}`,
-           `DETAILS: ${errDetails}`,
-           `PAYLOAD: ${JSON.stringify(cleanPayload, null, 2)}`
-         ]);
+         setLogs(prev => [...prev, `❌ SAVE ERROR: ${error.message}`]);
       }
     } finally {
       if (!silent) setSaving(false);
     }
   };
 
-  const runScanForSection = async (section: string, isAuto = false) => {
+  // Modified to accept currentDataState for chain updates
+  const runScanForSection = async (section: string, isAuto = false, currentDataState = data) => {
     if (!isAuto) {
         setAuditStatus('running');
         setLastRawOutput("");
@@ -212,19 +195,19 @@ export default function MasterProjectEditor({ projectId, onSave }: MasterEditorP
     }
     
     try {
-      // Lấy dữ liệu hiện tại để AI có ngữ cảnh (tránh tìm lại cái đã có nếu không cần thiết)
-      const currentContext = section === 'overview' && data.description ? `Dữ liệu hiện có: ${data.description}` : "";
+      const currentContext = section === 'overview' && currentDataState.description 
+        ? `Dữ liệu hiện có: ${currentDataState.description}` : "";
 
       const { data: resData, error: resError } = await supabase.functions.invoke('research-project', {
-        body: { query: data.name, mode: 'deep_scan', section, context: currentContext }
+        body: { query: currentDataState.name, mode: 'deep_scan', section, context: currentContext }
       });
       if (resError) throw resError;
       
       const rawText = resData.data || "No data returned";
-      setLastRawOutput(rawText);
+      if (!isAuto) setLastRawOutput(rawText);
 
       if (rawText.startsWith("RAW_DATA_NOT_FOUND")) {
-        throw new Error(`AI không tìm thấy thông tin cho ${section} hoặc trả về nội dung rác.`);
+        throw new Error(`AI không tìm thấy thông tin cho ${section}`);
       }
 
       const { data: structData, error: structError } = await supabase.functions.invoke('structure-data', {
@@ -232,41 +215,30 @@ export default function MasterProjectEditor({ projectId, onSave }: MasterEditorP
       });
       if (structError) throw structError;
 
-      setLastJsonOutput(structData.data);
+      if (!isAuto) setLastJsonOutput(structData.data);
 
-      // Merge thông minh: Truyền data hiện tại vào để so sánh
-      const newData = mapAiDataToFields(structData.data, section, data);
+      // Merge vào state hiện tại (hoặc accumulated state trong loop)
+      const newData = mapAiDataToFields(structData.data, section, currentDataState);
+      
+      // Cập nhật UI ngay lập tức
       setData(newData);
       
-      // Silent save để lưu từng bước
-      const { id, created_at, updated_at, ...updatePayload } = newData;
-      // Clean numbers again just in case
-      const cleanUpdate = {
-          ...updatePayload,
-          price_per_sqm: safeParseInt(updatePayload.price_per_sqm),
-          launch_price: safeParseInt(updatePayload.launch_price),
-          total_units: safeParseInt(updatePayload.total_units),
-          sold_units: safeParseInt(updatePayload.sold_units),
-          floors: safeParseInt(updatePayload.floors),
-          blocks: safeParseInt(updatePayload.blocks),
-          legal_score: safeParseInt(updatePayload.legal_score),
-      };
-
-      await supabase.from('projects').update(cleanUpdate).eq('id', projectId);
+      // Save to DB
+      await handleSave(true, newData);
 
       if (!isAuto) {
         setAuditStatus('idle');
-        toast.success(`Đã cập nhật dữ liệu phần: ${section}`);
+        toast.success(`Đã cập nhật: ${section}`);
       }
-      return true;
+      
+      return newData; // Trả về dữ liệu mới nhất để vòng lặp dùng tiếp
     } catch (error: any) {
       console.error(`Error scanning ${section}:`, error);
-      setLastRawOutput(prev => prev + `\n\n❌ ERROR: ${error.message}`);
       if (!isAuto) {
         setAuditStatus('idle');
-        toast.error(`Lỗi quét phần ${section}: ${error.message}`);
+        toast.error(`Lỗi quét ${section}: ${error.message}`);
       }
-      return false;
+      return null; // Return null on error
     }
   };
 
@@ -286,24 +258,29 @@ export default function MasterProjectEditor({ projectId, onSave }: MasterEditorP
       { id: 'amenities', label: 'Tiện ích' }
     ];
 
+    // QUAN TRỌNG: Dùng biến này để tích lũy dữ liệu qua các vòng lặp
+    let accumulatedData = { ...data };
+
     for (let i = 0; i < sections.length; i++) {
       const sec = sections[i];
       setCurrentStep(sec.label);
       setLogs(prev => [...prev, `⏳ Đang quét: ${sec.label}...`]);
       
-      const success = await runScanForSection(sec.id, true);
+      // Truyền accumulatedData vào để đảm bảo tính kế thừa
+      const updatedData = await runScanForSection(sec.id, true, accumulatedData);
       
-      if (success) {
+      if (updatedData) {
+        accumulatedData = updatedData; // Cập nhật dữ liệu tích lũy
         setLogs(prev => {
             const newLogs = [...prev];
             newLogs[newLogs.length - 1] = `✅ Hoàn tất: ${sec.label}`;
             return newLogs;
         });
       } else {
-        setLogs(prev => [...prev, `❌ Thất bại (hoặc không tìm thấy): ${sec.label}`]);
+        setLogs(prev => [...prev, `⚠️ Bỏ qua: ${sec.label}`]);
       }
       
-      await new Promise(r => setTimeout(r, 1000));
+      await new Promise(r => setTimeout(r, 1500));
       setProgress(Math.round(((i + 1) / sections.length) * 100));
     }
 
@@ -311,6 +288,7 @@ export default function MasterProjectEditor({ projectId, onSave }: MasterEditorP
     setTimeout(() => setAuditStatus('idle'), 3000);
     toast.success("Đã hoàn thành Audit toàn diện!");
     
+    // Reload cuối cùng để đồng bộ hoàn toàn
     loadProject();
   };
 

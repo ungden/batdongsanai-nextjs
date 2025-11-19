@@ -5,7 +5,9 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
+import { Input } from '@/components/ui/input';
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import {
   X,
   Plus,
@@ -16,7 +18,9 @@ import {
   Building2,
   ArrowRight,
   Trash2,
-  AlertCircle
+  AlertCircle,
+  Search,
+  Loader2
 } from 'lucide-react';
 import { formatCurrency } from '@/utils/formatCurrency';
 import { useNavigate } from 'react-router-dom';
@@ -25,12 +29,88 @@ import DesktopLayout from '@/components/layout/DesktopLayout';
 import BottomNavigation from '@/components/layout/BottomNavigation';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { Project } from '@/types/project';
+import { projectsData } from '@/data/projectsData';
+
+// --- Smart Add Modal Component ---
+const AddProjectModal = ({ 
+  open, 
+  onOpenChange, 
+  currentIds, 
+  onAdd 
+}: { 
+  open: boolean; 
+  onOpenChange: (open: boolean) => void; 
+  currentIds: string[]; 
+  onAdd: (project: Project) => void; 
+}) => {
+  const [search, setSearch] = useState('');
+
+  const availableProjects = useMemo(() => {
+    return projectsData.filter(p => 
+      !currentIds.includes(p.id) && 
+      (p.name.toLowerCase().includes(search.toLowerCase()) || 
+       p.location.toLowerCase().includes(search.toLowerCase()))
+    );
+  }, [search, currentIds]);
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-md max-h-[80vh] flex flex-col bg-card text-card-foreground border-border p-0 gap-0 overflow-hidden">
+        <DialogHeader className="p-4 border-b border-border">
+          <DialogTitle>Thêm dự án để so sánh</DialogTitle>
+          <div className="relative mt-2">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input 
+              placeholder="Tìm tên dự án, vị trí..." 
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="pl-9 bg-muted/50 border-border focus:bg-background"
+            />
+          </div>
+        </DialogHeader>
+        <ScrollArea className="flex-1 p-2">
+          <div className="grid gap-2">
+            {availableProjects.length === 0 ? (
+              <div className="py-8 text-center text-muted-foreground text-sm">
+                Không tìm thấy dự án phù hợp
+              </div>
+            ) : (
+              availableProjects.map(project => (
+                <div 
+                  key={project.id} 
+                  className="flex items-center gap-3 p-3 rounded-lg hover:bg-muted/50 cursor-pointer transition-colors border border-transparent hover:border-border"
+                  onClick={() => {
+                    onAdd(project);
+                    onOpenChange(false);
+                    setSearch('');
+                  }}
+                >
+                  <div className="h-12 w-12 rounded-md bg-muted overflow-hidden flex-shrink-0">
+                    <img src={project.image} alt={project.name} className="h-full w-full object-cover" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <h4 className="font-medium text-sm truncate text-foreground">{project.name}</h4>
+                    <p className="text-xs text-muted-foreground truncate">{project.location}</p>
+                  </div>
+                  <Button size="sm" variant="secondary" className="h-8 px-3 ml-auto">
+                    <Plus className="h-4 w-4" />
+                  </Button>
+                </div>
+              ))
+            )}
+          </div>
+        </ScrollArea>
+      </DialogContent>
+    </Dialog>
+  );
+};
 
 const Compare = () => {
-  const { compareList, removeFromCompare, clearCompare } = useCompareStore();
+  const { compareList, addToCompare, removeFromCompare, clearCompare } = useCompareStore();
   const navigate = useNavigate();
   const isMobile = useIsMobile();
   const [hideSimilar, setHideSimilar] = useState(false);
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
 
   // --- Helper Functions ---
 
@@ -94,20 +174,31 @@ const Compare = () => {
         content = <span className="font-bold text-primary">{formatCurrency(Number(value))}</span>;
         break;
       case 'percent':
-        // Error 1 Fix: Explicitly cast value to string or number to avoid object rendering issues
-        content = value ? <span className="font-medium text-emerald-600">{String(value)}%</span> : '-';
+        content = value ? <span className="font-medium text-emerald-600 dark:text-emerald-400">{String(value)}%</span> : '-';
         break;
       case 'score':
-        // Error 2 Fix: Explicitly cast value to string for display
         content = (
-            <Badge variant={Number(value) >= 8 ? 'default' : Number(value) >= 6 ? 'secondary' : 'destructive'}>
+            <Badge 
+                variant="outline"
+                className={`
+                    ${Number(value) >= 8 
+                        ? 'border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-800 dark:bg-emerald-950/30 dark:text-emerald-400' 
+                        : Number(value) >= 6 
+                            ? 'border-amber-200 bg-amber-50 text-amber-700 dark:border-amber-800 dark:bg-amber-950/30 dark:text-amber-400' 
+                            : 'border-destructive/30 bg-destructive/10 text-destructive'}
+                `}
+            >
                 {String(value)}/10
             </Badge>
         );
         break;
       case 'badge':
         const statusMap: any = { good: 'Tốt', warning: 'Cảnh báo', danger: 'Rủi ro' };
-        const colorMap: any = { good: 'bg-emerald-100 text-emerald-700', warning: 'bg-amber-100 text-amber-700', danger: 'bg-red-100 text-red-700' };
+        const colorMap: any = { 
+            good: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400', 
+            warning: 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400', 
+            danger: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400' 
+        };
         content = (
             <Badge className={`${colorMap[value as string]} hover:${colorMap[value as string]} border-0`}>
                 {statusMap[value as string] || value}
@@ -115,10 +206,10 @@ const Compare = () => {
         );
         break;
       case 'number':
-        content = <span>{Number(value).toLocaleString('vi-VN')}</span>;
+        content = <span className="text-foreground">{Number(value).toLocaleString('vi-VN')}</span>;
         break;
       default:
-        content = <span className="line-clamp-2" title={String(value)}>{String(value)}</span>;
+        content = <span className="line-clamp-2 text-foreground" title={String(value)}>{String(value)}</span>;
     }
 
     return (
@@ -126,7 +217,7 @@ const Compare = () => {
         {content}
         {isBest && (
           <div className="absolute top-0 right-0 p-1">
-            <Trophy className="w-3 h-3 text-yellow-500 fill-yellow-500" />
+            <Trophy className="w-3 h-3 text-yellow-500 fill-yellow-500 dark:text-yellow-400" />
           </div>
         )}
       </div>
@@ -138,7 +229,7 @@ const Compare = () => {
   const emptyState = (
     <div className="flex flex-col items-center justify-center min-h-[60vh] space-y-6 text-center p-4 animate-in fade-in zoom-in duration-500">
       <div className="bg-blue-50 dark:bg-blue-900/20 p-8 rounded-full shadow-inner">
-        <Building2 className="h-20 w-20 text-blue-500/50" />
+        <Building2 className="h-20 w-20 text-blue-500/50 dark:text-blue-400/50" />
       </div>
       <div className="space-y-2 max-w-md">
         <h1 className="text-2xl font-bold text-foreground">So sánh dự án</h1>
@@ -146,7 +237,7 @@ const Compare = () => {
           Chọn tối đa 4 dự án để so sánh chi tiết về giá, pháp lý và tiềm năng sinh lời.
         </p>
       </div>
-      <Button onClick={() => navigate('/explore')} size="lg" className="rounded-full shadow-lg hover:shadow-xl transition-all hover:-translate-y-1">
+      <Button onClick={() => setIsAddModalOpen(true)} size="lg" className="rounded-full shadow-lg hover:shadow-xl transition-all hover:-translate-y-1">
         <Plus className="mr-2 h-5 w-5" />
         Thêm dự án ngay
       </Button>
@@ -173,27 +264,33 @@ const Compare = () => {
   const content = (
     <div className="space-y-6 h-full flex flex-col max-w-full overflow-hidden">
       {/* Header Controls */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-card p-4 rounded-2xl border shadow-sm">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-card p-4 rounded-2xl border border-border shadow-sm">
         <div>
           <h1 className="text-2xl font-bold text-foreground flex items-center gap-2">
             So sánh dự án 
-            <Badge variant="secondary" className="rounded-full px-2.5">{compareList.length}/4</Badge>
+            <Badge variant="secondary" className="rounded-full px-2.5 bg-secondary text-secondary-foreground">{compareList.length}/4</Badge>
           </h1>
         </div>
         
         <div className="flex items-center gap-4">
           <div className="flex items-center space-x-2">
             <Switch id="hide-similar" checked={hideSimilar} onCheckedChange={setHideSimilar} />
-            <Label htmlFor="hide-similar" className="text-sm cursor-pointer">Chỉ hiện điểm khác</Label>
+            <Label htmlFor="hide-similar" className="text-sm cursor-pointer text-foreground">Chỉ hiện điểm khác</Label>
           </div>
           
           <div className="h-6 w-px bg-border hidden sm:block"></div>
           
           <div className="flex gap-2">
-            <Button variant="ghost" size="sm" onClick={clearCompare} className="text-destructive hover:bg-destructive/10 hover:text-destructive">
+            <Button 
+                variant="ghost" 
+                size="sm" 
+                onClick={clearCompare} 
+                className="text-destructive hover:bg-destructive/10 hover:text-destructive"
+                disabled={compareList.length === 0}
+            >
               <Trash2 className="mr-2 h-4 w-4" /> Xóa hết
             </Button>
-            <Button size="sm" onClick={() => navigate('/explore')} className="hidden sm:flex shadow-sm" disabled={compareList.length >= 4}>
+            <Button size="sm" onClick={() => setIsAddModalOpen(true)} className="hidden sm:flex shadow-sm" disabled={compareList.length >= 4}>
               <Plus className="mr-2 h-4 w-4" /> Thêm
             </Button>
           </div>
@@ -206,7 +303,7 @@ const Compare = () => {
           {/* 1. Sticky Header Row (Project Cards) */}
           <div className="flex sticky top-0 z-20 bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/80 border-b border-border shadow-sm">
             {/* Top-Left Empty Cell */}
-            <div className="w-40 sm:w-56 p-4 font-bold bg-muted/30 border-r border-border flex items-center text-foreground sticky left-0 z-30">
+            <div className="w-40 sm:w-56 p-4 font-bold bg-muted/30 dark:bg-muted/10 border-r border-border flex items-center text-foreground sticky left-0 z-30">
               <span className="text-sm text-muted-foreground uppercase tracking-wider font-semibold">Tiêu chí so sánh</span>
             </div>
 
@@ -224,7 +321,7 @@ const Compare = () => {
                 
                 <div className="flex flex-col h-full">
                   <div 
-                    className="h-32 w-full rounded-xl overflow-hidden mb-3 bg-muted relative cursor-pointer group/img"
+                    className="h-32 w-full rounded-xl overflow-hidden mb-3 bg-muted relative cursor-pointer group/img border border-border"
                     onClick={() => navigate(`/projects/${project.id}`)}
                   >
                     {project.image ? (
@@ -249,7 +346,7 @@ const Compare = () => {
                   <Button 
                     size="sm" 
                     variant="outline" 
-                    className="w-full mt-auto rounded-lg border-primary/20 text-primary hover:bg-primary/5"
+                    className="w-full mt-auto rounded-lg border-primary/20 text-primary hover:bg-primary/5 dark:hover:bg-primary/20 hover:text-primary"
                     onClick={() => navigate(`/projects/${project.id}`)}
                   >
                     Chi tiết <ArrowRight className="w-3 h-3 ml-1" />
@@ -260,9 +357,9 @@ const Compare = () => {
 
             {/* "Add Project" Slot */}
             {compareList.length < 4 && (
-              <div className="w-56 sm:w-72 p-4 flex flex-col items-center justify-center text-muted-foreground gap-3 cursor-pointer hover:bg-muted/30 transition-colors border-r border-transparent"
-                   onClick={() => navigate('/explore')}>
-                <div className="h-16 w-16 rounded-full bg-muted flex items-center justify-center group-hover:scale-110 transition-transform">
+              <div className="w-56 sm:w-72 p-4 flex flex-col items-center justify-center text-muted-foreground gap-3 cursor-pointer hover:bg-muted/30 dark:hover:bg-muted/10 transition-colors border-r border-transparent min-h-[260px]"
+                   onClick={() => setIsAddModalOpen(true)}>
+                <div className="h-16 w-16 rounded-full bg-muted/50 dark:bg-muted/20 flex items-center justify-center group-hover:scale-110 transition-transform border border-dashed border-border">
                   <Plus className="h-8 w-8 opacity-50" />
                 </div>
                 <span className="text-sm font-medium">Thêm dự án</span>
@@ -275,24 +372,24 @@ const Compare = () => {
             {comparisonGroups.map((group) => (
               <div key={group.id}>
                 {/* Group Header */}
-                <div className="sticky left-0 z-10 bg-muted/20 font-bold text-xs uppercase tracking-wider text-primary px-4 py-2 border-b border-border w-full">
+                <div className="sticky left-0 z-10 bg-muted/20 dark:bg-muted/10 font-bold text-xs uppercase tracking-wider text-primary px-4 py-2 border-b border-border w-full backdrop-blur-sm">
                   {group.label}
                 </div>
 
                 {/* Fields in Group */}
                 {group.fields.map((field) => {
-                   // Check for differences if "Hide Similar" is active
-                   const values = compareList.map(p => p[field.key as keyof Project]);
-                   const isUnique = new Set(values.map(String)).size > 1;
-                   if (hideSimilar && !isUnique) return null;
+                  // Check for differences if "Hide Similar" is active
+                  const values = compareList.map(p => p[field.key as keyof Project]);
+                  const isUnique = new Set(values.map(String)).size > 1;
+                  if (hideSimilar && !isUnique) return null;
 
-                   // Error 3 Fix: Cast compareList to unknown then Project[] to satisfy global Project type requirements
-                   const bestValue = field.highlightWinner ? getBestValue(field.key, compareList as unknown as Project[]) : null;
+                  // Explicit casts for TS
+                  const bestValue = field.highlightWinner ? getBestValue(field.key, compareList as unknown as Project[]) : null;
 
-                   return (
-                    <div key={field.key} className="flex hover:bg-muted/5 transition-colors">
+                  return (
+                    <div key={field.key} className="flex hover:bg-muted/5 dark:hover:bg-muted/5 transition-colors">
                       {/* Label Column (Sticky Left) */}
-                      <div className="w-40 sm:w-56 p-4 text-sm font-medium text-muted-foreground bg-card/95 backdrop-blur border-r border-border flex items-center gap-2 sticky left-0 z-10 shadow-[4px_0_24px_rgba(0,0,0,0.02)]">
+                      <div className="w-40 sm:w-56 p-4 text-sm font-medium text-muted-foreground bg-card/95 dark:bg-card/95 backdrop-blur border-r border-border flex items-center gap-2 sticky left-0 z-10 shadow-[4px_0_24px_rgba(0,0,0,0.02)] dark:shadow-none">
                         <span className="truncate">{field.label}</span>
                         {field.key === 'legalScore' && <AlertCircle className="w-3 h-3 text-muted-foreground/50 cursor-help" />}
                       </div>
@@ -303,8 +400,7 @@ const Compare = () => {
                         const isBest = bestValue !== null && val === bestValue;
                         
                         return (
-                          <div key={project.id} className={`w-56 sm:w-72 p-4 text-sm border-r border-border flex items-center justify-center text-center relative ${isBest ? 'bg-primary/5' : ''}`}>
-                            {/* Error 4 Fix: Cast project to unknown then Project to satisfy global type */}
+                          <div key={project.id} className={`w-56 sm:w-72 p-4 text-sm border-r border-border flex items-center justify-center text-center relative ${isBest ? 'bg-primary/5 dark:bg-primary/10' : ''}`}>
                             {renderCellContent(project as unknown as Project, field, isBest)}
                           </div>
                         );
@@ -313,7 +409,7 @@ const Compare = () => {
                       {/* Empty Slot Spacer */}
                       {compareList.length < 4 && <div className="w-56 sm:w-72" />}
                     </div>
-                   );
+                  );
                 })}
               </div>
             ))}
@@ -322,8 +418,16 @@ const Compare = () => {
         <ScrollBar orientation="horizontal" />
       </ScrollArea>
       
+      {/* Add Project Modal */}
+      <AddProjectModal
+        open={isAddModalOpen}
+        onOpenChange={setIsAddModalOpen}
+        currentIds={compareList.map(p => p.id)}
+        onAdd={(p) => addToCompare(p as any)}
+      />
+
       {/* Mobile Tip */}
-      {isMobile && (
+      {isMobile && compareList.length > 0 && (
         <div className="text-center text-xs text-muted-foreground animate-pulse pb-4">
           Vuốt ngang để xem thêm dự án
         </div>

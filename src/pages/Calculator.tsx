@@ -8,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import BottomNavigation from "@/components/layout/BottomNavigation";
 import DesktopLayout from "@/components/layout/DesktopLayout";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { Calculator as CalculatorIcon, Download, TrendingUp, DollarSign, Sparkles } from "lucide-react";
+import { Calculator as CalculatorIcon, Download, TrendingUp, DollarSign, Sparkles, PieChart } from "lucide-react";
 
 const Calculator = () => {
   const isMobile = useIsMobile();
@@ -25,14 +25,12 @@ const Calculator = () => {
 
   const [results, setResults] = useState<any>(null);
 
-  // Effect to pre-fill data from URL params
   useEffect(() => {
     const price = searchParams.get("price");
     const area = searchParams.get("area");
     
     if (price) {
-      // If price is per sqm and area is provided, calculate total
-      if (area && parseFloat(price) < 1000000000) { // Heuristic: if price < 1 billion, likely per sqm
+      if (area && parseFloat(price) < 1000000000) {
          const total = parseFloat(price) * parseFloat(area);
          setFormData(prev => ({ ...prev, propertyPrice: total.toString() }));
       } else {
@@ -65,198 +63,196 @@ const Calculator = () => {
     return new Intl.NumberFormat("vi-VN", {
       style: "currency",
       currency: "VND",
+      maximumFractionDigits: 0
     }).format(amount);
   };
 
   const content = (
-    <div className="space-y-6">
-        <Card className="rounded-2xl shadow-lg border-0 bg-card">
-          <CardHeader className="bg-gradient-to-r from-slate-50 to-blue-50/30 dark:from-slate-900 dark:to-blue-900/20 rounded-t-2xl border-b border-border/50 pb-4">
-            <CardTitle className="text-lg flex items-center gap-2 text-foreground">
-              <Sparkles className="w-5 h-5 text-primary" />
-              Thông tin căn hộ & tài chính
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="p-6 space-y-5">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-              <div className="space-y-2">
-                <Label htmlFor="propertyPrice" className="text-sm font-semibold text-muted-foreground">Giá trị căn hộ (VNĐ)</Label>
-                <Input
-                  id="propertyPrice"
-                  type="number"
-                  placeholder="3000000000"
-                  value={formData.propertyPrice}
-                  onChange={(e) => setFormData({ ...formData, propertyPrice: e.target.value })}
-                  className="h-12 rounded-xl border-2 focus:border-primary bg-background"
-                />
+    <div className="space-y-8 max-w-4xl mx-auto">
+        <div className="text-center space-y-2 mb-8">
+           <div className="inline-flex p-3 bg-primary/10 rounded-2xl mb-2">
+             <CalculatorIcon className="w-8 h-8 text-primary" />
+           </div>
+           <h1 className="text-3xl font-black text-slate-900">Tính toán khoản vay</h1>
+           <p className="text-slate-500 max-w-md mx-auto">Lập kế hoạch tài chính chi tiết cho ngôi nhà tương lai của bạn</p>
+        </div>
+
+        <div className="grid lg:grid-cols-5 gap-8">
+          {/* Input Form */}
+          <Card className="lg:col-span-3 rounded-3xl shadow-lg border-0 bg-white overflow-hidden">
+            <CardHeader className="bg-slate-50/50 border-b border-slate-100 pb-4">
+              <CardTitle className="text-lg flex items-center gap-2 text-slate-900">
+                <Sparkles className="w-5 h-5 text-amber-500" />
+                Thông tin khoản vay
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="p-8 space-y-6">
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="propertyPrice" className="text-slate-600 font-medium">Giá trị bất động sản (VNĐ)</Label>
+                  <div className="relative">
+                    <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
+                    <Input
+                      id="propertyPrice"
+                      type="number"
+                      placeholder="3.000.000.000"
+                      value={formData.propertyPrice}
+                      onChange={(e) => setFormData({ ...formData, propertyPrice: e.target.value })}
+                      className="h-12 pl-10 text-lg font-semibold rounded-xl border-slate-200 focus:border-primary focus:ring-primary/20 transition-all"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                   <div className="space-y-2">
+                    <Label htmlFor="downPayment" className="text-slate-600 font-medium">Trả trước (%)</Label>
+                    <Select value={formData.downPayment} onValueChange={(value) => setFormData({ ...formData, downPayment: value })}>
+                      <SelectTrigger className="h-12 rounded-xl border-slate-200 bg-slate-50 focus:bg-white transition-all">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="20">20%</SelectItem>
+                        <SelectItem value="30">30%</SelectItem>
+                        <SelectItem value="40">40%</SelectItem>
+                        <SelectItem value="50">50%</SelectItem>
+                        <SelectItem value="70">70%</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="loanTerm" className="text-slate-600 font-medium">Thời hạn (năm)</Label>
+                    <Select value={formData.loanTerm} onValueChange={(value) => setFormData({ ...formData, loanTerm: value })}>
+                      <SelectTrigger className="h-12 rounded-xl border-slate-200 bg-slate-50 focus:bg-white transition-all">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="5">5 năm</SelectItem>
+                        <SelectItem value="10">10 năm</SelectItem>
+                        <SelectItem value="15">15 năm</SelectItem>
+                        <SelectItem value="20">20 năm</SelectItem>
+                        <SelectItem value="25">25 năm</SelectItem>
+                        <SelectItem value="30">30 năm</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="interestRate" className="text-slate-600 font-medium">Lãi suất ưu đãi (%/năm)</Label>
+                  <Input
+                    id="interestRate"
+                    type="number"
+                    step="0.1"
+                    value={formData.interestRate}
+                    onChange={(e) => setFormData({ ...formData, interestRate: e.target.value })}
+                    className="h-12 rounded-xl border-slate-200 bg-slate-50 focus:bg-white transition-all"
+                  />
+                </div>
+
+                <div className="space-y-2 pt-2">
+                  <Label htmlFor="monthlyIncome" className="text-slate-600 font-medium">Thu nhập hàng tháng (Tùy chọn)</Label>
+                  <Input
+                    id="monthlyIncome"
+                    type="number"
+                    placeholder="50.000.000"
+                    value={formData.monthlyIncome}
+                    onChange={(e) => setFormData({ ...formData, monthlyIncome: e.target.value })}
+                    className="h-12 rounded-xl border-slate-200"
+                  />
+                </div>
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="downPayment" className="text-sm font-semibold text-muted-foreground">Trả trước (%)</Label>
-                <Select value={formData.downPayment} onValueChange={(value) => setFormData({ ...formData, downPayment: value })}>
-                  <SelectTrigger className="h-12 rounded-xl border-2 bg-background">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent className="rounded-xl">
-                    <SelectItem value="20">20%</SelectItem>
-                    <SelectItem value="30">30%</SelectItem>
-                    <SelectItem value="40">40%</SelectItem>
-                    <SelectItem value="50">50%</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
+              <Button 
+                onClick={calculateLoan} 
+                className="w-full h-14 text-lg font-bold rounded-xl shadow-lg hover:shadow-xl transition-all bg-gradient-to-r from-primary to-blue-600 hover:to-blue-700 text-white mt-4" 
+                disabled={!formData.propertyPrice}
+              >
+                Tính toán ngay
+              </Button>
+            </CardContent>
+          </Card>
 
-              <div className="space-y-2">
-                <Label htmlFor="interestRate" className="text-sm font-semibold text-muted-foreground">Lãi suất (%/năm)</Label>
-                <Input
-                  id="interestRate"
-                  type="number"
-                  step="0.1"
-                  value={formData.interestRate}
-                  onChange={(e) => setFormData({ ...formData, interestRate: e.target.value })}
-                  className="h-12 rounded-xl border-2 focus:border-primary bg-background"
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="loanTerm" className="text-sm font-semibold text-muted-foreground">Thời hạn vay (năm)</Label>
-                <Select value={formData.loanTerm} onValueChange={(value) => setFormData({ ...formData, loanTerm: value })}>
-                  <SelectTrigger className="h-12 rounded-xl border-2 bg-background">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent className="rounded-xl">
-                    <SelectItem value="10">10 năm</SelectItem>
-                    <SelectItem value="15">15 năm</SelectItem>
-                    <SelectItem value="20">20 năm</SelectItem>
-                    <SelectItem value="25">25 năm</SelectItem>
-                    <SelectItem value="30">30 năm</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="space-y-2 md:col-span-2">
-                <Label htmlFor="monthlyIncome" className="text-sm font-semibold text-muted-foreground">Thu nhập hàng tháng (VNĐ)</Label>
-                <Input
-                  id="monthlyIncome"
-                  type="number"
-                  placeholder="50000000"
-                  value={formData.monthlyIncome}
-                  onChange={(e) => setFormData({ ...formData, monthlyIncome: e.target.value })}
-                  className="h-12 rounded-xl border-2 focus:border-primary bg-background"
-                />
-              </div>
-            </div>
-
-            <Button 
-              onClick={calculateLoan} 
-              className="w-full h-14 text-base font-bold rounded-xl shadow-lg hover:shadow-xl transition-all btn-primary" 
-              disabled={!formData.propertyPrice}
-            >
-              <CalculatorIcon className="w-5 h-5 mr-2" />
-              Tính toán dòng tiền
-            </Button>
-          </CardContent>
-        </Card>
-
-        {results && (
-          <div className="space-y-6 animate-fade-in">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <Card className="rounded-2xl shadow-lg border-0 bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-950/40 dark:to-indigo-950/40">
-                <CardContent className="p-6">
-                  <div className="text-center">
-                    <div className="text-sm text-muted-foreground mb-2 font-medium">Trả hàng tháng</div>
-                    <div className="text-3xl font-bold text-primary">
+          {/* Results Panel */}
+          <div className="lg:col-span-2 space-y-6">
+            {results ? (
+              <div className="space-y-6 animate-fade-in">
+                <Card className="rounded-3xl shadow-lg border-0 bg-gradient-to-br from-slate-900 to-slate-800 text-white overflow-hidden">
+                  <CardContent className="p-8 text-center">
+                    <div className="text-sm text-slate-300 mb-2 font-medium uppercase tracking-wide">Thanh toán hàng tháng</div>
+                    <div className="text-4xl font-black text-white tracking-tight">
                       {formatCurrency(results.monthlyPayment)}
                     </div>
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card className="rounded-2xl shadow-lg border-0 bg-gradient-to-br from-emerald-50 to-teal-50 dark:from-emerald-950/40 dark:to-teal-950/40">
-                <CardContent className="p-6">
-                  <div className="text-center">
-                    <div className="text-sm text-muted-foreground mb-2 font-medium">Trả trước</div>
-                    <div className="text-3xl font-bold text-emerald-600 dark:text-emerald-400">
-                      {formatCurrency(results.downPaymentAmount)}
+                    <div className="mt-6 pt-6 border-t border-white/10 grid grid-cols-2 gap-4">
+                       <div>
+                         <div className="text-xs text-slate-400 mb-1">Trả trước</div>
+                         <div className="text-lg font-bold text-emerald-400">{formatCurrency(results.downPaymentAmount)}</div>
+                       </div>
+                       <div>
+                         <div className="text-xs text-slate-400 mb-1">Gốc vay</div>
+                         <div className="text-lg font-bold text-blue-400">{formatCurrency(results.loanAmount)}</div>
+                       </div>
                     </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
+                  </CardContent>
+                </Card>
 
-            <Card className="rounded-2xl shadow-lg border-0 bg-card">
-              <CardHeader className="bg-gradient-to-r from-slate-50 to-blue-50/30 dark:from-slate-900 dark:to-blue-900/20 rounded-t-2xl border-b border-border/50 pb-4">
-                <CardTitle className="flex items-center gap-2 text-base text-foreground">
-                  <div className="p-1.5 bg-primary/10 rounded-xl">
-                    <TrendingUp className="w-4 h-4 text-primary" />
-                  </div>
-                  Chi tiết khoản vay
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="p-6 space-y-4">
-                <div className="flex justify-between text-base">
-                  <span className="text-muted-foreground">Số tiền vay:</span>
-                  <span className="font-bold text-foreground">{formatCurrency(results.loanAmount)}</span>
-                </div>
-                <div className="flex justify-between text-base">
-                  <span className="text-muted-foreground">Tổng tiền phải trả:</span>
-                  <span className="font-bold text-foreground">{formatCurrency(results.totalPayment)}</span>
-                </div>
-                <div className="flex justify-between text-base">
-                  <span className="text-muted-foreground">Tổng tiền lãi:</span>
-                  <span className="font-bold text-amber-600 dark:text-amber-500">{formatCurrency(results.totalInterest)}</span>
-                </div>
-                
-                {formData.monthlyIncome && (
-                  <div className="mt-4 p-4 bg-gradient-to-br from-slate-50 to-blue-50 dark:from-slate-900 dark:to-blue-900/30 rounded-xl">
-                    <div className="flex justify-between text-base mb-2">
-                      <span className="text-muted-foreground font-medium">Tỷ lệ trả nợ/thu nhập:</span>
-                      <span className={`font-bold ${
+                <Card className="rounded-3xl shadow-sm border-none bg-white">
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-base flex items-center gap-2 text-slate-900">
+                      <PieChart className="w-5 h-5 text-primary" />
+                      Tổng quan chi phí
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="p-6 space-y-4">
+                    <div className="flex justify-between text-sm">
+                      <span className="text-slate-500">Tổng gốc + lãi:</span>
+                      <span className="font-bold text-slate-900">{formatCurrency(results.totalPayment)}</span>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                      <span className="text-slate-500">Tổng lãi phải trả:</span>
+                      <span className="font-bold text-amber-600">{formatCurrency(results.totalInterest)}</span>
+                    </div>
+                    
+                    {formData.monthlyIncome && (
+                      <div className={`mt-4 p-4 rounded-xl text-sm font-medium flex items-center justify-between ${
                         (results.monthlyPayment / parseFloat(formData.monthlyIncome)) > 0.5 
-                          ? "text-red-600 dark:text-red-400" 
-                          : "text-emerald-600 dark:text-emerald-400"
+                          ? "bg-red-50 text-red-700 border border-red-100" 
+                          : "bg-emerald-50 text-emerald-700 border border-emerald-100"
                       }`}>
-                        {((results.monthlyPayment / parseFloat(formData.monthlyIncome)) * 100).toFixed(1)}%
-                      </span>
-                    </div>
-                    <div className="text-sm text-muted-foreground">
-                      Khuyến nghị: Dưới 50% thu nhập
-                    </div>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
+                        <span>Tỷ lệ nợ/thu nhập:</span>
+                        <span className="font-bold">
+                          {((results.monthlyPayment / parseFloat(formData.monthlyIncome)) * 100).toFixed(1)}%
+                        </span>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
 
-            <Button variant="outline" className="w-full h-12 rounded-xl border-2 hover:bg-accent transition-all">
-              <Download className="w-4 h-4 mr-2" />
-              Tải xuống bảng tính
-            </Button>
+                <Button variant="outline" className="w-full h-12 rounded-xl border-slate-200 text-slate-600 hover:bg-slate-50 hover:text-slate-900 transition-all">
+                  <Download className="w-4 h-4 mr-2" />
+                  Tải bảng tính chi tiết
+                </Button>
+              </div>
+            ) : (
+              <div className="h-full flex flex-col items-center justify-center p-8 text-center text-slate-400 bg-slate-50/50 rounded-3xl border-2 border-dashed border-slate-200 min-h-[300px]">
+                <CalculatorIcon className="w-16 h-16 mb-4 opacity-20" />
+                <p className="font-medium">Nhập thông tin bên trái để xem kết quả</p>
+              </div>
+            )}
           </div>
-        )}
-      </div>
+        </div>
+    </div>
   );
 
   if (isMobile) {
     return (
-      <div className="min-h-screen bg-background pb-20">
-        <div className="bg-card border-b border-border shadow-sm">
-          <div className="p-6">
-            <div className="flex items-center gap-4">
-              <div className="p-3 bg-gradient-to-br from-primary to-accent rounded-2xl shadow-lg">
-                <CalculatorIcon className="w-8 h-8 text-white" />
-              </div>
-              <div>
-                <h1 className="text-2xl font-bold text-foreground">Tính toán dòng tiền</h1>
-                <p className="text-muted-foreground text-sm mt-1">Tính toán chi phí và khả năng thanh toán</p>
-              </div>
-            </div>
-          </div>
+      <div className="min-h-screen bg-slate-50 pb-20">
+        <div className="bg-white border-b border-slate-200 p-4 shadow-sm sticky top-0 z-10">
+          <h1 className="text-xl font-bold text-slate-900">Tính toán khoản vay</h1>
         </div>
-
         <div className="p-4">
           {content}
         </div>
-
         <BottomNavigation />
       </div>
     );
@@ -265,7 +261,7 @@ const Calculator = () => {
   return (
     <DesktopLayout 
       title="Tính toán dòng tiền" 
-      subtitle="Tính toán chi phí và khả năng thanh toán"
+      subtitle="Công cụ lập kế hoạch tài chính"
     >
       {content}
     </DesktopLayout>

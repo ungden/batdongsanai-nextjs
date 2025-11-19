@@ -11,7 +11,7 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
-import { Search, SortAsc, MapPin, DollarSign, Loader2 } from "lucide-react";
+import { Search, SortAsc, MapPin, DollarSign, Loader2, Filter } from "lucide-react";
 import { useState, useMemo } from "react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
@@ -87,8 +87,6 @@ const Projects = () => {
     return filtered;
   }, [filters, projects]);
 
-  const goodLegalProjects = filteredProjects.filter(p => p.status === "good").length;
-
   if (loading) {
     return (
       <DesktopLayout>
@@ -101,28 +99,29 @@ const Projects = () => {
 
   if (isMobile) {
     return (
-      <div className="min-h-screen bg-background pb-20">
-        <div className="bg-card border-b border-border p-4 sticky top-0 z-20">
+      <div className="min-h-screen bg-slate-50 pb-20">
+        <div className="bg-white border-b border-slate-200 p-4 sticky top-0 z-20 shadow-sm">
           <div className="flex items-center justify-between mb-3">
-            <h1 className="text-xl font-bold text-foreground">Danh sách dự án</h1>
-            <Badge variant="secondary" className="text-xs">
+            <h1 className="text-xl font-bold text-slate-900">Danh sách dự án</h1>
+            <Badge variant="secondary" className="text-xs font-medium bg-slate-100 text-slate-600">
               {filteredProjects.length} kết quả
             </Badge>
           </div>
 
           <div className="relative mb-3">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 w-4 h-4" />
             <Input
               placeholder="Tìm dự án, địa điểm..."
               value={filters.search}
               onChange={(e) => setFilters(prev => ({ ...prev, search: e.target.value }))}
-              className="pl-10 h-10 rounded-xl bg-background border-border"
+              className="pl-10 h-10 rounded-xl bg-slate-50 border-slate-200 focus:bg-white focus:border-primary transition-all"
             />
           </div>
           
           <div className="flex gap-2 overflow-x-auto scrollbar-hide pb-1">
+            {/* Mobile Filters - simplified for better UX */}
             <Select value={filters.location} onValueChange={(value) => setFilters(prev => ({ ...prev, location: value }))}>
-              <SelectTrigger className="w-auto min-w-[110px] h-8 rounded-full bg-secondary text-xs border-0">
+              <SelectTrigger className="w-auto min-w-[100px] h-9 rounded-full bg-white border-slate-200 text-xs font-medium">
                 <SelectValue placeholder="Khu vực" />
               </SelectTrigger>
               <SelectContent>
@@ -135,7 +134,7 @@ const Projects = () => {
             </Select>
             
             <Select value={filters.priceRange} onValueChange={(value) => setFilters(prev => ({ ...prev, priceRange: value }))}>
-              <SelectTrigger className="w-auto min-w-[110px] h-8 rounded-full bg-secondary text-xs border-0">
+              <SelectTrigger className="w-auto min-w-[100px] h-9 rounded-full bg-white border-slate-200 text-xs font-medium">
                 <SelectValue placeholder="Mức giá" />
               </SelectTrigger>
               <SelectContent>
@@ -143,18 +142,6 @@ const Projects = () => {
                 <SelectItem value="under-50">&lt; 50tr/m²</SelectItem>
                 <SelectItem value="50-100">50-100tr/m²</SelectItem>
                 <SelectItem value="over-100">&gt; 100tr/m²</SelectItem>
-              </SelectContent>
-            </Select>
-            
-            <Select value={filters.sortBy} onValueChange={(value) => setFilters(prev => ({ ...prev, sortBy: value }))}>
-              <SelectTrigger className="w-auto min-w-[110px] h-8 rounded-full bg-secondary text-xs border-0">
-                <SelectValue placeholder="Sắp xếp" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="newest">Mới nhất</SelectItem>
-                <SelectItem value="price-low">Giá thấp</SelectItem>
-                <SelectItem value="price-high">Giá cao</SelectItem>
-                <SelectItem value="legal-score">Pháp lý</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -198,24 +185,26 @@ const Projects = () => {
       subtitle={`${filteredProjects.length} dự án đang mở bán`}
     >
       <div className="space-y-6">
-        {/* Filter Bar */}
-        <Card className="border border-border shadow-sm bg-card">
+        {/* Filter Bar - Clean Card Design */}
+        <Card className="border-none shadow-sm bg-white rounded-2xl sticky top-20 z-10">
           <div className="p-4 flex flex-wrap gap-4 items-center">
             <div className="relative flex-1 min-w-[300px]">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 w-4 h-4" />
               <Input
                 placeholder="Tìm kiếm theo tên dự án, địa điểm, chủ đầu tư..."
                 value={filters.search}
                 onChange={(e) => setFilters(prev => ({ ...prev, search: e.target.value }))}
-                className="pl-9 h-10 text-sm bg-background"
+                className="pl-10 h-11 text-sm bg-slate-50 border-transparent focus:bg-white focus:border-primary transition-all rounded-xl"
               />
             </div>
             
-            <div className="flex items-center gap-2">
-              <MapPin className="w-4 h-4 text-muted-foreground" />
+            <div className="flex items-center gap-3">
               <Select value={filters.location} onValueChange={(value) => setFilters(prev => ({ ...prev, location: value }))}>
-                <SelectTrigger className="w-[160px] h-10">
-                  <SelectValue placeholder="Khu vực" />
+                <SelectTrigger className="w-[160px] h-11 rounded-xl border-slate-200 bg-white hover:bg-slate-50">
+                  <div className="flex items-center gap-2 text-slate-600">
+                    <MapPin className="w-4 h-4" />
+                    <SelectValue placeholder="Khu vực" />
+                  </div>
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">Tất cả khu vực</SelectItem>
@@ -223,16 +212,15 @@ const Projects = () => {
                   <SelectItem value="ha noi">Hà Nội</SelectItem>
                   <SelectItem value="da nang">Đà Nẵng</SelectItem>
                   <SelectItem value="binh duong">Bình Dương</SelectItem>
-                  <SelectItem value="dong nai">Đồng Nai</SelectItem>
                 </SelectContent>
               </Select>
-            </div>
 
-            <div className="flex items-center gap-2">
-              <DollarSign className="w-4 h-4 text-muted-foreground" />
               <Select value={filters.priceRange} onValueChange={(value) => setFilters(prev => ({ ...prev, priceRange: value }))}>
-                <SelectTrigger className="w-[180px] h-10">
-                  <SelectValue placeholder="Mức giá" />
+                <SelectTrigger className="w-[160px] h-11 rounded-xl border-slate-200 bg-white hover:bg-slate-50">
+                   <div className="flex items-center gap-2 text-slate-600">
+                    <DollarSign className="w-4 h-4" />
+                    <SelectValue placeholder="Mức giá" />
+                  </div>
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">Tất cả mức giá</SelectItem>
@@ -241,13 +229,13 @@ const Projects = () => {
                   <SelectItem value="over-100">Trên 100 triệu/m²</SelectItem>
                 </SelectContent>
               </Select>
-            </div>
 
-            <div className="flex items-center gap-2">
-              <SortAsc className="w-4 h-4 text-muted-foreground" />
               <Select value={filters.sortBy} onValueChange={(value) => setFilters(prev => ({ ...prev, sortBy: value }))}>
-                <SelectTrigger className="w-[160px] h-10">
-                  <SelectValue placeholder="Sắp xếp" />
+                <SelectTrigger className="w-[160px] h-11 rounded-xl border-slate-200 bg-white hover:bg-slate-50">
+                   <div className="flex items-center gap-2 text-slate-600">
+                    <SortAsc className="w-4 h-4" />
+                    <SelectValue placeholder="Sắp xếp" />
+                  </div>
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="newest">Mới nhất</SelectItem>
@@ -262,7 +250,7 @@ const Projects = () => {
         </Card>
 
         {/* Projects Grid */}
-        <div className="grid gap-6 grid-cols-1 xl:grid-cols-2 2xl:grid-cols-3">
+        <div className="grid gap-6 grid-cols-1 xl:grid-cols-2 2xl:grid-cols-3 pb-10">
           {filteredProjects.map((project) => (
             <ProjectGridCard
               key={project.id}
@@ -273,12 +261,14 @@ const Projects = () => {
         </div>
 
         {filteredProjects.length === 0 && (
-          <div className="text-center py-16">
-            <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-muted mb-4">
-              <Search className="w-8 h-8 text-muted-foreground" />
+          <div className="text-center py-20 bg-white rounded-2xl border border-dashed border-slate-200">
+            <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-slate-50 mb-4">
+              <Filter className="w-8 h-8 text-slate-300" />
             </div>
-            <h3 className="text-lg font-semibold text-foreground">Không tìm thấy dự án</h3>
-            <p className="text-muted-foreground text-sm mt-1">Thử điều chỉnh bộ lọc hoặc từ khóa tìm kiếm.</p>
+            <h3 className="text-lg font-bold text-slate-900">Không tìm thấy dự án</h3>
+            <p className="text-slate-500 text-sm mt-1 max-w-xs mx-auto">
+              Thử điều chỉnh bộ lọc hoặc tìm kiếm với từ khóa khác.
+            </p>
           </div>
         )}
       </div>

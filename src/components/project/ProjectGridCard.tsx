@@ -3,7 +3,7 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import FavoriteButton from "./FavoriteButton";
 import { Project } from "@/types/project";
-import { MapPin, User, TrendingUp, TrendingDown, Calendar, Star, Flame, Sparkles, Award } from "lucide-react";
+import { MapPin, User, TrendingUp, TrendingDown, Calendar, Star, Flame, Sparkles, Award, ArrowRight } from "lucide-react";
 import { getProjectBadges } from "@/utils/projectBadges";
 
 interface ProjectGridCardProps {
@@ -41,126 +41,110 @@ const ProjectGridCard = ({ project, onClick }: ProjectGridCardProps) => {
   return (
     <Card
       onClick={() => onClick(project.id)}
-      className="overflow-hidden cursor-pointer group border border-border/60 bg-card shadow-sm hover:shadow-md hover:border-primary/50 transition-all duration-300"
+      className="group overflow-hidden cursor-pointer bg-white border border-slate-200 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 rounded-2xl"
     >
       {/* Image with gradient overlays */}
-      <div className="relative h-[220px] overflow-hidden bg-muted">
+      <div className="relative h-[240px] overflow-hidden bg-slate-100">
         <img
           src={project.image}
           alt={project.name}
           loading="lazy"
-          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+          className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
         />
         
-        {/* Multi-layer gradient */}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-80" />
+        {/* Gradient overlay for text readability */}
+        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-80" />
         
         {/* Status/Sold badge */}
         <div className="absolute top-4 left-4 flex items-center gap-2">
-          {typeof soldPercentage === "number" ? (
-            <Badge className="bg-emerald-500/90 text-white border-0 backdrop-blur-sm shadow-sm">
-              <TrendingUp className="w-3.5 h-3.5 mr-1" />
+          {typeof soldPercentage === "number" && soldPercentage > 0 ? (
+            <Badge className="bg-emerald-500/90 hover:bg-emerald-600 text-white border-0 backdrop-blur-md shadow-sm font-semibold px-2.5">
+              <TrendingUp className="w-3.5 h-3.5 mr-1.5" />
               {soldPercentage}% đã bán
             </Badge>
           ) : null}
         </div>
 
         {/* Favorite with backdrop */}
-        <div className="absolute top-4 right-4 z-10 bg-black/20 backdrop-blur-md rounded-full p-1 hover:bg-black/40 transition-colors" onClick={(e) => e.stopPropagation()}>
-          <FavoriteButton projectId={project.id} projectName={project.name} />
+        <div className="absolute top-4 right-4 z-10" onClick={(e) => e.stopPropagation()}>
+           <div className="bg-white/20 hover:bg-white/40 backdrop-blur-md rounded-full p-1 transition-colors">
+             <FavoriteButton projectId={project.id} projectName={project.name} className="text-white hover:text-white" />
+           </div>
+        </div>
+
+        {/* Bottom Info Over Image */}
+        <div className="absolute bottom-4 left-4 right-4 text-white">
+           <h3 className="text-xl font-bold leading-snug mb-1 shadow-black/50 drop-shadow-md line-clamp-1">
+            {project.name}
+          </h3>
+           <div className="flex items-center text-sm text-white/90">
+              <MapPin className="w-3.5 h-3.5 mr-1.5" />
+              <span className="truncate font-medium">{project.location}</span>
+            </div>
         </div>
       </div>
 
       {/* Content */}
-      <div className="p-6 space-y-4">
-        {/* Title & meta */}
-        <div>
-          <h3 className="text-lg font-bold leading-snug text-foreground group-hover:text-primary transition-colors mb-2 line-clamp-1">
-            {project.name}
-          </h3>
-          
-          <div className="space-y-1.5">
-            <div className="flex items-center text-sm text-muted-foreground">
-              <MapPin className="w-4 h-4 mr-2 text-primary/70" />
-              <span className="line-clamp-1">{project.location}</span>
+      <div className="p-5 space-y-5">
+        {/* Meta Info */}
+        <div className="flex items-center justify-between text-sm">
+            <div className="flex items-center text-slate-500">
+              <User className="w-4 h-4 mr-2" />
+              <span className="font-medium truncate max-w-[140px]">{project.developer}</span>
             </div>
-            
-            <div className="flex items-center text-sm text-muted-foreground">
-              <User className="w-4 h-4 mr-2 text-accent/70" />
-              <span className="line-clamp-1">{project.developer}</span>
+             <div className="flex items-center text-slate-500">
+                <Calendar className="w-4 h-4 mr-2" />
+                <span className="font-medium">{project.completionDate}</span>
             </div>
-          </div>
-
-          {/* Badges */}
-          {badges.length > 0 && (
-            <div className="mt-3 flex flex-wrap gap-1.5">
-              {badges.map((b) => (
-                <Badge 
-                  key={b} 
-                  variant={b === 'hot' ? 'premium' : b === 'new' ? 'secondary' : b === 'discount' ? 'warning' : 'default'} 
-                  className="text-[10px] px-2 py-0.5 shadow-sm"
-                >
-                  <span className="inline-flex items-center gap-1">
-                    {b === 'hot' && <Flame className="w-3 h-3" />}
-                    {b === 'new' && <Sparkles className="w-3 h-3" />}
-                    {b === 'discount' && <TrendingDown className="w-3 h-3" />}
-                    {b === 'featured' && <Star className="w-3 h-3" />}
-                    {b === 'hot' ? 'Hot' : b === 'new' ? 'Mới' : b === 'discount' ? 'Giảm giá' : 'Nổi bật'}
-                  </span>
-                </Badge>
-              ))}
-            </div>
-          )}
         </div>
 
-        {/* Pricing Card */}
-        <div className="rounded-xl border border-border bg-secondary/30 p-4">
-          <div className="flex items-center justify-between gap-4">
+        {/* Pricing Section */}
+        <div className="flex items-center justify-between bg-slate-50 rounded-xl p-3 border border-slate-100">
             <div>
-              <div className="text-xl font-bold text-primary mb-0.5">
-                {project.priceRange}
-              </div>
-              <div className="text-xs text-muted-foreground font-medium">
-                {formatPrice(project.pricePerSqm)} VNĐ/m²
-              </div>
+                <p className="text-xs text-slate-500 font-medium uppercase mb-0.5">Giá bán</p>
+                <div className="text-xl font-bold text-primary">
+                    {project.priceRange}
+                </div>
             </div>
-            {priceTrend && (
-              <div className={`flex items-center text-xs font-medium px-2.5 py-1 rounded-lg border ${
-                priceTrend === "up" 
-                  ? "text-emerald-600 bg-emerald-50 border-emerald-100 dark:bg-emerald-950/30 dark:border-emerald-900" 
-                  : priceTrend === "down" 
-                  ? "text-red-600 bg-red-50 border-red-100 dark:bg-red-950/30 dark:border-red-900" 
-                  : "text-muted-foreground bg-muted border-border"
-              }`}>
-                {priceTrend === "up" ? (
-                  <TrendingUp className="w-3.5 h-3.5 mr-1" />
-                ) : priceTrend === "down" ? (
-                  <TrendingDown className="w-3.5 h-3.5 mr-1" />
-                ) : null}
-                {priceTrend === "up" ? "Tăng giá" : priceTrend === "down" ? "Giảm nhẹ" : "Ổn định"}
-              </div>
-            )}
-          </div>
+             <div className="text-right">
+                 <p className="text-xs text-slate-500 font-medium uppercase mb-0.5">Đơn giá</p>
+                 <div className="text-sm font-semibold text-slate-700">
+                    {new Intl.NumberFormat('vi-VN', { maximumFractionDigits: 1 }).format(project.pricePerSqm / 1000000)} tr/m²
+                 </div>
+            </div>
         </div>
 
         {/* Progress */}
         <div className="space-y-2">
           <div className="flex items-center justify-between text-xs">
-            <span className="text-muted-foreground font-medium">Tiến độ xây dựng</span>
-            <span className="font-semibold text-foreground">{Math.round(completionProgress)}%</span>
+            <span className="text-slate-500 font-medium">Tiến độ xây dựng</span>
+            <span className="font-bold text-primary">{Math.round(completionProgress)}%</span>
           </div>
-          <Progress value={completionProgress} className="h-1.5" />
+          <Progress value={completionProgress} className="h-1.5 bg-slate-100" />
         </div>
 
-        {/* Footer */}
-        <div className="flex items-center justify-between pt-3 border-t border-border/50">
-          <Badge variant="outline" className="font-medium text-foreground border-border">
-            <Award className="w-3.5 h-3.5 mr-1 text-primary" /> {project.legalScore}/10
-          </Badge>
-          <div className="flex items-center text-xs text-muted-foreground">
-            <Calendar className="w-3.5 h-3.5 mr-1.5" />
-            <span>{project.completionDate}</span>
-          </div>
+        {/* Badges & Action */}
+        <div className="flex items-center justify-between pt-2">
+           <div className="flex gap-1.5">
+              {badges.slice(0, 2).map((b) => (
+                <Badge 
+                  key={b} 
+                  variant="secondary"
+                  className="text-[10px] px-2 py-0.5 bg-slate-100 text-slate-600 border-slate-200"
+                >
+                  {b === 'hot' ? 'Hot' : b === 'new' ? 'Mới' : b === 'discount' ? 'Giảm giá' : 'Nổi bật'}
+                </Badge>
+              ))}
+              {project.legalScore >= 8 && (
+                 <Badge variant="outline" className="text-[10px] px-2 py-0.5 text-emerald-600 border-emerald-200 bg-emerald-50">
+                    Pháp lý tốt
+                 </Badge>
+              )}
+           </div>
+           
+           <div className="group/btn flex items-center text-sm font-bold text-primary">
+             Xem chi tiết <ArrowRight className="w-4 h-4 ml-1 transition-transform group-hover/btn:translate-x-1" />
+           </div>
         </div>
       </div>
     </Card>

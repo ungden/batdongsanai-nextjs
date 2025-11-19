@@ -28,8 +28,6 @@ function extractJSON(text: string): any {
     if (firstOpen !== -1 && lastClose !== -1) {
       try { return JSON.parse(text.substring(firstOpen, lastClose + 1)); } catch (e3) { /* continue */ }
     }
-    // Return empty object instead of crashing if JSON fails
-    console.error("JSON parse failed, returning empty object");
     return {};
   }
 }
@@ -64,7 +62,6 @@ serve(async (req: Request) => {
   try {
     const { content, type } = await req.json()
     
-    // Kiểm tra nếu bước trước bị fail
     if (content && typeof content === 'string' && content.startsWith("RAW_DATA_NOT_FOUND")) {
        return new Response(JSON.stringify({ data: {} }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -79,31 +76,53 @@ serve(async (req: Request) => {
 
     if (type === 'project_detail') {
       prompt = `
-      Convert this Real Estate Data into standard JSON.
-      INPUT:
+      NHIỆM VỤ: Chuyển đổi văn bản BĐS sau thành JSON chuẩn để lưu Database.
+      DỮ LIỆU VÀO:
       """
       ${content}
       """
       
-      RULES:
-      1. Extract numbers strictly (e.g. "5 billion" -> 5000000000).
-      2. If data is missing, use null.
-      3. Output valid JSON only.
+      QUY TẮC XỬ LÝ SỐ LIỆU (BẮT BUỘC):
+      1. Chuyển đổi TẤT CẢ giá tiền và diện tích về số nguyên (Integer/Float).
+         - "5 tỷ" -> 5000000000
+         - "60 triệu/m2" -> 60000000
+         - "100m2" -> 100
+      2. Nếu là khoảng giá (3-5 tỷ), lấy giá trung bình hoặc giá thấp nhất.
+      3. Các trường văn bản phải là TIẾNG VIỆT.
+      4. Nếu không có dữ liệu, để null.
       
-      SCHEMA:
+      JSON SCHEMA:
       {
-        "overview": { "description": "string", "developer": "string", "location": "string", "city": "string", "district": "string" },
-        "specs": { "total_units": number, "total_floors": number, "blocks": number, "density_construction": number, "handover_standard": "string" },
-        "pricing": { "price_per_sqm": number, "launch_price": number, "price_range": "string" },
-        "legal": { "legal_status": "string", "completion_date": "string" },
-        "amenities": ["string"]
+        "overview": {
+          "description": "string (Tiếng Việt, tóm tắt)",
+          "developer": "string",
+          "location": "string (Địa chỉ chi tiết)",
+          "city": "string",
+          "district": "string"
+        },
+        "specs": {
+          "total_units": number (số nguyên),
+          "total_floors": number (số nguyên),
+          "blocks": number (số nguyên),
+          "handover_standard": "string"
+        },
+        "pricing": {
+          "price_per_sqm": number (VNĐ, ví dụ 60000000),
+          "launch_price": number (VNĐ),
+          "price_range": "string (ví dụ: 3 - 5 tỷ)"
+        },
+        "legal": {
+          "legal_status": "string (Sổ hồng/HĐMB...)",
+          "completion_date": "string (YYYY hoặc Quý/Năm)"
+        },
+        "amenities": ["string (Tiếng Việt)"]
       }`;
     }
     else if (type === 'project_list') {
-      prompt = `Extract list to JSON array. Input: ${content}`;
+      prompt = `Extract list of real estate projects to JSON. Input: ${content}`;
     }
     else if (type === 'raw_list') {
-      prompt = `Convert to JSON array. Input: ${content}`;
+      prompt = `Convert list to JSON Array. Input: ${content}`;
     }
 
     const jsonString = await callGemini(apiKey, prompt);

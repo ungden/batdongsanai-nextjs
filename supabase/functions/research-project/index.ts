@@ -23,7 +23,6 @@ async function callGeminiSearch(apiKey: string, prompt: string) {
       temperature: 0.1,
       maxOutputTokens: 8192,
     },
-    // Tắt safety filter để tránh block các từ khóa nhạy cảm trong BĐS nếu có
     safetySettings: [
       { category: "HARM_CATEGORY_HARASSMENT", threshold: "BLOCK_NONE" },
       { category: "HARM_CATEGORY_HATE_SPEECH", threshold: "BLOCK_NONE" },
@@ -44,8 +43,13 @@ async function callGeminiSearch(apiKey: string, prompt: string) {
   }
 
   const data = await response.json();
-  // Trả về nguyên văn text để debug ở client
-  return data.candidates?.[0]?.content?.parts?.[0]?.text || "[[AI trả về rỗng]]";
+  const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
+
+  if (!text || text.length < 50 || text.includes("Tôi sẽ") || text.includes("I will")) {
+     return `RAW_DATA_NOT_FOUND: ${text}`; 
+  }
+  
+  return text;
 }
 
 serve(async (req: Request) => {
@@ -61,45 +65,76 @@ serve(async (req: Request) => {
     if (mode === 'deep_scan') {
       let searchInstructions = "";
 
-      // Prompt cực kỳ cụ thể để ép AI trả về dữ liệu thay vì chat
+      // VIỆT HÓA TOÀN BỘ HƯỚNG DẪN ĐỂ AI HIỂU NGỮ CẢNH VIỆT NAM
       switch (section) {
         case 'overview':
-          searchInstructions = `TÌM KIẾM: Tên dự án, Chủ đầu tư, Vị trí chính xác, Mô tả.`;
+          searchInstructions = `
+          YÊU CẦU DỮ LIỆU (Tiếng Việt):
+          - Tên dự án chính thức
+          - Tên Chủ đầu tư đầy đủ
+          - Địa chỉ chính xác (Số, Đường, Phường, Quận, Thành phố)
+          - Mô tả dự án (Vị trí, lợi thế, kết nối giao thông)`;
           break;
         case 'specs':
-          searchInstructions = `TÌM KIẾM: Diện tích đất, Quy mô (số tòa/tầng/căn), Mật độ xây dựng.`;
+          searchInstructions = `
+          YÊU CẦU DỮ LIỆU (Tiếng Việt):
+          - Tổng diện tích đất (ha/m2)
+          - Mật độ xây dựng (%)
+          - Quy mô: Số Block, Số tầng, Số hầm
+          - Tổng số căn hộ
+          - Diện tích căn hộ (Ví dụ: 50m2 - 100m2)
+          - Tiêu chuẩn bàn giao (Thô/Cơ bản/Cao cấp)`;
           break;
         case 'financial':
-          searchInstructions = `TÌM KIẾM: Giá bán (m2), Giá mở bán, Chính sách thanh toán.`;
+          searchInstructions = `
+          YÊU CẦU DỮ LIỆU (Tiếng Việt):
+          - Giá mở bán (đợt đầu) VNĐ/m2
+          - Giá thị trường hiện tại VNĐ/m2
+          - Tổng giá bán (Ví dụ: 3-5 tỷ)
+          - Ngân hàng hỗ trợ
+          - Chính sách thanh toán tóm tắt`;
           break;
         case 'legal':
-          searchInstructions = `TÌM KIẾM: Pháp lý (Sổ hồng/HĐMB), Giấy phép xây dựng, Thời gian bàn giao.`;
+          searchInstructions = `
+          YÊU CẦU DỮ LIỆU (Tiếng Việt):
+          - Pháp lý hiện tại (Sổ hồng/HĐMB/1:500/GPXD)
+          - Tình trạng xây dựng (Đang làm móng/Cất nóc/Đã bàn giao)
+          - Thời gian bàn giao (Dự kiến hoặc Thực tế)`;
           break;
         case 'amenities':
-          searchInstructions = `TÌM KIẾM: Tiện ích nội khu và ngoại khu.`;
+          searchInstructions = `
+          YÊU CẦU DỮ LIỆU (Tiếng Việt):
+          - Tiện ích nội khu (Hồ bơi, Gym, Công viên...)
+          - Tiện ích ngoại khu (Trường học, Bệnh viện gần đó)`;
           break;
+        default:
+          searchInstructions = "Tìm kiếm thông tin chi tiết về dự án Bất Động Sản này.";
       }
 
       const prompt = `
-      [SYSTEM: ACT AS A SEARCH ENGINE WRAPPER. NO CONVERSATION.]
+      NHIỆM VỤ: TÌM KIẾM VÀ TRÍCH XUẤT DỮ LIỆU
+      ĐỐI TƯỢNG: Dự án Bất Động Sản "${query}" tại Việt Nam.
+      NGÔN NGỮ BẮT BUỘC: TIẾNG VIỆT.
       
-      QUERY: ${query}
-      CONTEXT: ${searchInstructions}
+      HƯỚNG DẪN:
+      1. Google Search thông tin mới nhất.
+      2. TRÍCH XUẤT CHÍNH XÁC các mục dữ liệu bên dưới.
+      3. ĐỊNH DẠNG: Danh sách văn bản thô (Bullet points).
+      4. TUYỆT ĐỐI KHÔNG viết câu mở đầu như "Dưới đây là...", "Tôi tìm thấy...". Chỉ trả về dữ liệu.
+
+      ${searchInstructions}
       
-      INSTRUCTION:
-      1. Use Google Search to find specific data.
-      2. OUTPUT RAW DATA ONLY. Do not say "I found this" or "Here is the info".
-      3. Just list the facts found. If not found, say "Not found".
+      BẮT ĐẦU TRẢ VỀ KẾT QUẢ (TIẾNG VIỆT):
       `;
       
       resultText = await callGeminiSearch(apiKey, prompt);
     } 
     else if (mode === 'batch_extract') {
-      const prompt = `Extract list of real estate projects from this text. Return strictly 1 project per line. Text: \n${raw_content}`;
+      const prompt = `Trích xuất danh sách dự án BĐS từ văn bản sau. Trả về mỗi dự án 1 dòng. Văn bản: \n${raw_content}`;
       resultText = await callGeminiSearch(apiKey, prompt);
     }
     else if (mode === 'scout') {
-      const prompt = `Search for new real estate projects related to: "${query}". List them.`;
+      const prompt = `Tìm kiếm các dự án BĐS mới liên quan đến: "${query}". Liệt kê danh sách bằng Tiếng Việt.`;
       resultText = await callGeminiSearch(apiKey, prompt);
     }
 

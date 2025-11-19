@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Save, Loader2, ScanSearch, Sparkles, Terminal, CheckCircle2, XCircle } from "lucide-react";
+import { Save, Loader2, ScanSearch, Sparkles, Terminal } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import { ScrollArea } from "@/components/ui/scroll-area";
 
@@ -23,24 +23,26 @@ interface MasterEditorProps {
 const safeParseInt = (val: any): number | null => {
   if (val === null || val === undefined) return null;
   if (typeof val === 'number') return isNaN(val) ? null : val;
-  const str = String(val).replace(/,/g, '');
+  
+  // Xử lý string: "5.000", "5,000"
+  // Nếu AI trả về "50000000" dạng string
+  let str = String(val);
+  // Xóa dấu chấm/phẩy phân cách ngàn nếu có (tùy format)
+  // Ở đây ta giả sử AI đã trả về raw number string hoặc số
+  str = str.replace(/[,.]/g, ''); 
   const num = parseInt(str.replace(/\D/g, ''));
   return isNaN(num) ? null : num;
 };
 
-const safeParseFloat = (val: any): number | null => {
-  if (val === null || val === undefined) return null;
-  if (typeof val === 'number') return isNaN(val) ? null : val;
-  const match = String(val).match(/(\d+(\.\d+)?)/);
-  return match ? parseFloat(match[0]) : null;
-}
-
+// Helper to map flat JSON keys to our DB structure
 const mapAiDataToFields = (aiData: any, section: string, currentData: any) => {
   const newData = { ...currentData };
   
   const find = (keys: string[]) => {
     for (const k of keys) {
+      // Check root level
       if (aiData[k] !== undefined && aiData[k] !== null) return aiData[k];
+      // Check nested sections
       if (aiData.overview?.[k]) return aiData.overview[k];
       if (aiData.specs?.[k]) return aiData.specs[k];
       if (aiData.pricing?.[k]) return aiData.pricing[k];
@@ -65,12 +67,16 @@ const mapAiDataToFields = (aiData: any, section: string, currentData: any) => {
   if (section === 'specs') {
     const units = find(['total_units', 'totalUnits', 'so_can_ho']);
     if (units) newData.total_units = safeParseInt(units);
+    
     const floors = find(['total_floors', 'floors', 'so_tang']);
     if (floors) newData.floors = safeParseInt(floors);
+
     const blocks = find(['blocks', 'so_block']);
     if (blocks) newData.blocks = safeParseInt(blocks);
+    
     const types = find(['apartment_types']);
     if (types && Array.isArray(types)) newData.apartment_types = types;
+    
     const handover = find(['handover_standard']);
     if (handover) newData.handover_standard = handover;
   }
@@ -78,8 +84,10 @@ const mapAiDataToFields = (aiData: any, section: string, currentData: any) => {
   if (section === 'financial') {
     const price = find(['price_per_sqm', 'current_price']);
     if (price) newData.price_per_sqm = safeParseInt(price);
+    
     const launch = find(['launch_price']);
     if (launch) newData.launch_price = safeParseInt(launch);
+    
     const range = find(['price_range']);
     if (range) newData.price_range = range;
   }
@@ -87,8 +95,10 @@ const mapAiDataToFields = (aiData: any, section: string, currentData: any) => {
   if (section === 'legal') {
     const status = find(['legal_status']);
     if (status) newData.legal_status = status;
+    
     const date = find(['completion_date']);
     if (date) newData.completion_date = date;
+
     if (newData.legal_status?.toLowerCase().includes('sổ') || newData.legal_status?.toLowerCase().includes('hđmb')) {
        if (!newData.legal_score) newData.legal_score = 8;
     }
@@ -139,11 +149,18 @@ export default function MasterProjectEditor({ projectId, onSave }: MasterEditorP
   const handleSave = async (silent = false) => {
     if (!silent) setSaving(true);
     try {
-      const { error } = await supabase.from('projects').update(data).eq('id', projectId);
+      // SANITIZE DATA BEFORE SAVING
+      // Remove read-only fields or fields that shouldn't be updated manually if necessary
+      const { id, created_at, updated_at, ...updatePayload } = data;
+
+      const { error } = await supabase.from('projects').update(updatePayload).eq('id', projectId);
+      
       if (error) throw error;
-      if (!silent) toast.success("Đã lưu dữ liệu");
+      
+      if (!silent) toast.success("Đã lưu dữ liệu thành công");
       if (onSave) onSave();
     } catch (error: any) {
+      console.error("Save Error:", error);
       if (!silent) toast.error("Lỗi lưu: " + error.message);
     } finally {
       if (!silent) setSaving(false);
@@ -167,6 +184,10 @@ export default function MasterProjectEditor({ projectId, onSave }: MasterEditorP
       const rawText = resData.data || "No data returned";
       setLastRawOutput(rawText);
 
+      if (rawText.startsWith("RAW_DATA_NOT_FOUND")) {
+        throw new Error("AI không tìm thấy thông tin");
+      }
+
       const { data: structData, error: structError } = await supabase.functions.invoke('structure-data', {
         body: { content: rawText, type: 'project_detail' }
       });
@@ -177,7 +198,9 @@ export default function MasterProjectEditor({ projectId, onSave }: MasterEditorP
       const newData = mapAiDataToFields(structData.data, section, data);
       setData(newData);
       
-      await supabase.from('projects').update(newData).eq('id', projectId);
+      // Silent Save Step-by-Step
+      const { id, created_at, updated_at, ...updatePayload } = newData;
+      await supabase.from('projects').update(updatePayload).eq('id', projectId);
 
       if (!isAuto) {
         setAuditStatus('idle');
@@ -241,6 +264,7 @@ export default function MasterProjectEditor({ projectId, onSave }: MasterEditorP
 
   return (
     <div className="space-y-4">
+      {/* Actions Bar */}
       <div className="flex flex-col md:flex-row justify-between items-center bg-card p-4 rounded-lg border shadow-sm gap-4">
         <div className="flex items-center gap-4 w-full md:w-auto">
           <h2 className="text-xl font-bold text-foreground truncate max-w-[200px]">{data.name}</h2>
@@ -315,6 +339,7 @@ export default function MasterProjectEditor({ projectId, onSave }: MasterEditorP
         </Card>
       )}
 
+      {/* Tabs Form */}
       <Tabs defaultValue="overview" className="w-full">
         <TabsList className="w-full justify-start h-12 bg-muted/50 p-1 border-b overflow-x-auto">
           <TabsTrigger value="overview" className="px-4 py-2">Tổng quan</TabsTrigger>
@@ -324,6 +349,7 @@ export default function MasterProjectEditor({ projectId, onSave }: MasterEditorP
           <TabsTrigger value="amenities" className="px-4 py-2">Tiện ích</TabsTrigger>
         </TabsList>
 
+        {/* OVERVIEW TAB */}
         <TabsContent value="overview">
           <Card>
             <CardContent className="p-6 space-y-4">
@@ -364,6 +390,7 @@ export default function MasterProjectEditor({ projectId, onSave }: MasterEditorP
           </Card>
         </TabsContent>
 
+        {/* SPECS TAB */}
         <TabsContent value="specs">
           <Card>
             <CardContent className="p-6 space-y-4">
@@ -398,6 +425,7 @@ export default function MasterProjectEditor({ projectId, onSave }: MasterEditorP
           </Card>
         </TabsContent>
 
+        {/* FINANCIAL TAB */}
         <TabsContent value="financial">
           <Card>
             <CardContent className="p-6 space-y-4">
@@ -424,6 +452,7 @@ export default function MasterProjectEditor({ projectId, onSave }: MasterEditorP
           </Card>
         </TabsContent>
 
+        {/* LEGAL TAB */}
         <TabsContent value="legal">
           <Card>
             <CardContent className="p-6 space-y-4">
@@ -461,6 +490,7 @@ export default function MasterProjectEditor({ projectId, onSave }: MasterEditorP
           </Card>
         </TabsContent>
 
+        {/* AMENITIES TAB */}
         <TabsContent value="amenities">
           <Card>
             <CardContent className="p-6 space-y-4">

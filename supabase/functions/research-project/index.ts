@@ -12,9 +12,8 @@ declare const Deno: {
 };
 
 // Cấu hình Models
-// CHUYỂN SANG FLASH ĐỂ TRÁNH LỖI 429 QUOTA LIMIT
-// Flash có giới hạn rate limit cao hơn nhiều so với Pro/Exp
-const MODEL_RESEARCH = "gemini-2.0-flash"; 
+// Sử dụng model mới nhất theo yêu cầu để có quota tốt hơn
+const MODEL_RESEARCH = "gemini-2.5-pro-preview-03-25"; 
 const MODEL_FORMAT = "gemini-2.0-flash";   
 const MAX_TOKENS = 50000;
 

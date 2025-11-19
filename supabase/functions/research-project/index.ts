@@ -38,7 +38,6 @@ serve(async (req: Request) => {
   try {
     const { query, mode = 'scout' } = await req.json()
     
-    // Sử dụng GEMINI_API_KEY thay vì OPENROUTER
     const apiKey = Deno.env.get('GEMINI_API_KEY')
     if (!apiKey) throw new Error('GEMINI_API_KEY not set')
 
@@ -65,17 +64,48 @@ serve(async (req: Request) => {
       }`
       userPrompt = `Tìm kiếm dự án: ${query}`
     } else {
-      systemPrompt = `Bạn là chuyên gia dữ liệu BĐS. Hãy dùng Google Search để tìm thông tin CHI TIẾT và MỚI NHẤT.
+      // CHẾ ĐỘ DEEP SCAN - Nâng cấp logic tìm giá
+      systemPrompt = `Bạn là chuyên gia Thẩm định giá và Nghiên cứu thị trường BĐS.
       
-      Output JSON (Full Schema, KHÔNG markdown):
+      NHIỆM VỤ QUAN TRỌNG VỀ GIÁ (PRICING):
+      1. Tìm kiếm ít nhất 3-5 nguồn tin khác nhau (batdongsan.com.vn, cafef, các trang rao vặt, báo cáo thị trường) trong 3 tháng gần nhất.
+      2. Loại bỏ các mức giá "ảo" (quá thấp để câu khách) hoặc giá cũ.
+      3. Tổng hợp và tính GIÁ TRUNG BÌNH thực tế trên thị trường chuyển nhượng hoặc giá chủ đầu tư đang bán.
+      4. Phân biệt rõ giá mở bán (Launch) và giá hiện tại (Current).
+      
+      Output JSON Schema (KHÔNG markdown):
       {
-        "overview": { "description": "Mô tả ~200 từ", "address": "Địa chỉ", "district": "Quận", "city": "TP", "website": "Link" },
-        "specs": { "site_area": number, "construction_density": number, "total_blocks": number, "total_floors": number, "total_units": number, "unit_types": ["1PN", "2PN"] },
-        "legal": { "status": "Pháp lý hiện tại", "construction_permit": boolean, "bank_guarantee": "Ngân hàng" },
-        "amenities": ["Tiện ích 1", "Tiện ích 2"],
-        "pricing": { "min_price": number, "max_price": number, "price_per_sqm": number }
+        "overview": { 
+          "description": "Mô tả tổng quan dự án (~200 từ)", 
+          "address": "Địa chỉ chính xác", 
+          "district": "Quận/Huyện", 
+          "city": "Tỉnh/TP", 
+          "website": "Link (nếu có)" 
+        },
+        "specs": { 
+          "site_area": number (m2), 
+          "construction_density": number (%), 
+          "total_blocks": number, 
+          "total_floors": number, 
+          "total_units": number, 
+          "unit_types": ["1PN", "2PN", "3PN"] 
+        },
+        "legal": { 
+          "status": "Pháp lý hiện tại (Sổ hồng/HĐMB/Chưa rõ)", 
+          "construction_permit": boolean, 
+          "bank_guarantee": "Tên ngân hàng bảo lãnh (nếu có)" 
+        },
+        "amenities": ["Tiện ích 1", "Tiện ích 2", "Tiện ích 3"],
+        "pricing": { 
+          "min_price": number (VNĐ/m2), 
+          "max_price": number (VNĐ/m2), 
+          "price_per_sqm": number (VNĐ/m2 - Giá trung bình đã tính toán),
+          "launch_price": number (VNĐ/m2 - Giá mở bán đợt đầu, nếu tìm thấy),
+          "pricing_note": "Ghi chú rõ nguồn gốc giá (Ví dụ: 'Giá trung bình dựa trên 5 tin đăng tháng 6/2024, giá đã bao gồm VAT' hoặc 'Giá rumor từ môi giới')"
+        }
       }`
-      userPrompt = `Deep Scan thông tin dự án: ${query}`
+      
+      userPrompt = `Deep Scan (Thẩm định chi tiết) dự án: ${query}. Hãy tìm kiếm kỹ về giá bán hiện tại.`
     }
 
     // Gọi trực tiếp Google Gemini API với tools google_search
@@ -89,12 +119,12 @@ serve(async (req: Request) => {
         google_search: {} // Kích hoạt Google Search Grounding
       }],
       generationConfig: {
-        temperature: 0.1,
-        responseMimeType: "application/json" // Yêu cầu trả về JSON
+        temperature: 0.1, // Giữ nhiệt độ thấp để AI tập trung vào số liệu chính xác
+        responseMimeType: "application/json"
       }
     };
 
-    console.log("Calling Gemini with Search...");
+    console.log(`Calling Gemini (Mode: ${mode})...`);
     
     const response = await fetch(url, {
       method: 'POST',
@@ -117,9 +147,13 @@ serve(async (req: Request) => {
 
     const textResponse = candidates[0].content.parts[0].text;
     
-    // Lấy thông tin grounding (nguồn tham khảo) nếu cần hiển thị sau này
+    // Lấy thông tin grounding (nguồn tham khảo)
     const groundingMetadata = candidates[0].groundingMetadata;
-    console.log("Grounding Metadata found:", !!groundingMetadata);
+    
+    // In ra log để debug nguồn
+    if (groundingMetadata?.groundingChunks) {
+      console.log("Sources used:", groundingMetadata.groundingChunks.map((c: any) => c.web?.title).join(", "));
+    }
 
     const result = extractJSON(textResponse);
 

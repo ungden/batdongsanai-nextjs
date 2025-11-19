@@ -39,6 +39,7 @@ const AdminDashboard = lazy(() => import('@/pages/admin/Dashboard'));
 const ResearchFactory = lazy(() => import('@/pages/admin/ResearchFactory'));
 const MarketResearchFactory = lazy(() => import('@/pages/admin/MarketResearchFactory'));
 const CatalystFactory = lazy(() => import('@/pages/admin/CatalystFactory'));
+const ContentStudio = lazy(() => import('@/pages/admin/ContentStudio')); // New
 const DataManagement = lazy(() => import('@/pages/admin/DataManagement'));
 const AnalyticsDashboard = lazy(() => import('@/pages/admin/AnalyticsDashboard'));
 const LeadManagement = lazy(() => import('@/pages/admin/LeadManagement'));
@@ -116,9 +117,12 @@ const App = () => (
                 <Route path="leads" element={<LeadManagement />} />
                 <Route path="data-management" element={<DataManagement />} />
                 <Route path="analytics" element={<AnalyticsDashboard />} />
+                
+                {/* AI Tools */}
                 <Route path="research-factory" element={<ResearchFactory />} />
                 <Route path="market-research-factory" element={<MarketResearchFactory />} />
                 <Route path="catalyst-factory" element={<CatalystFactory />} />
+                <Route path="content-studio" element={<ContentStudio />} /> {/* New Route */}
                 
                 {/* Functional Admin Pages */}
                 <Route path="users" element={<AdminUsers />} />

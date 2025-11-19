@@ -13,7 +13,8 @@ import {
   Database,
   BarChart3,
   Target,
-  Newspaper
+  Newspaper,
+  PenTool
 } from "lucide-react";
 import {
   Sidebar,
@@ -46,6 +47,7 @@ const aiTools = [
   { title: "Nghiên cứu Dự án", url: "/admin/research-factory", icon: Sparkles, badge: "AI" },
   { title: "Nghiên cứu Thị trường", url: "/admin/market-research-factory", icon: LineChart },
   { title: "Phân tích Chất xúc tác", url: "/admin/catalyst-factory", icon: Sparkles },
+  { title: "Content Studio", url: "/admin/content-studio", icon: PenTool, badge: "Beta" },
 ];
 
 export function AdminSidebar() {

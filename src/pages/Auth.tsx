@@ -25,7 +25,6 @@ const Auth = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
-  // Get the page user was trying to access
   const from = (location.state as any)?.from?.pathname || '/';
 
   useEffect(() => {
@@ -286,7 +285,6 @@ const Auth = () => {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 via-blue-50/30 to-indigo-50 p-4">
-      {/* Back to Home Button */}
       <Button
         variant="ghost"
         onClick={() => navigate('/')}
@@ -306,12 +304,12 @@ const Auth = () => {
             {view === 'forgot_password' && <KeyRound className="w-8 h-8 text-primary" />}
           </div>
           <CardTitle className="text-2xl font-bold text-slate-900">
-            {view === 'login' && 'Đăng nhập'}
+            {view === 'login' && 'Đăng nhập Realprofit.vn'}
             {view === 'register' && 'Tạo tài khoản'}
             {view === 'forgot_password' && 'Khôi phục mật khẩu'}
           </CardTitle>
           <CardDescription>
-            {view === 'login' && 'Chào mừng bạn quay trở lại PropertyHub'}
+            {view === 'login' && 'Chào mừng bạn quay trở lại'}
             {view === 'register' && 'Tham gia cộng đồng đầu tư bất động sản'}
             {view === 'forgot_password' && 'Đừng lo, chúng tôi sẽ giúp bạn lấy lại mật khẩu'}
           </CardDescription>

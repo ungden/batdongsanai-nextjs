@@ -83,8 +83,8 @@ export function AppSidebar() {
           </div>
           {!collapsed && (
             <div className="flex flex-col gap-0.5 leading-none">
-              <span className="font-bold text-lg tracking-tight text-sidebar-foreground">PropertyHub</span>
-              <span className="text-[11px] font-medium text-sidebar-foreground/60 uppercase tracking-wider">AI Real Estate</span>
+              <span className="font-bold text-lg tracking-tight text-sidebar-foreground">Realprofit.vn</span>
+              <span className="text-[11px] font-medium text-sidebar-foreground/60 uppercase tracking-wider">Smart Investment</span>
             </div>
           )}
         </div>

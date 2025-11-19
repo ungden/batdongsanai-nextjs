@@ -1,4 +1,3 @@
-
 import { Project } from '@/types/project';
 
 interface SchemaMarkupProps {
@@ -10,9 +9,9 @@ interface SchemaMarkupProps {
 export const generateOrganizationSchema = () => ({
   "@context": "https://schema.org",
   "@type": "Organization",
-  "name": "PropertyLegal",
-  "description": "Nền tảng kiểm tra pháp lý bất động sản hàng đầu Việt Nam",
-  "url": "https://propertylegal.vn",
+  "name": "Realprofit.vn",
+  "description": "Nền tảng kiểm tra pháp lý và đầu tư bất động sản hàng đầu Việt Nam",
+  "url": "https://realprofit.vn",
   "logo": "https://lovable.dev/opengraph-image-p98pqg.png",
   "contactPoint": {
     "@type": "ContactPoint",
@@ -26,21 +25,21 @@ export const generateOrganizationSchema = () => ({
     "addressLocality": "Ho Chi Minh City"
   },
   "sameAs": [
-    "https://facebook.com/propertylegal",
-    "https://linkedin.com/company/propertylegal"
+    "https://facebook.com/realprofitvn",
+    "https://linkedin.com/company/realprofitvn"
   ]
 });
 
 export const generateWebsiteSchema = () => ({
   "@context": "https://schema.org",
   "@type": "WebSite",
-  "name": "PropertyLegal",
-  "url": "https://propertylegal.vn",
+  "name": "Realprofit.vn",
+  "url": "https://realprofit.vn",
   "potentialAction": {
     "@type": "SearchAction",
     "target": {
       "@type": "EntryPoint",
-      "urlTemplate": "https://propertylegal.vn/search?q={search_term_string}"
+      "urlTemplate": "https://realprofit.vn/search?q={search_term_string}"
     },
     "query-input": "required name=search_term_string"
   }
@@ -51,7 +50,7 @@ export const generateRealEstateSchema = (project: Project) => ({
   "@type": "RealEstateListing",
   "name": project.name,
   "description": `Dự án ${project.name} tại ${project.location} do ${project.developer} phát triển`,
-  "url": `https://propertylegal.vn/projects/${project.id}`,
+  "url": `https://realprofit.vn/projects/${project.id}`,
   "image": project.image,
   "address": {
     "@type": "PostalAddress",
@@ -85,7 +84,7 @@ export const generateRealEstateSchema = (project: Project) => ({
 export const generateLocalBusinessSchema = () => ({
   "@context": "https://schema.org",
   "@type": "LocalBusiness",
-  "name": "PropertyLegal",
+  "name": "Realprofit.vn",
   "description": "Dịch vụ tư vấn và kiểm tra pháp lý bất động sản",
   "image": "https://lovable.dev/opengraph-image-p98pqg.png",
   "address": {

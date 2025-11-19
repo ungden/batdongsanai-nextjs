@@ -39,7 +39,7 @@ const AdminDashboard = () => {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold">Dashboard Quản Trị</h1>
-          <p className="text-muted-foreground">Tổng quan hệ thống PropertyHub</p>
+          <p className="text-muted-foreground">Tổng quan hệ thống Realprofit.vn</p>
         </div>
         <div className="flex items-center gap-2">
           <Badge variant="outline" className="bg-yellow-50 text-yellow-700 border-yellow-200 text-xs">

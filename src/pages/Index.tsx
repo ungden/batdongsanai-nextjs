@@ -1,42 +1,29 @@
 import { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import { useIsMobile } from "@/hooks/use-mobile";
-import { useAuth } from "@/hooks/useAuth";
 import { useAnalytics } from "@/hooks/useAnalytics";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import BottomNavigation from "@/components/layout/BottomNavigation";
+import { Card, CardContent } from "@/components/ui/card";
 import DesktopLayout from "@/components/layout/DesktopLayout";
-import CompactProjectCard from "@/components/home/CompactProjectCard";
-import ProjectColumns from "@/components/home/ProjectColumns";
-import { projectsData } from "@/data/projectsData";
-import { 
-  Search, 
-  Calculator, 
-  TrendingUp, 
-  Building2, 
-  Star, 
-  Shield, 
-  Award,
-  Users,
-  ChevronRight,
-  Sparkles
-} from "lucide-react";
 import SEOHead from "@/components/seo/SEOHead";
+import { Search, TrendingUp, ArrowRight, Building2, Sparkles, MapPin, Shield, Star, Award } from "lucide-react";
+import { projectsData } from "@/data/projectsData";
+import CompactProjectCard from "@/components/home/CompactProjectCard";
+import { ANALYTICS_CONFIG } from "@/config/analytics";
+import { useIsMobile } from "@/hooks/use-mobile";
+import ProjectColumns from "@/components/home/ProjectColumns";
+import BottomNavigation from "@/components/layout/BottomNavigation";
 
-const Index = () => {
+const Home = () => {
   const navigate = useNavigate();
+  const { trackEvent } = useAnalytics(ANALYTICS_CONFIG.GA_TRACKING_ID);
   const isMobile = useIsMobile();
-  const { user } = useAuth();
-  const { trackProjectView } = useAnalytics();
   const [searchQuery, setSearchQuery] = useState("");
 
   const featuredProjects = useMemo(() => {
     return projectsData
       .filter(project => project.legalScore >= 8)
-      .slice(0, 6);
+      .slice(0, 8);
   }, []);
 
   const stats = useMemo(() => {
@@ -48,11 +35,16 @@ const Index = () => {
     return { total, goodLegal, avgLegal: avgLegal.toFixed(1), safetyRate };
   }, []);
 
-  const handleProjectClick = (id: string) => {
-    const project = projectsData.find(p => p.id === id);
-    if (project) {
-      trackProjectView(id, project.name);
+  const handleSearch = () => {
+    if (searchQuery.trim()) {
+      trackEvent({ action: 'search_from_home', category: 'Search', label: searchQuery });
+      navigate(`/market-overview?search=${encodeURIComponent(searchQuery)}`);
+    } else {
+      navigate('/market-overview');
     }
+  };
+
+  const handleProjectClick = (id: string) => {
     navigate(`/projects/${id}`);
   };
 
@@ -81,7 +73,7 @@ const Index = () => {
           <div className="flex items-center justify-center gap-2 mb-4">
             <Sparkles className="w-8 h-8 text-yellow-300" />
             <h1 className="text-headline-1 text-white font-black">
-              PropertyHub
+              Realprofit.vn
             </h1>
           </div>
           <p className="text-xl text-white/90 max-w-2xl mx-auto leading-relaxed">
@@ -145,7 +137,7 @@ const Index = () => {
           onClick={() => handleQuickAction('calculator')}
           className="btn-modern h-16 flex-col gap-2 bg-gradient-accent text-white"
         >
-          <Calculator className="w-6 h-6" />
+          <Sparkles className="w-6 h-6" />
           <span className="font-semibold">Tính toán</span>
         </Button>
         <Button 
@@ -170,7 +162,7 @@ const Index = () => {
             className="flex items-center gap-2"
           >
             Xem tất cả
-            <ChevronRight className="w-4 h-4" />
+            <ArrowRight className="w-4 h-4" />
           </Button>
         </div>
         
@@ -191,27 +183,6 @@ const Index = () => {
           />
         )}
       </div>
-
-      {/* Call to Action */}
-      <Card className="card-blue text-center p-8">
-        <div className="space-y-4">
-          <Users className="w-12 h-12 mx-auto text-primary" />
-          <h3 className="text-2xl font-bold text-primary">
-            Tham gia cộng đồng đầu tư thông minh
-          </h3>
-          <p className="text-muted-foreground max-w-md mx-auto">
-            Nhận thông tin cập nhật về thị trường và các cơ hội đầu tư tốt nhất
-          </p>
-          {!user && (
-            <Button 
-              onClick={() => navigate('/auth')}
-              className="btn-gradient"
-            >
-              Đăng ký ngay
-            </Button>
-          )}
-        </div>
-      </Card>
     </div>
   );
 
@@ -219,9 +190,8 @@ const Index = () => {
     return (
       <>
         <SEOHead
-          title="PropertyHub - Nền tảng đầu tư BĐS thông minh"
+          title="Realprofit.vn - Nền tảng đầu tư BĐS thông minh"
           description="Phân tích pháp lý, tính toán ROI và khám phá cơ hội đầu tư bất động sản tốt nhất tại Việt Nam"
-          keywords="bất động sản, đầu tư, pháp lý, ROI, dự án"
         />
         <div className="min-h-screen bg-background pb-20">
           <div className="p-4">
@@ -236,12 +206,11 @@ const Index = () => {
   return (
     <>
       <SEOHead
-        title="PropertyHub - Nền tảng đầu tư BĐS thông minh"
+        title="Realprofit.vn - Nền tảng đầu tư BĐS thông minh"
         description="Phân tích pháp lý, tính toán ROI và khám phá cơ hội đầu tư bất động sản tốt nhất tại Việt Nam"
-        keywords="bất động sản, đầu tư, pháp lý, ROI, dự án"
       />
       <DesktopLayout 
-        title="Chào mừng đến PropertyHub" 
+        title="Chào mừng đến Realprofit.vn" 
         subtitle="Nền tảng đầu tư BĐS thông minh"
       >
         {content}
@@ -250,4 +219,4 @@ const Index = () => {
   );
 };
 
-export default Index;
+export default Home;

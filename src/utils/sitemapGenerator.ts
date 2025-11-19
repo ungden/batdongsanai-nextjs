@@ -1,8 +1,7 @@
-
 import { projectsData } from '@/data/projectsData';
 
 export const generateSitemap = () => {
-  const baseUrl = 'https://propertylegal.vn';
+  const baseUrl = 'https://realprofit.vn';
   
   // Static pages
   const staticPages = [
@@ -37,7 +36,7 @@ ${allPages.map(page => `  <url>
 };
 
 export const generateRobotsTxt = () => {
-  const baseUrl = 'https://propertylegal.vn';
+  const baseUrl = 'https://realprofit.vn';
   
   return `User-agent: *
 Allow: /

@@ -1,4 +1,3 @@
-
 import { Helmet } from 'react-helmet-async';
 import { useLocation } from 'react-router-dom';
 
@@ -13,9 +12,9 @@ interface SEOProps {
 }
 
 const SEOHead = ({ 
-  title = "PropertyLegal - Kiểm tra pháp lý bất động sản",
-  description = "Nền tảng kiểm tra pháp lý bất động sản hàng đầu Việt Nam. Tìm hiểu thông tin pháp lý chi tiết trước khi đầu tư.",
-  keywords = "bất động sản, pháp lý, kiểm tra, đầu tư, chung cư, dự án",
+  title = "Realprofit.vn - Đầu tư BĐS thông minh",
+  description = "Realprofit.vn - Nền tảng kiểm tra pháp lý, phân tích thị trường và tính toán đầu tư bất động sản hàng đầu Việt Nam.",
+  keywords = "bất động sản, pháp lý, kiểm tra, đầu tư, chung cư, dự án, realprofit",
   image = "https://lovable.dev/opengraph-image-p98pqg.png",
   type = "website",
   schema,
@@ -41,7 +40,7 @@ const SEOHead = ({
       <meta property="og:type" content={type} />
       <meta property="og:url" content={currentUrl} />
       <meta property="og:image" content={image} />
-      <meta property="og:site_name" content="PropertyLegal" />
+      <meta property="og:site_name" content="Realprofit.vn" />
       <meta property="og:locale" content="vi_VN" />
       
       {/* Twitter Card */}

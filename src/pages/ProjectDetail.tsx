@@ -9,9 +9,10 @@ import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { 
   TrendingUp, Shield, Home, DollarSign, Activity, FileText, Crown,
-  BarChart3, AlertTriangle, Eye, Info, Building2, Users, Calendar, Star
+  BarChart3, AlertTriangle, Eye, Info, Building2, Users, Calendar, Star,
+  Calculator, Loader2
 } from "lucide-react";
-import { projectsData } from "@/data/projectsData";
+import { useProjectDetail } from "@/hooks/useProjects"; // Use the new hook
 import { useProjectViews } from "@/hooks/useProjectViews";
 import { usePermissions } from "@/hooks/usePermissions";
 import ImprovedConsultationForm from "@/components/consultation/ImprovedConsultationForm";
@@ -49,13 +50,22 @@ const ProjectDetail = () => {
   const [showConsultationForm, setShowConsultationForm] = useState(false);
   const [activeTab, setActiveTab] = useState("overview");
 
-  const project = projectsData.find(p => p.id === id);
+  // Use the hook instead of static data
+  const { project, loading } = useProjectDetail(id);
 
   useEffect(() => {
     if (project) {
       trackView(project.id);
     }
   }, [project?.id, trackView]);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 flex items-center justify-center">
+        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+      </div>
+    );
+  }
 
   if (!project) {
     return (
@@ -95,6 +105,12 @@ const ProjectDetail = () => {
 
   const faqSchema = generateFAQSchema(faqData);
 
+  const handleCalculate = () => {
+    // Navigate to calculator with pre-filled data
+    // Assuming standard 70m2 apartment for quick calculation
+    navigate(`/calculator?price=${project.pricePerSqm}&area=70`);
+  };
+
   return (
     <>
       <SEOHead
@@ -130,18 +146,13 @@ const ProjectDetail = () => {
                       </div>
                     </div>
                     <div className="text-right space-y-2">
-                      {project.averageRentalPrice && (
-                        <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-4 shadow-md border border-slate-200/50">
-                          <div className="text-xs text-slate-600 font-medium">Cho thuê/tháng</div>
-                          <div className="text-lg font-bold text-slate-900">{project.averageRentalPrice}</div>
-                        </div>
-                      )}
-                      {project.rentalYield && (
-                        <div className="bg-gradient-to-br from-emerald-50 to-teal-50 rounded-2xl p-4 shadow-md border border-emerald-200/50">
-                          <div className="text-xs text-emerald-700 font-medium">ROI dự kiến</div>
-                          <div className="text-lg font-bold text-emerald-600">{project.rentalYield}%/năm</div>
-                        </div>
-                      )}
+                      <Button 
+                        onClick={handleCalculate}
+                        className="bg-gradient-to-r from-primary to-accent text-white shadow-lg hover:shadow-xl transition-all"
+                      >
+                        <Calculator className="w-4 h-4 mr-2" />
+                        Tính toán vay
+                      </Button>
                     </div>
                   </div>
                 </CardContent>

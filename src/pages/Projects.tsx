@@ -5,13 +5,13 @@ import ProjectGridCard from "@/components/project/ProjectGridCard";
 import BannerAd from "@/components/ads/BannerAd";
 import { useNavigate } from "react-router-dom";
 import { useAnalytics } from "@/hooks/useAnalytics";
-import { projectsData } from "@/data/projectsData";
+import { useProjects } from "@/hooks/useProjects"; // Changed import
 import { ANALYTICS_CONFIG, isAdsEnabled } from "@/config/analytics";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
-import { Search, SortAsc, MapPin, DollarSign } from "lucide-react";
+import { Search, SortAsc, MapPin, DollarSign, Loader2 } from "lucide-react";
 import { useState, useMemo } from "react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
@@ -19,6 +19,8 @@ const Projects = () => {
   const navigate = useNavigate();
   const { trackProjectView } = useAnalytics(ANALYTICS_CONFIG.GA_TRACKING_ID);
   const isMobile = useIsMobile();
+  const { projects, loading } = useProjects(); // Use the hook
+  
   const [filters, setFilters] = useState({
     search: "",
     location: "all",
@@ -27,7 +29,7 @@ const Projects = () => {
   });
 
   const handleProjectClick = (id: string) => {
-    const project = projectsData.find(p => p.id === id);
+    const project = projects.find(p => p.id === id);
     if (project) {
       trackProjectView(id, project.name);
     }
@@ -35,7 +37,7 @@ const Projects = () => {
   };
 
   const filteredProjects = useMemo(() => {
-    let filtered = projectsData;
+    let filtered = [...projects]; // Create a copy
 
     if (filters.search) {
       filtered = filtered.filter(project =>
@@ -75,13 +77,28 @@ const Projects = () => {
         filtered.sort((a, b) => a.name.localeCompare(b.name));
         break;
       default:
-        filtered.sort((a, b) => new Date(b.completionDate).getTime() - new Date(a.completionDate).getTime());
+        // Handle potential missing dates safely
+        filtered.sort((a, b) => {
+            const dateA = a.completionDate ? new Date(a.completionDate).getTime() : 0;
+            const dateB = b.completionDate ? new Date(b.completionDate).getTime() : 0;
+            return dateB - dateA;
+        });
     }
 
     return filtered;
-  }, [filters]);
+  }, [filters, projects]);
 
   const goodLegalProjects = filteredProjects.filter(p => p.status === "good").length;
+
+  if (loading) {
+    return (
+      <DesktopLayout>
+        <div className="flex items-center justify-center min-h-[60vh]">
+          <Loader2 className="w-8 h-8 animate-spin text-primary" />
+        </div>
+      </DesktopLayout>
+    );
+  }
 
   if (isMobile) {
     return (
@@ -89,7 +106,7 @@ const Projects = () => {
         <div className="bg-card border-b p-4">
           <h1 className="text-2xl font-bold text-foreground">Danh sách dự án</h1>
           <p className="text-sm text-muted-foreground mt-1">
-            <span className="font-medium text-foreground bg-muted px-2 py-0.5 rounded">{projectsData.length}</span> dự án đang mở bán
+            <span className="font-medium text-foreground bg-muted px-2 py-0.5 rounded">{projects.length}</span> dự án đang mở bán
           </p>
         </div>
 

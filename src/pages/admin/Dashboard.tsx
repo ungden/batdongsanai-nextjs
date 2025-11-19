@@ -17,9 +17,11 @@ import RealTimeAnalytics from '@/components/admin/RealTimeAnalytics';
 import DeveloperManagement from '@/components/admin/DeveloperManagement';
 import DataManagement from '@/pages/admin/DataManagement';
 import { Button } from '@/components/ui/button';
-import { Shield, BarChart3, Activity, Users, Settings, FileText, AlertTriangle, Newspaper, Database } from 'lucide-react';
+import { Shield, BarChart3, Activity, Users, Settings, FileText, AlertTriangle, Newspaper, Database, ArrowRight } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 const AdminDashboard = () => {
+  const navigate = useNavigate();
   const { user } = useAuth();
   const {
     userRoles,
@@ -43,6 +45,13 @@ const AdminDashboard = () => {
           <p className="text-muted-foreground">Tổng quan hệ thống Realprofit.vn</p>
         </div>
         <div className="flex items-center gap-2">
+          <Button 
+            onClick={() => navigate('/admin/data-management')}
+            className="bg-blue-600 hover:bg-blue-700 text-white shadow-md"
+          >
+            <Database className="w-4 h-4 mr-2" />
+            Quản lý Dữ liệu (Seed)
+          </Button>
           <Badge variant="outline" className="bg-yellow-50 text-yellow-700 border-yellow-200 text-xs">
             <AlertTriangle className="w-3 h-3 mr-1" />
             1 cảnh báo
@@ -63,13 +72,14 @@ const AdminDashboard = () => {
 
       <SystemHealthMonitor />
 
-      <Tabs defaultValue="analytics" className="w-full">
-        <TabsList className="flex w-full h-auto p-1 bg-muted overflow-x-auto flex-nowrap justify-start">
+      {/* Set default value to 'data' so you see it immediately */}
+      <Tabs defaultValue="data" className="w-full">
+        <TabsList className="flex w-full h-auto p-1 bg-muted overflow-x-auto flex-nowrap justify-start no-scrollbar">
+          <TabsTrigger value="data" className="flex items-center gap-1 text-xs whitespace-nowrap px-3 py-2 font-bold text-blue-700 data-[state=active]:bg-blue-100">
+            <Database className="w-4 h-4" /> DỮ LIỆU & SEED
+          </TabsTrigger>
           <TabsTrigger value="analytics" className="flex items-center gap-1 text-xs whitespace-nowrap px-3 py-2">
             <BarChart3 className="w-4 h-4" /> Phân tích
-          </TabsTrigger>
-          <TabsTrigger value="data" className="flex items-center gap-1 text-xs whitespace-nowrap px-3 py-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
-            <Database className="w-4 h-4" /> Dữ liệu & Seed
           </TabsTrigger>
           <TabsTrigger value="projects" className="flex items-center gap-1 text-xs whitespace-nowrap px-3 py-2">
             <FileText className="w-4 h-4" /> Dự án
@@ -97,14 +107,28 @@ const AdminDashboard = () => {
           </TabsTrigger>
         </TabsList>
 
+        {/* New Data Management Tab - Placed First */}
+        <TabsContent value="data" className="mt-4">
+          <div className="mb-4 p-4 bg-blue-50 border border-blue-200 rounded-lg flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-white rounded-full shadow-sm text-blue-600">
+                <Database className="w-5 h-5" />
+              </div>
+              <div>
+                <h3 className="font-bold text-blue-900">Khu vực Quản lý Dữ liệu</h3>
+                <p className="text-sm text-blue-700">Tại đây bạn có thể Seed dữ liệu mẫu, Xóa dữ liệu cũ, Import/Export file.</p>
+              </div>
+            </div>
+            <Button variant="outline" className="bg-white hover:bg-blue-50 text-blue-700 border-blue-200" onClick={() => navigate('/admin/data-management')}>
+              Mở toàn màn hình <ArrowRight className="w-4 h-4 ml-2" />
+            </Button>
+          </div>
+          <DataManagement />
+        </TabsContent>
+
         <TabsContent value="analytics" className="mt-4 space-y-4">
           <RealTimeAnalytics />
           <WebsiteAnalytics />
-        </TabsContent>
-
-        {/* New Data Management Tab */}
-        <TabsContent value="data" className="mt-4">
-          <DataManagement />
         </TabsContent>
 
         <TabsContent value="consultations" className="mt-4">

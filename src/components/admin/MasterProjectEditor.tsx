@@ -11,8 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Save, Loader2, ScanSearch, ArrowRight, Check, FileText, Code } from "lucide-react";
-import { ScrollArea } from "@/components/ui/scroll-area";
+import { Save, Loader2, ScanSearch, ArrowRight, Check, FileText, Code, RefreshCw } from "lucide-react";
 
 interface MasterEditorProps {
   projectId: string;
@@ -28,7 +27,8 @@ export default function MasterProjectEditor({ projectId, onSave }: MasterEditorP
   const [showScanDialog, setShowScanDialog] = useState(false);
   const [scanStep, setScanStep] = useState<'idle' | 'researching' | 'review_text' | 'structuring' | 'review_json'>('idle');
   const [researchText, setResearchText] = useState("");
-  const [structuredJson, setStructuredJson] = useState<any>(null);
+  // Thay vì lưu object, lưu string để user có thể sửa
+  const [jsonString, setJsonString] = useState(""); 
 
   useEffect(() => {
     loadProject();
@@ -81,7 +81,7 @@ export default function MasterProjectEditor({ projectId, onSave }: MasterEditorP
     setShowScanDialog(true);
     setScanStep('researching');
     setResearchText("");
-    setStructuredJson(null);
+    setJsonString("");
 
     try {
       const { data: resData, error } = await supabase.functions.invoke('research-project', {
@@ -109,48 +109,90 @@ export default function MasterProjectEditor({ projectId, onSave }: MasterEditorP
       });
 
       if (error) throw error;
-      console.log("AI JSON:", structData.data); // Debug
-      setStructuredJson(structData.data);
+      
+      // Format JSON đẹp để user dễ đọc/sửa
+      setJsonString(JSON.stringify(structData.data, null, 2));
       setScanStep('review_json');
     } catch (error: any) {
       toast.error("Lỗi định dạng: " + error.message);
-      setScanStep('review_text'); // Back to text review
+      setScanStep('review_text');
     }
+  };
+
+  // Helper to find value in nested object using multiple key variations
+  const findValue = (obj: any, keys: string[]): any => {
+    if (!obj) return undefined;
+    
+    // 1. Search in current level
+    for (const key of keys) {
+      if (obj[key] !== undefined && obj[key] !== null) return obj[key];
+    }
+    
+    // 2. Search in common sub-objects (flattening)
+    const subObjects = ['specs', 'pricing', 'overview', 'details', 'info'];
+    for (const sub of subObjects) {
+      if (obj[sub]) {
+        for (const key of keys) {
+          if (obj[sub][key] !== undefined && obj[sub][key] !== null) return obj[sub][key];
+        }
+      }
+    }
+    
+    return undefined;
   };
 
   // --- Step 3: Apply ---
   const applyData = () => {
-    if (!structuredJson) return;
-    
-    const newData = { ...data };
-    const aiData = structuredJson;
+    try {
+      const aiData = JSON.parse(jsonString); // Parse từ text user đã có thể sửa
+      const newData = { ...data };
 
-    // Mapping logic
-    if (aiData.overview?.description) newData.description = aiData.overview.description;
-    
-    if (aiData.specs) {
-      if (aiData.specs.total_units) newData.total_units = aiData.specs.total_units;
-      if (aiData.specs.total_floors) newData.floors = aiData.specs.total_floors;
-    }
-    
-    if (aiData.pricing) {
-      if (aiData.pricing.price_per_sqm) newData.price_per_sqm = aiData.pricing.price_per_sqm;
-      if (aiData.pricing.launch_price) newData.launch_price = aiData.pricing.launch_price;
-      if (aiData.pricing.price_range) newData.price_range = aiData.pricing.price_range;
-    }
-    
-    if (aiData.amenities && Array.isArray(aiData.amenities)) {
-      const existing = Array.isArray(newData.amenities) ? newData.amenities : [];
-      const combined = [...existing, ...aiData.amenities];
-      const unique = combined.filter((item, index) => 
-          combined.findIndex(i => i.toLowerCase() === item.toLowerCase()) === index
-      );
-      newData.amenities = unique;
-    }
+      console.log("Applying AI Data:", aiData);
 
-    setData(newData);
-    setShowScanDialog(false);
-    toast.success("Đã điền dữ liệu vào form! Vui lòng kiểm tra và bấm Lưu.");
+      // Mapping thông minh hơn: Tìm kiếm cả snake_case và camelCase, ở root hoặc nested
+      
+      // 1. Description
+      const desc = findValue(aiData, ['description', 'mo_ta', 'summary']);
+      if (desc) newData.description = desc;
+
+      // 2. Total Units
+      const units = findValue(aiData, ['total_units', 'totalUnits', 'so_can']);
+      if (units) newData.total_units = parseInt(units);
+
+      // 3. Floors
+      const floors = findValue(aiData, ['total_floors', 'floors', 'so_tang']);
+      if (floors) newData.floors = parseInt(floors);
+
+      // 4. Price per m2
+      const priceSqm = findValue(aiData, ['price_per_sqm', 'pricePerSqm', 'gia_m2', 'current_price']);
+      if (priceSqm) newData.price_per_sqm = parseInt(priceSqm);
+
+      // 5. Launch Price
+      const launchPrice = findValue(aiData, ['launch_price', 'launchPrice', 'gia_mo_ban']);
+      if (launchPrice) newData.launch_price = parseInt(launchPrice);
+
+      // 6. Price Range (Text)
+      const priceRange = findValue(aiData, ['price_range', 'priceRange', 'khoang_gia']);
+      if (priceRange) newData.price_range = priceRange;
+
+      // 7. Amenities
+      const amenities = findValue(aiData, ['amenities', 'tien_ich']);
+      if (amenities && Array.isArray(amenities)) {
+        const existing = Array.isArray(newData.amenities) ? newData.amenities : [];
+        const combined = [...existing, ...amenities];
+        const unique = combined.filter((item, index) => 
+            combined.findIndex(i => i.toLowerCase() === item.toLowerCase()) === index
+        );
+        newData.amenities = unique;
+      }
+
+      setData(newData);
+      setShowScanDialog(false);
+      toast.success("Đã áp dụng dữ liệu vào form! Hãy kiểm tra và bấm Lưu.");
+      
+    } catch (e) {
+      toast.error("JSON không hợp lệ. Vui lòng kiểm tra cú pháp.");
+    }
   };
 
   if (loading) return <div className="p-8 text-center"><Loader2 className="w-8 h-8 animate-spin mx-auto" /></div>;
@@ -163,7 +205,7 @@ export default function MasterProjectEditor({ projectId, onSave }: MasterEditorP
           <h2 className="text-xl font-bold text-foreground">{data.name}</h2>
           <Button variant="secondary" size="sm" onClick={startDeepScan} className="border border-blue-200 bg-blue-50 text-blue-700 hover:bg-blue-100">
             <ScanSearch className="w-4 h-4 mr-2" />
-            AI Deep Scan (Wizard)
+            AI Deep Scan
           </Button>
         </div>
         <Button onClick={handleSave} disabled={saving} className="bg-green-600 hover:bg-green-700 text-white font-bold shadow-md">
@@ -383,7 +425,7 @@ export default function MasterProjectEditor({ projectId, onSave }: MasterEditorP
                 <Textarea 
                   value={researchText} 
                   onChange={(e) => setResearchText(e.target.value)} 
-                  className="flex-1 font-mono text-sm leading-relaxed"
+                  className="flex-1 font-mono text-sm leading-relaxed p-4"
                 />
               </div>
             )}
@@ -402,24 +444,17 @@ export default function MasterProjectEditor({ projectId, onSave }: MasterEditorP
               <div className="h-full flex flex-col gap-2">
                 <Label className="flex items-center gap-2 text-green-600">
                   <Code className="w-4 h-4" />
-                  Bước 2: Xác nhận dữ liệu trích xuất
+                  Bước 2: Sửa JSON (nếu cần)
                 </Label>
-                <div className="flex-1 border rounded-md bg-slate-50 p-4 overflow-auto">
-                   {structuredJson ? (
-                     <div className="grid grid-cols-2 gap-4 text-sm">
-                        <div><strong>Mô tả:</strong> <p className="line-clamp-4 text-muted-foreground">{structuredJson.overview?.description}</p></div>
-                        <div><strong>Giá:</strong> {structuredJson.pricing?.price_range || 'N/A'} ({structuredJson.pricing?.price_per_sqm?.toLocaleString()} đ/m2)</div>
-                        <div><strong>Tổng căn:</strong> {structuredJson.specs?.total_units}</div>
-                        <div><strong>Số tầng:</strong> {structuredJson.specs?.total_floors}</div>
-                        <div className="col-span-2"><strong>Tiện ích:</strong> {structuredJson.amenities?.join(', ')}</div>
-                     </div>
-                   ) : (
-                     <p className="text-red-500">Không có dữ liệu JSON hợp lệ.</p>
-                   )}
-                   <pre className="mt-4 text-xs text-muted-foreground bg-white p-2 rounded border overflow-x-auto">
-                      {JSON.stringify(structuredJson, null, 2)}
-                   </pre>
+                <div className="flex-1 border rounded-md bg-slate-50 overflow-hidden relative">
+                   <Textarea 
+                     value={jsonString}
+                     onChange={(e) => setJsonString(e.target.value)}
+                     className="w-full h-full font-mono text-xs p-4 resize-none border-0 focus-visible:ring-0 bg-transparent text-slate-800"
+                     spellCheck={false}
+                   />
                 </div>
+                <p className="text-xs text-muted-foreground">Bạn có thể sửa trực tiếp JSON ở trên nếu thấy AI trích xuất sai.</p>
               </div>
             )}
           </div>
@@ -431,9 +466,14 @@ export default function MasterProjectEditor({ projectId, onSave }: MasterEditorP
                </Button>
             )}
             {scanStep === 'review_json' && (
-               <Button onClick={applyData} className="bg-green-600 hover:bg-green-700">
-                 <Check className="w-4 h-4 mr-2" /> Áp dụng vào Form
-               </Button>
+               <div className="flex gap-2 w-full justify-end">
+                 <Button variant="outline" onClick={() => setScanStep('review_text')}>
+                    <RefreshCw className="w-4 h-4 mr-2" /> Làm lại
+                 </Button>
+                 <Button onClick={applyData} className="bg-green-600 hover:bg-green-700">
+                   <Check className="w-4 h-4 mr-2" /> Áp dụng vào Form
+                 </Button>
+               </div>
             )}
           </DialogFooter>
         </DialogContent>

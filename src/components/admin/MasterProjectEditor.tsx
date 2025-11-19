@@ -45,7 +45,21 @@ const mapAiDataToFields = (aiData: any, section: string, currentData: any) => {
 
   if (section === 'overview') {
     const desc = find(['description', 'summary']);
-    if (desc) newData.description = desc;
+    // GARBAGE FILTER: Chặn AI trả lời kiểu "Tôi sẽ tìm..." thay vì dữ liệu thật
+    const isGarbage = desc && (
+      desc.toLowerCase().includes("tôi sẽ") || 
+      desc.toLowerCase().includes("i will") || 
+      desc.toLowerCase().includes("đang tìm kiếm") ||
+      desc.toLowerCase().includes("searching for") ||
+      desc.length < 15 // Quá ngắn thì cũng bỏ
+    );
+
+    if (desc && !isGarbage) {
+      newData.description = desc;
+    } else if (isGarbage) {
+      console.warn("AI returned garbage description, ignored:", desc);
+    }
+
     const dev = find(['developer', 'chu_dau_tu']);
     if (dev) newData.developer = dev;
     const loc = find(['location', 'dia_chi']);
@@ -136,12 +150,10 @@ export default function MasterProjectEditor({ projectId, onSave }: MasterEditorP
 
     try {
       // 1. CLEAN DATA (Sanitize)
-      // Loại bỏ các trường không tồn tại hoặc read-only
       const { id, created_at, updated_at, ...rest } = data;
       
       cleanPayload = {
         ...rest,
-        // Ép kiểu số chắc chắn để tránh lỗi DB
         price_per_sqm: safeParseInt(rest.price_per_sqm),
         launch_price: safeParseInt(rest.launch_price),
         total_units: safeParseInt(rest.total_units),
@@ -149,12 +161,10 @@ export default function MasterProjectEditor({ projectId, onSave }: MasterEditorP
         floors: safeParseInt(rest.floors),
         blocks: safeParseInt(rest.blocks),
         legal_score: safeParseInt(rest.legal_score),
-        // Đảm bảo amenities là array string
         amenities: Array.isArray(rest.amenities) ? rest.amenities : [],
         apartment_types: Array.isArray(rest.apartment_types) ? rest.apartment_types : [],
       };
 
-      // 2. SEND UPDATE
       const { error } = await supabase.from('projects').update(cleanPayload).eq('id', projectId);
       
       if (error) throw error;
@@ -162,7 +172,6 @@ export default function MasterProjectEditor({ projectId, onSave }: MasterEditorP
       if (!silent) toast.success("Đã lưu dữ liệu thành công");
       if (onSave) onSave();
       
-      // Log success
       if (!silent) {
          setLogs(prev => [...prev, `✅ SAVE SUCCESS: ${new Date().toLocaleTimeString()}`]);
       }
@@ -175,14 +184,12 @@ export default function MasterProjectEditor({ projectId, onSave }: MasterEditorP
       
       if (!silent) {
          toast.error(`Lỗi lưu: ${errMsg}`);
-         
-         // Tự động bật Debug Console để user thấy lỗi
          setShowDebug(true);
          setLogs(prev => [
            ...prev, 
            `❌ SAVE ERROR: ${errMsg}`,
            `DETAILS: ${errDetails}`,
-           `PAYLOAD (Dữ liệu gửi đi): ${JSON.stringify(cleanPayload, null, 2)}`
+           `PAYLOAD: ${JSON.stringify(cleanPayload, null, 2)}`
          ]);
       }
     } finally {
@@ -218,11 +225,27 @@ export default function MasterProjectEditor({ projectId, onSave }: MasterEditorP
 
       setLastJsonOutput(structData.data);
 
+      // Áp dụng bộ lọc rác tại đây
       const newData = mapAiDataToFields(structData.data, section, data);
+      
+      // Cập nhật state React
       setData(newData);
       
-      // Auto save after scan - use silent mode but catch errors
-      await handleSave(true);
+      // Lưu vào DB (Sử dụng newData thay vì data từ state vì state chưa kịp update trong hàm async)
+      const { id, created_at, updated_at, ...updatePayload } = newData;
+      const cleanUpdate = {
+          ...updatePayload,
+          price_per_sqm: safeParseInt(updatePayload.price_per_sqm),
+          launch_price: safeParseInt(updatePayload.launch_price),
+          total_units: safeParseInt(updatePayload.total_units),
+          sold_units: safeParseInt(updatePayload.sold_units),
+          floors: safeParseInt(updatePayload.floors),
+          blocks: safeParseInt(updatePayload.blocks),
+          legal_score: safeParseInt(updatePayload.legal_score),
+      };
+
+      const { error: saveError } = await supabase.from('projects').update(cleanUpdate).eq('id', projectId);
+      if (saveError) throw saveError;
 
       if (!isAuto) {
         setAuditStatus('idle');
@@ -256,6 +279,7 @@ export default function MasterProjectEditor({ projectId, onSave }: MasterEditorP
       { id: 'amenities', label: 'Tiện ích' }
     ];
 
+    // Chạy tuần tự để tránh race condition
     for (let i = 0; i < sections.length; i++) {
       const sec = sections[i];
       setCurrentStep(sec.label);
@@ -270,16 +294,19 @@ export default function MasterProjectEditor({ projectId, onSave }: MasterEditorP
             return newLogs;
         });
       } else {
-        setLogs(prev => [...prev, `❌ Thất bại: ${sec.label}`]);
+        setLogs(prev => [...prev, `❌ Thất bại (hoặc không tìm thấy): ${sec.label}`]);
       }
       
-      await new Promise(r => setTimeout(r, 1000));
+      await new Promise(r => setTimeout(r, 1500)); // Tăng delay lên 1.5s để an toàn
       setProgress(Math.round(((i + 1) / sections.length) * 100));
     }
 
     setAuditStatus('completed');
     setTimeout(() => setAuditStatus('idle'), 3000);
     toast.success("Đã hoàn thành Audit toàn diện!");
+    
+    // Reload data cuối cùng để đảm bảo đồng bộ
+    loadProject();
   };
 
   if (loading) return <div className="p-8 text-center"><Loader2 className="w-8 h-8 animate-spin mx-auto" /></div>;
@@ -331,6 +358,21 @@ export default function MasterProjectEditor({ projectId, onSave }: MasterEditorP
       {showDebug && (
         <Card className="bg-slate-950 text-green-400 border-slate-800 shadow-inner font-mono text-xs">
             <CardContent className="p-4 space-y-4">
+                {logs.length > 0 && (
+                    <div className="border-b border-slate-800 pb-2 mb-2">
+                        <div className="text-slate-500 mb-1 font-bold flex items-center gap-2">
+                            <Terminal className="w-3 h-3" /> SYSTEM LOGS
+                        </div>
+                        <ScrollArea className="h-32 w-full rounded-md border border-slate-800 bg-slate-900 p-2">
+                            {logs.map((log, i) => (
+                                <div key={i} className={`mb-1 whitespace-pre-wrap break-all ${log.includes("❌") || log.includes("ERROR") ? "text-red-400" : log.includes("⚠️") ? "text-yellow-400" : ""}`}>
+                                    {log}
+                                </div>
+                            ))}
+                        </ScrollArea>
+                    </div>
+                )}
+
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 h-64">
                     <div className="flex flex-col h-full">
                         <div className="text-slate-500 mb-1 font-bold">&gt;&gt;&gt; RAW AI OUTPUT (STEP 1)</div>
@@ -349,15 +391,6 @@ export default function MasterProjectEditor({ projectId, onSave }: MasterEditorP
                         />
                     </div>
                 </div>
-                
-                {logs.length > 0 && (
-                    <div className="border-t border-slate-800 pt-2">
-                        <div className="text-slate-500 mb-1 font-bold">&gt;&gt;&gt; AUDIT LOGS</div>
-                        <ScrollArea className="h-24 w-full rounded-md border border-slate-800 bg-slate-900 p-2">
-                            {logs.map((log, i) => <div key={i} className={log.includes("❌") ? "text-red-400" : ""}>{log}</div>)}
-                        </ScrollArea>
-                    </div>
-                )}
             </CardContent>
         </Card>
       )}

@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { useState, useEffect } from "react";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -10,7 +10,8 @@ import { Label } from "@/components/ui/label";
 import { projectsData } from "@/data/projectsData";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Loader2, PenTool, Save, RefreshCw, Copy } from "lucide-react";
+import { Loader2, PenTool, Save, RefreshCw, Copy, Database, Sparkles } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import ReactMarkdown from 'react-markdown';
 
 export default function ContentStudio() {
@@ -20,7 +21,12 @@ export default function ContentStudio() {
   const [tone, setTone] = useState("chuyên nghiệp");
   
   const [generating, setGenerating] = useState(false);
-  const [result, setResult] = useState<any>(null);
+  
+  // Editable Result State
+  const [editedContent, setEditedContent] = useState("");
+  const [editedTitle, setEditedTitle] = useState("");
+  const [editedSummary, setEditedSummary] = useState("");
+  const [activeTab, setActiveTab] = useState("preview");
 
   const handleGenerate = async () => {
     if (!topic && projectId === "none") {
@@ -50,7 +56,7 @@ TRẠNG THÁI: ${p.status === 'good' ? 'Pháp lý tốt' : 'Đang cập nhật'}
         body: {
           action: 'generate',
           topic: topic || `Bài viết về dự án`,
-          type: contentType, // news, page, blog
+          type: contentType, 
           context: contextData,
           tone: tone,
           language: 'vi-VN'
@@ -59,8 +65,13 @@ TRẠNG THÁI: ${p.status === 'good' ? 'Pháp lý tốt' : 'Đang cập nhật'}
 
       if (error) throw error;
       
-      setResult(data.data);
-      toast.success("Đã tạo nội dung thành công!");
+      const result = data.data;
+      setEditedTitle(result.title || "");
+      setEditedContent(result.content || "");
+      setEditedSummary(result.summary || result.meta_description || "");
+      
+      toast.success("Đã tạo nội dung! Bạn hãy kiểm tra và chỉnh sửa.");
+      setActiveTab("edit"); // Switch to edit mode automatically
     } catch (error: any) {
       toast.error("Lỗi: " + error.message);
     } finally {
@@ -69,20 +80,23 @@ TRẠNG THÁI: ${p.status === 'good' ? 'Pháp lý tốt' : 'Đang cập nhật'}
   };
 
   const handleSave = async () => {
-    if (!result) return;
+    if (!editedTitle || !editedContent) {
+      toast.error("Tiêu đề và nội dung không được để trống");
+      return;
+    }
     try {
       const { error } = await supabase.from('content_items').insert({
-        title: result.title,
-        content: result.content,
-        type: 'news', // Map to DB type
+        title: editedTitle,
+        content: editedContent,
+        type: 'news', // Mapping to DB type
         status: 'draft',
-        meta_title: result.meta_title,
-        meta_description: result.summary,
-        keywords: result.keywords
+        meta_title: editedTitle,
+        meta_description: editedSummary,
+        // Assuming keywords generated implicitly or empty for now
       });
 
       if (error) throw error;
-      toast.success("Đã lưu vào CMS (Bản nháp)");
+      toast.success("Đã lưu bản nháp vào CMS (Bảng: content_items)");
     } catch (error: any) {
       toast.error("Lỗi lưu: " + error.message);
     }
@@ -167,55 +181,76 @@ TRẠNG THÁI: ${p.status === 'good' ? 'Pháp lý tốt' : 'Đang cập nhật'}
           </CardContent>
         </Card>
 
-        {/* Result Panel */}
+        {/* Editor Panel */}
         <Card className="lg:col-span-3 min-h-[600px] flex flex-col">
-          <CardHeader className="border-b">
-            <CardTitle className="flex justify-between items-center">
-              Kết quả
-              {result && (
-                <div className="flex gap-2">
-                   <Button variant="outline" size="sm" onClick={() => {navigator.clipboard.writeText(result.content); toast.success("Đã copy");}}>
-                     <Copy className="w-4 h-4" />
-                   </Button>
-                   <Button size="sm" onClick={handleSave} className="bg-green-600 hover:bg-green-700">
-                     <Save className="w-4 h-4 mr-2" /> Lưu nháp
-                   </Button>
-                </div>
-              )}
-            </CardTitle>
+          <CardHeader className="border-b pb-3">
+            <div className="flex justify-between items-center">
+              <CardTitle>Biên tập & Lưu trữ</CardTitle>
+              <div className="flex items-center gap-2 text-xs text-muted-foreground bg-muted px-2 py-1 rounded">
+                <Database className="w-3 h-3" />
+                <span>Lưu vào: <strong>content_items</strong></span>
+              </div>
+            </div>
           </CardHeader>
-          <CardContent className="flex-1 p-6">
-            {result ? (
-              <div className="space-y-4">
-                <div>
-                  <Label className="text-xs text-muted-foreground uppercase font-bold">Tiêu đề (SEO)</Label>
-                  <h2 className="text-xl font-bold text-foreground mt-1">{result.title}</h2>
-                </div>
-                
-                <div>
-                  <Label className="text-xs text-muted-foreground uppercase font-bold">Tóm tắt</Label>
-                  <p className="text-sm text-muted-foreground italic mt-1">{result.summary || result.meta_description}</p>
-                </div>
+          
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col">
+            <div className="px-6 pt-4">
+              <TabsList className="grid w-full grid-cols-2">
+                <TabsTrigger value="edit">Chỉnh sửa (Markdown)</TabsTrigger>
+                <TabsTrigger value="preview">Xem trước</TabsTrigger>
+              </TabsList>
+            </div>
 
-                <div className="prose prose-sm max-w-none dark:prose-invert bg-muted/30 p-4 rounded-lg border">
-                  <ReactMarkdown>{result.content}</ReactMarkdown>
+            <CardContent className="flex-1 p-6">
+              {!editedContent ? (
+                <div className="h-full flex flex-col items-center justify-center text-muted-foreground space-y-4 opacity-50">
+                  <PenTool className="w-16 h-16" />
+                  <p>Nội dung AI tạo sẽ hiển thị tại đây để bạn chỉnh sửa</p>
                 </div>
-
-                {result.keywords && (
-                   <div className="flex gap-2 flex-wrap">
-                     {result.keywords.map((k: string, i: number) => (
-                       <Badge key={i} variant="secondary">#{k}</Badge>
-                     ))}
+              ) : (
+                <TabsContent value="edit" className="mt-0 h-full space-y-4">
+                   <div className="space-y-2">
+                     <Label>Tiêu đề bài viết</Label>
+                     <Input value={editedTitle} onChange={(e) => setEditedTitle(e.target.value)} className="font-bold text-lg" />
                    </div>
-                )}
-              </div>
-            ) : (
-              <div className="h-full flex flex-col items-center justify-center text-muted-foreground space-y-4 opacity-50">
-                <PenTool className="w-16 h-16" />
-                <p>Nội dung AI tạo sẽ hiển thị tại đây</p>
-              </div>
-            )}
-          </CardContent>
+                   <div className="space-y-2 h-[calc(100%-80px)]">
+                     <Label>Nội dung (Markdown)</Label>
+                     <Textarea 
+                        value={editedContent} 
+                        onChange={(e) => setEditedContent(e.target.value)} 
+                        className="h-full font-mono text-sm leading-relaxed"
+                     />
+                   </div>
+                   <div className="space-y-2">
+                     <Label>Tóm tắt (Meta Description)</Label>
+                     <Textarea value={editedSummary} onChange={(e) => setEditedSummary(e.target.value)} rows={2} />
+                   </div>
+                </TabsContent>
+              )}
+
+              {editedContent && (
+                <TabsContent value="preview" className="mt-0 h-full overflow-y-auto pr-2">
+                  <h1 className="text-2xl font-bold mb-4">{editedTitle}</h1>
+                  <div className="prose prose-sm max-w-none dark:prose-invert">
+                    <ReactMarkdown>{editedContent}</ReactMarkdown>
+                  </div>
+                </TabsContent>
+              )}
+            </CardContent>
+          </Tabs>
+
+          <CardFooter className="border-t p-4 flex justify-end gap-2 bg-muted/10">
+             {editedContent && (
+                <>
+                  <Button variant="outline" onClick={() => {setEditedContent(""); setEditedTitle("");}}>
+                    Xóa
+                  </Button>
+                  <Button onClick={handleSave} className="bg-green-600 hover:bg-green-700">
+                    <Save className="w-4 h-4 mr-2" /> Lưu bản nháp
+                  </Button>
+                </>
+             )}
+          </CardFooter>
         </Card>
       </div>
     </div>

@@ -4,16 +4,19 @@ import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
+import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Loader2, Zap, Save, ArrowRight } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
+import { Loader2, Zap, Save, ArrowRight, Database } from "lucide-react";
 
 export default function CatalystFactory() {
   const [rawText, setRawText] = useState("");
   const [processing, setProcessing] = useState(false);
-  const [result, setResult] = useState<any>(null);
+  
+  // Editing State
+  const [formData, setFormData] = useState<any>(null);
 
   const handleAnalyze = async () => {
     if (!rawText.trim()) return;
@@ -24,8 +27,21 @@ export default function CatalystFactory() {
       });
 
       if (error) throw error;
-      setResult(data.data);
-      toast.success("Phân tích thành công!");
+      
+      // Load result into editable state
+      const result = data.data;
+      setFormData({
+        title: result.title || "",
+        catalyst_type: result.catalyst_type || "infrastructure",
+        description: result.description || "",
+        impact_level: result.impact_level || "medium",
+        impact_direction: result.impact_direction || "positive",
+        estimated_price_impact_percent: result.estimated_price_impact_percent || 0,
+        affected_areas: Array.isArray(result.affected_areas) ? result.affected_areas.join(", ") : "",
+        effective_date: result.effective_date || ""
+      });
+      
+      toast.success("Đã trích xuất dữ liệu! Vui lòng kiểm tra lại.");
     } catch (error: any) {
       toast.error("Lỗi: " + error.message);
     } finally {
@@ -34,12 +50,20 @@ export default function CatalystFactory() {
   };
 
   const handleSave = async () => {
-    if (!result) return;
+    if (!formData) return;
     try {
-      const { error } = await supabase.from('market_catalysts' as any).insert(result);
+      // Convert affected_areas string back to array
+      const payload = {
+        ...formData,
+        affected_areas: formData.affected_areas.split(',').map((s: string) => s.trim()).filter(Boolean),
+        verification_status: 'verified' // Auto verify since admin is saving it
+      };
+
+      const { error } = await supabase.from('market_catalysts' as any).insert(payload);
       if (error) throw error;
+      
       toast.success("Đã lưu Catalyst vào Database");
-      setResult(null);
+      setFormData(null);
       setRawText("");
     } catch (error: any) {
       toast.error("Lỗi lưu: " + error.message);
@@ -53,20 +77,20 @@ export default function CatalystFactory() {
           <Zap className="w-8 h-8 text-yellow-500" />
           Catalyst Factory
         </h1>
-        <p className="text-muted-foreground">AI phát hiện & phân tích các yếu tố tác động giá (Tin tức hạ tầng, chính sách...)</p>
+        <p className="text-muted-foreground">AI phát hiện & phân tích các yếu tố tác động giá từ tin tức</p>
       </div>
 
       <div className="grid md:grid-cols-2 gap-6">
-        <Card>
+        <Card className="h-fit">
           <CardHeader>
-            <CardTitle>Nguồn tin</CardTitle>
+            <CardTitle>1. Dữ liệu nguồn</CardTitle>
             <CardDescription>Paste nội dung tin tức, thông báo quy hoạch...</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <Textarea
               value={rawText}
               onChange={(e) => setRawText(e.target.value)}
-              placeholder="Ví dụ: Tuyến Metro số 1 Bến Thành - Suối Tiên dự kiến vận hành thương mại từ tháng 7/2024..."
+              placeholder="Ví dụ: Tuyến Metro số 1 Bến Thành - Suối Tiên dự kiến vận hành thương mại từ tháng 7/2024, kéo theo giá BĐS khu Đông tăng mạnh..."
               className="min-h-[300px]"
             />
             <Button onClick={handleAnalyze} disabled={processing || !rawText} className="w-full">
@@ -75,53 +99,123 @@ export default function CatalystFactory() {
           </CardContent>
         </Card>
 
-        <Card className="bg-muted/30">
-          <CardHeader>
-            <CardTitle>Kết quả AI</CardTitle>
-            <CardDescription>Dữ liệu trích xuất tự động</CardDescription>
+        <Card className="bg-muted/30 border-l-4 border-l-primary">
+          <CardHeader className="pb-2">
+            <div className="flex justify-between items-start">
+                <div>
+                    <CardTitle>2. Kiểm tra & Chỉnh sửa</CardTitle>
+                    <CardDescription>Dữ liệu sẽ được lưu vào bảng: <strong>market_catalysts</strong></CardDescription>
+                </div>
+                <Database className="w-5 h-5 text-muted-foreground" />
+            </div>
           </CardHeader>
           <CardContent>
-            {result ? (
-              <div className="space-y-4">
-                <div className="p-4 bg-background rounded-lg border space-y-3">
-                  <div>
-                    <Label className="text-xs text-muted-foreground">Tiêu đề</Label>
-                    <div className="font-bold text-lg">{result.title}</div>
-                  </div>
-                  
-                  <div className="flex gap-2">
-                    <Badge variant="outline">{result.catalyst_type}</Badge>
-                    <Badge className={result.impact_direction === 'positive' ? 'bg-green-500' : 'bg-red-500'}>
-                      {result.impact_direction}
-                    </Badge>
-                    <Badge variant="secondary">{result.impact_level} impact</Badge>
+            {formData ? (
+              <div className="space-y-4 bg-background p-4 rounded-lg border shadow-sm">
+                <div className="space-y-2">
+                  <Label>Tiêu đề (Ngắn gọn)</Label>
+                  <Input 
+                    value={formData.title} 
+                    onChange={(e) => setFormData({...formData, title: e.target.value})} 
+                    className="font-semibold"
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label>Loại Catalyst</Label>
+                    <Select 
+                        value={formData.catalyst_type} 
+                        onValueChange={(val) => setFormData({...formData, catalyst_type: val})}
+                    >
+                      <SelectTrigger><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="infrastructure">Hạ tầng (Cầu, Đường)</SelectItem>
+                        <SelectItem value="policy">Chính sách / Luật</SelectItem>
+                        <SelectItem value="economic">Kinh tế vĩ mô</SelectItem>
+                        <SelectItem value="supply_demand">Cung cầu</SelectItem>
+                      </SelectContent>
+                    </Select>
                   </div>
 
-                  <div className="grid grid-cols-2 gap-2 text-sm">
-                    <div>
-                      <Label className="text-xs text-muted-foreground">Khu vực</Label>
-                      <div>{result.affected_areas?.join(', ')}</div>
-                    </div>
-                    <div>
-                      <Label className="text-xs text-muted-foreground">Tác động giá</Label>
-                      <div className="font-bold text-primary">{result.estimated_price_impact_percent}%</div>
-                    </div>
-                  </div>
-
-                  <div>
-                    <Label className="text-xs text-muted-foreground">Mô tả</Label>
-                    <p className="text-sm text-muted-foreground">{result.description}</p>
+                  <div className="space-y-2">
+                    <Label>Mức độ tác động</Label>
+                     <Select 
+                        value={formData.impact_level} 
+                        onValueChange={(val) => setFormData({...formData, impact_level: val})}
+                    >
+                      <SelectTrigger><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="very_high">Rất cao (Đột biến)</SelectItem>
+                        <SelectItem value="high">Cao</SelectItem>
+                        <SelectItem value="medium">Trung bình</SelectItem>
+                        <SelectItem value="low">Thấp</SelectItem>
+                      </SelectContent>
+                    </Select>
                   </div>
                 </div>
 
-                <Button onClick={handleSave} className="w-full bg-green-600 hover:bg-green-700">
+                <div className="grid grid-cols-2 gap-4">
+                   <div className="space-y-2">
+                    <Label>Hướng tác động</Label>
+                     <Select 
+                        value={formData.impact_direction} 
+                        onValueChange={(val) => setFormData({...formData, impact_direction: val})}
+                    >
+                      <SelectTrigger><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="positive">Tích cực (Tăng giá)</SelectItem>
+                        <SelectItem value="negative">Tiêu cực (Giảm giá)</SelectItem>
+                        <SelectItem value="neutral">Trung lập</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Tác động giá dự kiến (%)</Label>
+                    <Input 
+                        type="number" 
+                        step="0.1"
+                        value={formData.estimated_price_impact_percent} 
+                        onChange={(e) => setFormData({...formData, estimated_price_impact_percent: e.target.value})} 
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <Label>Khu vực ảnh hưởng (cách nhau dấu phẩy)</Label>
+                  <Input 
+                    value={formData.affected_areas} 
+                    onChange={(e) => setFormData({...formData, affected_areas: e.target.value})} 
+                    placeholder="Quận 9, Thủ Đức, Bình Dương..."
+                  />
+                </div>
+                
+                 <div className="space-y-2">
+                  <Label>Ngày hiệu lực / Hoàn thành (Dự kiến)</Label>
+                  <Input 
+                    type="date"
+                    value={formData.effective_date} 
+                    onChange={(e) => setFormData({...formData, effective_date: e.target.value})} 
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label>Mô tả chi tiết</Label>
+                  <Textarea 
+                    value={formData.description} 
+                    onChange={(e) => setFormData({...formData, description: e.target.value})} 
+                    rows={3}
+                  />
+                </div>
+
+                <Button onClick={handleSave} className="w-full bg-green-600 hover:bg-green-700 shadow-md">
                   <Save className="mr-2 h-4 w-4" /> Lưu vào Database
                 </Button>
               </div>
             ) : (
-              <div className="flex flex-col items-center justify-center h-[300px] text-muted-foreground">
+              <div className="flex flex-col items-center justify-center h-[300px] text-muted-foreground border-2 border-dashed rounded-lg">
                 <ArrowRight className="w-8 h-8 mb-2 opacity-20" />
-                <p>Kết quả sẽ hiện ở đây</p>
+                <p>Kết quả phân tích sẽ hiện ở đây để bạn chỉnh sửa</p>
               </div>
             )}
           </CardContent>

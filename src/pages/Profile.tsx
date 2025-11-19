@@ -315,26 +315,26 @@ const Profile = () => {
       {/* Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab}>
         <TabsList className="flex w-full overflow-x-auto p-1 bg-muted/50 rounded-2xl border border-border h-auto space-x-1">
-          <TabsTrigger value="info" className="flex-1 min-w-[100px] data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow-sm rounded-xl font-semibold py-3">
+          <TabsTrigger value="info" className="flex-1 min-w-[100px] data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow-sm rounded-xl font-semibold py-3 transition-all">
             <User className="w-4 h-4 mr-2" />
             Thông tin
           </TabsTrigger>
-          <TabsTrigger value="listings" className="flex-1 min-w-[100px] data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow-sm rounded-xl font-semibold py-3">
+          <TabsTrigger value="listings" className="flex-1 min-w-[100px] data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow-sm rounded-xl font-semibold py-3 transition-all">
             <Store className="w-4 h-4 mr-2" />
             Tin đăng
           </TabsTrigger>
-          <TabsTrigger value="subscription" className="flex-1 min-w-[100px] data-[state=active]:bg-background data-[state=active]:text-amber-600 rounded-xl font-semibold py-3">
+          <TabsTrigger value="subscription" className="flex-1 min-w-[100px] data-[state=active]:bg-background data-[state=active]:text-amber-600 dark:data-[state=active]:text-amber-400 rounded-xl font-semibold py-3 transition-all">
             <Crown className="w-4 h-4 mr-2" />
             Gói VIP
           </TabsTrigger>
-          <TabsTrigger value="favorites" className="flex-1 min-w-[100px] data-[state=active]:bg-background data-[state=active]:text-primary rounded-xl font-semibold py-3">
+          <TabsTrigger value="favorites" className="flex-1 min-w-[100px] data-[state=active]:bg-background data-[state=active]:text-primary rounded-xl font-semibold py-3 transition-all">
             <Heart className="w-4 h-4 mr-2" />
             Yêu thích
           </TabsTrigger>
         </TabsList>
 
         {/* Content - Thông tin cá nhân */}
-        <TabsContent value="info" className="space-y-6 mt-6">
+        <TabsContent value="info" className="space-y-6 mt-6 animate-in fade-in-50 slide-in-from-bottom-2">
           <Card className="rounded-2xl shadow-sm border border-border bg-card">
             <CardHeader>
               <CardTitle className="text-xl font-bold text-foreground">Thông tin cá nhân</CardTitle>
@@ -347,7 +347,7 @@ const Profile = () => {
                   id="fullName"
                   value={profile?.full_name || ''}
                   onChange={(e) => setProfile(prev => prev ? { ...prev, full_name: e.target.value } : null)}
-                  className="h-12 rounded-xl"
+                  className="h-12 rounded-xl bg-background border-input focus:border-primary"
                 />
               </div>
               <div className="space-y-2">
@@ -356,7 +356,7 @@ const Profile = () => {
                   id="phone"
                   value={profile?.phone || ''}
                   onChange={(e) => setProfile(prev => prev ? { ...prev, phone: e.target.value } : null)}
-                  className="h-12 rounded-xl"
+                  className="h-12 rounded-xl bg-background border-input focus:border-primary"
                 />
               </div>
               <div className="space-y-2">
@@ -365,7 +365,7 @@ const Profile = () => {
                   id="occupation"
                   value={profile?.occupation || ''}
                   onChange={(e) => setProfile(prev => prev ? { ...prev, occupation: e.target.value } : null)}
-                  className="h-12 rounded-xl"
+                  className="h-12 rounded-xl bg-background border-input focus:border-primary"
                 />
               </div>
               <div className="space-y-2">
@@ -374,7 +374,7 @@ const Profile = () => {
                   value={profile?.budget_range || ''} 
                   onValueChange={(value) => setProfile(prev => prev ? { ...prev, budget_range: value } : null)}
                 >
-                  <SelectTrigger className="h-12 rounded-xl">
+                  <SelectTrigger className="h-12 rounded-xl bg-background border-input">
                     <SelectValue placeholder="Chọn mức ngân sách" />
                   </SelectTrigger>
                   <SelectContent>
@@ -386,7 +386,7 @@ const Profile = () => {
                   </SelectContent>
                 </Select>
               </div>
-              <Button onClick={handleSave} disabled={saving} className="w-full h-14 text-base font-bold rounded-xl">
+              <Button onClick={handleSave} disabled={saving} className="w-full h-14 text-base font-bold rounded-xl shadow-md">
                 {saving ? 'Đang lưu...' : 'Lưu thông tin'}
               </Button>
             </CardContent>
@@ -394,12 +394,12 @@ const Profile = () => {
         </TabsContent>
 
         {/* Content - Quản lý tin đăng */}
-        <TabsContent value="listings" className="mt-6">
+        <TabsContent value="listings" className="mt-6 animate-in fade-in-50 slide-in-from-bottom-2">
           <MyListingsTab />
         </TabsContent>
 
         {/* Content - Gói VIP */}
-        <TabsContent value="subscription" className="space-y-6 mt-6">
+        <TabsContent value="subscription" className="space-y-6 mt-6 animate-in fade-in-50 slide-in-from-bottom-2">
           <div className="space-y-4">
             <h2 className="text-2xl font-bold text-foreground">Gói thành viên</h2>
             <SubscriptionPlans />
@@ -408,11 +408,14 @@ const Profile = () => {
         </TabsContent>
 
         {/* Content - Yêu thích */}
-        <TabsContent value="favorites" className="mt-6">
-           <div className="text-center py-12 bg-card rounded-2xl border border-border">
-             <Heart className="w-16 h-16 mx-auto text-muted-foreground/50 mb-4" />
-             <p className="text-muted-foreground mb-4">Xem danh sách dự án yêu thích</p>
-             <Button onClick={() => navigate('/favorites')} className="rounded-xl">Xem ngay</Button>
+        <TabsContent value="favorites" className="mt-6 animate-in fade-in-50 slide-in-from-bottom-2">
+           <div className="text-center py-16 bg-card rounded-2xl border border-border shadow-sm">
+             <div className="p-4 bg-muted rounded-full w-20 h-20 mx-auto mb-4 flex items-center justify-center">
+               <Heart className="w-10 h-10 text-muted-foreground/70" />
+             </div>
+             <h3 className="text-xl font-semibold mb-2">Dự án yêu thích</h3>
+             <p className="text-muted-foreground mb-6">Xem và quản lý danh sách các dự án bạn đã lưu</p>
+             <Button onClick={() => navigate('/favorites')} className="rounded-xl px-8">Xem ngay</Button>
            </div>
         </TabsContent>
       </Tabs>

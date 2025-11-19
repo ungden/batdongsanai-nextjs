@@ -126,14 +126,14 @@ const Auth = () => {
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
               <div className="relative">
-                <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-slate-400" />
+                <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-muted-foreground" />
                 <Input
                   id="email"
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
-                  className="pl-11 h-12 rounded-xl border-2 focus:border-primary"
+                  className="pl-11 h-12 rounded-xl border-border bg-background focus:border-primary"
                   placeholder="email@example.com"
                 />
               </div>
@@ -150,14 +150,14 @@ const Auth = () => {
                 </button>
               </div>
               <div className="relative">
-                <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-slate-400" />
+                <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-muted-foreground" />
                 <Input
                   id="password"
                   type="password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required
-                  className="pl-11 h-12 rounded-xl border-2 focus:border-primary"
+                  className="pl-11 h-12 rounded-xl border-border bg-background focus:border-primary"
                   placeholder="••••••••"
                 />
               </div>
@@ -182,14 +182,14 @@ const Auth = () => {
             <div className="space-y-2">
               <Label htmlFor="fullName">Họ và tên</Label>
               <div className="relative">
-                <User className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-slate-400" />
+                <User className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-muted-foreground" />
                 <Input
                   id="fullName"
                   type="text"
                   value={fullName}
                   onChange={(e) => setFullName(e.target.value)}
                   required
-                  className="pl-11 h-12 rounded-xl border-2 focus:border-primary"
+                  className="pl-11 h-12 rounded-xl border-border bg-background focus:border-primary"
                   placeholder="Nguyễn Văn A"
                 />
               </div>
@@ -197,14 +197,14 @@ const Auth = () => {
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
               <div className="relative">
-                <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-slate-400" />
+                <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-muted-foreground" />
                 <Input
                   id="email"
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
-                  className="pl-11 h-12 rounded-xl border-2 focus:border-primary"
+                  className="pl-11 h-12 rounded-xl border-border bg-background focus:border-primary"
                   placeholder="email@example.com"
                 />
               </div>
@@ -212,14 +212,14 @@ const Auth = () => {
             <div className="space-y-2">
               <Label htmlFor="password">Mật khẩu</Label>
               <div className="relative">
-                <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-slate-400" />
+                <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-muted-foreground" />
                 <Input
                   id="password"
                   type="password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required
-                  className="pl-11 h-12 rounded-xl border-2 focus:border-primary"
+                  className="pl-11 h-12 rounded-xl border-border bg-background focus:border-primary"
                   placeholder="••••••••"
                 />
               </div>
@@ -241,20 +241,20 @@ const Auth = () => {
       case 'forgot_password':
         return (
           <form onSubmit={handleForgotPassword} className="space-y-5">
-            <div className="bg-blue-50 text-blue-800 p-4 rounded-xl text-sm mb-4">
+            <div className="bg-blue-50 dark:bg-blue-950/30 text-blue-800 dark:text-blue-300 p-4 rounded-xl text-sm mb-4 border border-blue-100 dark:border-blue-900">
               Nhập email của bạn, chúng tôi sẽ gửi liên kết để bạn đặt lại mật khẩu mới.
             </div>
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
               <div className="relative">
-                <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-slate-400" />
+                <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-muted-foreground" />
                 <Input
                   id="email"
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
-                  className="pl-11 h-12 rounded-xl border-2 focus:border-primary"
+                  className="pl-11 h-12 rounded-xl border-border bg-background focus:border-primary"
                   placeholder="email@example.com"
                 />
               </div>
@@ -274,7 +274,7 @@ const Auth = () => {
               variant="ghost"
               type="button"
               onClick={() => setView('login')}
-              className="w-full"
+              className="w-full hover:bg-muted"
             >
               Quay lại đăng nhập
             </Button>
@@ -284,18 +284,18 @@ const Auth = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 via-blue-50/30 to-indigo-50 p-4">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 via-blue-50/30 to-indigo-50 dark:from-slate-950 dark:via-slate-900 dark:to-blue-950/20 p-4">
       <Button
         variant="ghost"
         onClick={() => navigate('/')}
-        className="fixed top-4 left-4 z-50 flex items-center gap-2 bg-white/80 backdrop-blur-sm hover:bg-white shadow-md rounded-xl border border-slate-200"
+        className="fixed top-4 left-4 z-50 flex items-center gap-2 bg-background/80 backdrop-blur-sm hover:bg-card shadow-md rounded-xl border border-border"
       >
         <ArrowLeft className="w-4 h-4" />
         <span className="hidden sm:inline">Trang chủ</span>
         <Home className="w-4 h-4 sm:hidden" />
       </Button>
 
-      <Card className="w-full max-w-md rounded-2xl shadow-2xl border-0 bg-white/95 backdrop-blur-sm overflow-hidden">
+      <Card className="w-full max-w-md rounded-2xl shadow-strong border-border bg-card/95 backdrop-blur-sm overflow-hidden">
         <div className="h-2 bg-gradient-to-r from-primary to-accent" />
         <CardHeader className="space-y-3 pb-6 text-center">
           <div className="w-16 h-16 bg-gradient-to-br from-primary/10 to-accent/10 rounded-2xl flex items-center justify-center mx-auto mb-2">
@@ -303,12 +303,12 @@ const Auth = () => {
             {view === 'register' && <UserPlus className="w-8 h-8 text-primary" />}
             {view === 'forgot_password' && <KeyRound className="w-8 h-8 text-primary" />}
           </div>
-          <CardTitle className="text-2xl font-bold text-slate-900">
+          <CardTitle className="text-2xl font-bold text-foreground">
             {view === 'login' && 'Đăng nhập Realprofit.vn'}
             {view === 'register' && 'Tạo tài khoản'}
             {view === 'forgot_password' && 'Khôi phục mật khẩu'}
           </CardTitle>
-          <CardDescription>
+          <CardDescription className="text-muted-foreground">
             {view === 'login' && 'Chào mừng bạn quay trở lại'}
             {view === 'register' && 'Tham gia cộng đồng đầu tư bất động sản'}
             {view === 'forgot_password' && 'Đừng lo, chúng tôi sẽ giúp bạn lấy lại mật khẩu'}
@@ -320,8 +320,8 @@ const Auth = () => {
         </CardContent>
 
         {view !== 'forgot_password' && (
-          <CardFooter className="flex flex-col gap-4 bg-slate-50/50 border-t border-slate-100 p-6">
-            <div className="text-center text-sm text-slate-600">
+          <CardFooter className="flex flex-col gap-4 bg-muted/30 border-t border-border p-6">
+            <div className="text-center text-sm text-muted-foreground">
               {view === 'login' ? "Chưa có tài khoản?" : "Đã có tài khoản?"}
               <button
                 onClick={() => setView(view === 'login' ? 'register' : 'login')}

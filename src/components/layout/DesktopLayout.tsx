@@ -26,7 +26,7 @@ const DesktopLayout: React.FC<DesktopLayoutProps> = ({ children, title, subtitle
       <div className="flex min-h-screen w-full bg-background text-foreground">
         <AppSidebar />
         
-        <div className="flex flex-1 flex-col min-w-0 overflow-hidden bg-background/50">
+        <div className="flex flex-1 flex-col min-w-0 overflow-hidden bg-background/50 dark:bg-background">
           {showHeader && (
             <header className="sticky top-0 z-20 flex h-16 shrink-0 items-center gap-4 border-b border-border/40 bg-background/80 px-6 backdrop-blur-xl transition-all">
               <div className="flex items-center gap-2">

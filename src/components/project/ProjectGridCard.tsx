@@ -41,10 +41,10 @@ const ProjectGridCard = ({ project, onClick }: ProjectGridCardProps) => {
   return (
     <Card
       onClick={() => onClick(project.id)}
-      className="group overflow-hidden cursor-pointer bg-white border border-slate-200 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 rounded-2xl"
+      className="group overflow-hidden cursor-pointer bg-card border border-border shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 rounded-2xl"
     >
       {/* Image with gradient overlays */}
-      <div className="relative h-[240px] overflow-hidden bg-slate-100">
+      <div className="relative h-[240px] overflow-hidden bg-muted">
         <img
           src={project.image}
           alt={project.name}
@@ -67,7 +67,7 @@ const ProjectGridCard = ({ project, onClick }: ProjectGridCardProps) => {
 
         {/* Favorite with backdrop */}
         <div className="absolute top-4 right-4 z-10" onClick={(e) => e.stopPropagation()}>
-           <div className="bg-white/20 hover:bg-white/40 backdrop-blur-md rounded-full p-1 transition-colors">
+           <div className="bg-black/30 hover:bg-black/50 backdrop-blur-md rounded-full p-1 transition-colors">
              <FavoriteButton projectId={project.id} projectName={project.name} className="text-white hover:text-white" />
            </div>
         </div>
@@ -88,27 +88,27 @@ const ProjectGridCard = ({ project, onClick }: ProjectGridCardProps) => {
       <div className="p-5 space-y-5">
         {/* Meta Info */}
         <div className="flex items-center justify-between text-sm">
-            <div className="flex items-center text-slate-500">
+            <div className="flex items-center text-muted-foreground">
               <User className="w-4 h-4 mr-2" />
               <span className="font-medium truncate max-w-[140px]">{project.developer}</span>
             </div>
-             <div className="flex items-center text-slate-500">
+             <div className="flex items-center text-muted-foreground">
                 <Calendar className="w-4 h-4 mr-2" />
                 <span className="font-medium">{project.completionDate}</span>
             </div>
         </div>
 
         {/* Pricing Section */}
-        <div className="flex items-center justify-between bg-slate-50 rounded-xl p-3 border border-slate-100">
+        <div className="flex items-center justify-between bg-muted/40 rounded-xl p-3 border border-border/50">
             <div>
-                <p className="text-xs text-slate-500 font-medium uppercase mb-0.5">Giá bán</p>
+                <p className="text-xs text-muted-foreground font-medium uppercase mb-0.5">Giá bán</p>
                 <div className="text-xl font-bold text-primary">
                     {project.priceRange}
                 </div>
             </div>
              <div className="text-right">
-                 <p className="text-xs text-slate-500 font-medium uppercase mb-0.5">Đơn giá</p>
-                 <div className="text-sm font-semibold text-slate-700">
+                 <p className="text-xs text-muted-foreground font-medium uppercase mb-0.5">Đơn giá</p>
+                 <div className="text-sm font-semibold text-foreground">
                     {new Intl.NumberFormat('vi-VN', { maximumFractionDigits: 1 }).format(project.pricePerSqm / 1000000)} tr/m²
                  </div>
             </div>
@@ -117,10 +117,10 @@ const ProjectGridCard = ({ project, onClick }: ProjectGridCardProps) => {
         {/* Progress */}
         <div className="space-y-2">
           <div className="flex items-center justify-between text-xs">
-            <span className="text-slate-500 font-medium">Tiến độ xây dựng</span>
+            <span className="text-muted-foreground font-medium">Tiến độ xây dựng</span>
             <span className="font-bold text-primary">{Math.round(completionProgress)}%</span>
           </div>
-          <Progress value={completionProgress} className="h-1.5 bg-slate-100" />
+          <Progress value={completionProgress} className="h-1.5 bg-muted" />
         </div>
 
         {/* Badges & Action */}
@@ -130,13 +130,13 @@ const ProjectGridCard = ({ project, onClick }: ProjectGridCardProps) => {
                 <Badge 
                   key={b} 
                   variant="secondary"
-                  className="text-[10px] px-2 py-0.5 bg-slate-100 text-slate-600 border-slate-200"
+                  className="text-[10px] px-2 py-0.5 bg-muted text-muted-foreground border-border"
                 >
                   {b === 'hot' ? 'Hot' : b === 'new' ? 'Mới' : b === 'discount' ? 'Giảm giá' : 'Nổi bật'}
                 </Badge>
               ))}
               {project.legalScore >= 8 && (
-                 <Badge variant="outline" className="text-[10px] px-2 py-0.5 text-emerald-600 border-emerald-200 bg-emerald-50">
+                 <Badge variant="outline" className="text-[10px] px-2 py-0.5 text-emerald-600 border-emerald-200 bg-emerald-50 dark:bg-emerald-900/20 dark:border-emerald-800">
                     Pháp lý tốt
                  </Badge>
               )}

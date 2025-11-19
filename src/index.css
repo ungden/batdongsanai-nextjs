@@ -4,8 +4,8 @@
 
 @layer base {
   :root {
-    /* LIGHT MODE - Clean, Professional, Off-white */
-    --background: 0 0% 100%; /* White */
+    /* LIGHT MODE - Clean, Professional, Airy */
+    --background: 210 40% 98%; /* Slate 50 - Softer than pure white */
     --foreground: 222 47% 11%; /* Slate 900 */
 
     --card: 0 0% 100%;
@@ -14,14 +14,14 @@
     --popover: 0 0% 100%;
     --popover-foreground: 222 47% 11%;
 
-    --primary: 221 83% 53%; /* Blue 600 */
+    --primary: 221 83% 53%; /* Blue 600 - Vibrant but professional */
     --primary-foreground: 210 40% 98%;
 
-    --secondary: 210 40% 96.1%; /* Slate 100 */
+    --secondary: 210 40% 96.1%;
     --secondary-foreground: 222 47% 11.2%;
 
     --muted: 210 40% 96.1%;
-    --muted-foreground: 215 16% 47%; /* Slate 500 */
+    --muted-foreground: 215 16% 47%;
 
     --accent: 210 40% 96.1%;
     --accent-foreground: 222 47% 11.2%;
@@ -29,46 +29,46 @@
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 210 40% 98%;
 
-    --border: 214 32% 91%; /* Slate 200 */
+    --border: 214 32% 91%;
     --input: 214 32% 91%;
     --ring: 221 83% 53%;
 
     --radius: 0.75rem;
 
-    /* Semantic Colors - Light */
-    --success: 142 76% 36%; /* Green 600 */
-    --warning: 38 92% 50%;  /* Amber 500 */
-    
-    /* Sidebar - Light */
-    --sidebar-background: 222 47% 11%; /* Dark Navy Sidebar for contrast */
-    --sidebar-foreground: 210 40% 98%;
+    /* Semantic Colors */
+    --success: 142 76% 36%;
+    --warning: 38 92% 50%;
+
+    /* SIDEBAR - Light Mode: Clean White with subtle border */
+    --sidebar-background: 0 0% 100%;
+    --sidebar-foreground: 215 16% 47%;
     --sidebar-primary: 221 83% 53%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 217 33% 17%;
-    --sidebar-accent-foreground: 210 40% 98%;
-    --sidebar-border: 217 33% 20%;
-    --sidebar-ring: 221 83% 53%;
+    --sidebar-accent: 210 40% 96.1%;
+    --sidebar-accent-foreground: 222 47% 11%;
+    --sidebar-border: 214 32% 91%;
+    --sidebar-ring: 215 16% 47%;
   }
 
   .dark {
-    /* DARK MODE - Deep Navy/Black, High Contrast */
-    --background: 222 47% 11%; /* Slate 950 */
-    --foreground: 210 40% 98%; /* Slate 50 */
+    /* DARK MODE - Deep, Rich, High Contrast */
+    --background: 222 47% 11%; /* Slate 950 - Deep Navy */
+    --foreground: 210 40% 98%;
 
-    --card: 222 47% 11%; /* Slate 950 */
+    --card: 217 33% 17%; /* Slate 900 - Slightly lighter than bg */
     --card-foreground: 210 40% 98%;
 
     --popover: 222 47% 11%;
     --popover-foreground: 210 40% 98%;
 
-    --primary: 217 91% 60%; /* Blue 500 - Lighter for dark mode */
+    --primary: 217 91% 60%; /* Blue 500 - Bright for dark bg */
     --primary-foreground: 222 47% 11%;
 
-    --secondary: 217 33% 17%; /* Slate 800 */
+    --secondary: 217 33% 17%;
     --secondary-foreground: 210 40% 98%;
 
     --muted: 217 33% 17%;
-    --muted-foreground: 215 20% 65%; /* Slate 400 */
+    --muted-foreground: 215 20% 65%;
 
     --accent: 217 33% 17%;
     --accent-foreground: 210 40% 98%;
@@ -76,23 +76,19 @@
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 210 40% 98%;
 
-    --border: 217 33% 17%; /* Slate 800 */
-    --input: 217 33% 17%;
+    --border: 217 33% 20%; /* Subtle border in dark mode */
+    --input: 217 33% 20%;
     --ring: 224 76% 48%;
 
-    /* Semantic Colors - Dark */
-    --success: 142 70% 50%; /* Green 500 */
-    --warning: 48 96% 53%;  /* Yellow 500 */
-
-    /* Sidebar - Dark */
-    --sidebar-background: 222 47% 11%;
-    --sidebar-foreground: 210 40% 98%;
-    --sidebar-primary: 221 83% 53%;
+    /* SIDEBAR - Dark Mode: Integrated seamlessly */
+    --sidebar-background: 222 47% 11%; /* Same as main bg for flat look */
+    --sidebar-foreground: 215 20% 65%;
+    --sidebar-primary: 217 91% 60%;
     --sidebar-primary-foreground: 0 0% 100%;
     --sidebar-accent: 217 33% 17%;
     --sidebar-accent-foreground: 210 40% 98%;
     --sidebar-border: 217 33% 20%;
-    --sidebar-ring: 221 83% 53%;
+    --sidebar-ring: 224 76% 48%;
   }
 }
 
@@ -101,48 +97,61 @@
     @apply border-border;
   }
   body {
-    @apply bg-background text-foreground font-sans antialiased;
+    @apply bg-background text-foreground font-sans antialiased selection:bg-primary/20 selection:text-primary;
   }
 }
 
 @layer components {
-  /* Modern Card */
+  /* Modern Card - Flat with subtle border */
   .card-modern {
-    @apply bg-card border border-border shadow-sm hover:shadow-md transition-all duration-200 rounded-xl;
+    @apply bg-card border border-border shadow-sm hover:shadow-md transition-all duration-300 rounded-xl;
   }
 
-  /* Clean Button */
-  .btn-primary {
-    @apply bg-primary text-primary-foreground hover:bg-primary/90 shadow-sm transition-all duration-200 font-medium rounded-lg;
+  /* Buttons - Removing default heavy styles */
+  .btn-modern {
+    @apply rounded-lg font-medium transition-all duration-200 active:scale-95 disabled:opacity-50 disabled:pointer-events-none;
   }
   
-  .btn-outline {
-    @apply bg-background border border-border hover:bg-accent hover:text-accent-foreground transition-all duration-200 font-medium rounded-lg;
+  .btn-primary {
+    @apply btn-modern bg-primary text-primary-foreground hover:bg-primary/90 shadow-sm hover:shadow;
+  }
+  
+  .btn-ghost {
+    @apply btn-modern hover:bg-accent hover:text-accent-foreground;
   }
 
-  /* Typography */
-  .h1-title {
+  /* Typography Hierarchy */
+  .text-headline-1 {
     @apply text-3xl md:text-4xl font-bold tracking-tight text-foreground;
   }
   
-  .h2-title {
+  .text-headline-2 {
     @apply text-2xl font-bold tracking-tight text-foreground;
   }
   
-  .h3-title {
+  .text-headline-3 {
     @apply text-lg font-semibold text-foreground;
   }
 
-  .text-subtle {
+  .text-body {
+    @apply text-base text-muted-foreground leading-relaxed;
+  }
+
+  .text-caption {
     @apply text-sm text-muted-foreground;
   }
   
-  /* Custom Gradients that work in both modes */
-  .bg-gradient-primary {
-    @apply bg-gradient-to-r from-blue-600 to-indigo-600 dark:from-blue-500 dark:to-indigo-500;
+  /* Utilities */
+  .flex-center {
+    @apply flex items-center justify-center;
   }
   
-  .bg-gradient-subtle {
-    @apply bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800;
+  .hover-lift {
+    @apply transition-transform duration-300 hover:-translate-y-1;
+  }
+
+  /* Modern Gradients */
+  .bg-gradient-brand {
+    @apply bg-gradient-to-r from-blue-600 to-indigo-600 dark:from-blue-500 dark:to-indigo-500;
   }
 }

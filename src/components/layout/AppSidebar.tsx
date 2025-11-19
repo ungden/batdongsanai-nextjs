@@ -3,126 +3,152 @@
 import { NavLink, useLocation } from "react-router-dom";
 import {
   Home, TrendingUp, Calculator, Heart, Users, Newspaper,
-  Shield, FileText, Briefcase, Calendar, Sparkles, GitCompare, Store,
-  ChevronRight
+  Shield, Briefcase, Calendar, Sparkles, GitCompare, Store,
+  Settings, LogOut, User as UserIcon, ChevronRight
 } from "lucide-react";
 import {
   Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent,
   SidebarGroupLabel, SidebarMenu, SidebarMenuButton, SidebarMenuItem,
-  SidebarHeader, useSidebar,
+  SidebarHeader, SidebarFooter, useSidebar, SidebarRail
 } from "@/components/ui/sidebar";
 import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/hooks/useAuth";
 import { usePermissions } from "@/hooks/usePermissions";
-import { cn } from "@/lib/utils";
 import { useCompareStore } from "@/stores/compareStore";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { cn } from "@/lib/utils";
+import { useNavigate } from "react-router-dom";
 
-const mainItems = [
-  { title: "Trang chủ", url: "/", icon: Home },
-  { title: "Thị trường", url: "/market-overview", icon: TrendingUp },
-  { title: "Market Intelligence", url: "/market-intelligence", icon: Sparkles },
-  { title: "Chợ BĐS", url: "/marketplace", icon: Store },
-  { title: "So sánh", url: "/compare", icon: GitCompare, badge: "dynamic" },
-];
-
-const personalItems = [
-  { title: "Danh mục đầu tư", url: "/portfolio", icon: Briefcase },
-  { title: "Lịch hẹn", url: "/appointments", icon: Calendar },
-  { title: "Yêu thích", url: "/favorites", icon: Heart },
-];
-
-const resourceItems = [
-  { title: "Chủ đầu tư", url: "/developers", icon: Users },
-  { title: "Tin tức", url: "/news", icon: Newspaper },
-  { title: "Tính toán", url: "/calculator", icon: Calculator },
+// Grouped Navigation Items
+const navGroups = [
+  {
+    label: "Tổng quan",
+    items: [
+      { title: "Trang chủ", url: "/", icon: Home },
+      { title: "Thị trường", url: "/market-overview", icon: TrendingUp },
+      { title: "Market Intelligence", url: "/market-intelligence", icon: Sparkles },
+    ]
+  },
+  {
+    label: "Công cụ",
+    items: [
+      { title: "Chợ BĐS", url: "/marketplace", icon: Store },
+      { title: "So sánh dự án", url: "/compare", icon: GitCompare, badge: "compare" },
+      { title: "Tính toán vay", url: "/calculator", icon: Calculator },
+    ]
+  },
+  {
+    label: "Cá nhân",
+    items: [
+      { title: "Danh mục đầu tư", url: "/portfolio", icon: Briefcase },
+      { title: "Lịch hẹn", url: "/appointments", icon: Calendar },
+      { title: "Yêu thích", url: "/favorites", icon: Heart },
+    ]
+  },
+  {
+    label: "Thông tin",
+    items: [
+      { title: "Chủ đầu tư", url: "/developers", icon: Users },
+      { title: "Tin tức", url: "/news", icon: Newspaper },
+    ]
+  }
 ];
 
 export function AppSidebar() {
   const { state } = useSidebar();
   const location = useLocation();
-  const { user } = useAuth();
+  const navigate = useNavigate();
+  const { user, signOut } = useAuth();
   const { isAdmin } = usePermissions();
   const { compareList } = useCompareStore();
   const collapsed = state === "collapsed";
 
-  const isActive = (path: string) => location.pathname === path || (path !== "/" && location.pathname.startsWith(path));
+  const isActive = (path: string) => {
+    if (path === "/" && location.pathname !== "/") return false;
+    return location.pathname.startsWith(path);
+  };
 
-  const NavItem = ({ item }: { item: any }) => (
-    <SidebarMenuItem>
-      <SidebarMenuButton asChild tooltip={item.title} isActive={isActive(item.url)}>
-        <NavLink to={item.url} className={cn(
-          "flex items-center gap-3 px-3 py-2 rounded-md transition-colors text-sm font-medium",
-          isActive(item.url) 
-            ? "bg-primary text-white" 
-            : "text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-white"
-        )}>
-          <item.icon className="h-4 w-4" />
-          <span>{item.title}</span>
-          {item.badge === "dynamic" && compareList.length > 0 && (
-            <Badge variant="secondary" className="ml-auto h-5 px-1.5 min-w-5 flex justify-center bg-primary-foreground text-primary">
-              {compareList.length}
-            </Badge>
-          )}
-        </NavLink>
-      </SidebarMenuButton>
-    </SidebarMenuItem>
-  );
+  const handleSignOut = async () => {
+    await signOut();
+    navigate("/auth");
+  };
 
   return (
-    <Sidebar collapsible="icon" className="border-r border-sidebar-border bg-sidebar">
-      <SidebarHeader className="h-16 flex items-center px-4 border-b border-sidebar-border">
-        <div className="flex items-center gap-2 font-bold text-xl text-white">
-          <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
-            <span className="text-white">P</span>
+    <Sidebar collapsible="icon" className="border-r border-border bg-sidebar">
+      {/* Header Logo */}
+      <SidebarHeader className="h-16 border-b border-sidebar-border/50 flex items-center justify-center px-4">
+        <div className="flex items-center gap-3 w-full overflow-hidden transition-all duration-300">
+          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary text-primary-foreground shadow-sm">
+            <Sparkles className="h-4 w-4" />
           </div>
-          {!collapsed && <span>PropertyHub</span>}
+          {!collapsed && (
+            <div className="flex flex-col gap-0.5 leading-none">
+              <span className="font-bold text-sidebar-foreground">PropertyHub</span>
+              <span className="text-[10px] text-sidebar-foreground/60">AI Real Estate</span>
+            </div>
+          )}
         </div>
       </SidebarHeader>
 
-      <SidebarContent className="p-2">
-        <SidebarGroup>
-          <SidebarGroupLabel className="text-sidebar-foreground/50 text-xs font-medium uppercase tracking-wider px-2 mb-2">
-            Khám phá
-          </SidebarGroupLabel>
-          <SidebarGroupContent>
-            <SidebarMenu>
-              {mainItems.map((item) => <NavItem key={item.url} item={item} />)}
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
+      {/* Main Navigation */}
+      <SidebarContent className="px-2 py-4">
+        {navGroups.map((group, index) => (
+          <SidebarGroup key={index} className="mb-4">
+            {!collapsed && (
+              <SidebarGroupLabel className="text-xs font-semibold uppercase tracking-wider text-sidebar-foreground/50 px-2 mb-2">
+                {group.label}
+              </SidebarGroupLabel>
+            )}
+            <SidebarGroupContent>
+              <SidebarMenu>
+                {group.items.map((item) => {
+                  const active = isActive(item.url);
+                  return (
+                    <SidebarMenuItem key={item.url}>
+                      <SidebarMenuButton
+                        asChild
+                        tooltip={item.title}
+                        isActive={active}
+                        className={cn(
+                          "h-10 rounded-lg transition-all duration-200 group",
+                          active 
+                            ? "bg-sidebar-accent text-sidebar-accent-foreground font-medium shadow-sm" 
+                            : "text-sidebar-foreground/70 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground"
+                        )}
+                      >
+                        <NavLink to={item.url} className="flex items-center gap-3 w-full">
+                          <item.icon className={cn("h-4 w-4", active ? "text-primary" : "opacity-70 group-hover:opacity-100")} />
+                          <span className="flex-1 truncate">{item.title}</span>
+                          
+                          {/* Badges */}
+                          {item.badge === "compare" && compareList.length > 0 && (
+                            <Badge variant="secondary" className="ml-auto h-5 min-w-5 px-1 flex items-center justify-center bg-primary/10 text-primary text-[10px]">
+                              {compareList.length}
+                            </Badge>
+                          )}
+                        </NavLink>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                  );
+                })}
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
+        ))}
 
-        <SidebarGroup>
-          <SidebarGroupLabel className="text-sidebar-foreground/50 text-xs font-medium uppercase tracking-wider px-2 mb-2 mt-4">
-            Cá nhân
-          </SidebarGroupLabel>
-          <SidebarGroupContent>
-            <SidebarMenu>
-              {personalItems.map((item) => <NavItem key={item.url} item={item} />)}
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
-
-        <SidebarGroup>
-          <SidebarGroupLabel className="text-sidebar-foreground/50 text-xs font-medium uppercase tracking-wider px-2 mb-2 mt-4">
-            Công cụ & Tin tức
-          </SidebarGroupLabel>
-          <SidebarGroupContent>
-            <SidebarMenu>
-              {resourceItems.map((item) => <NavItem key={item.url} item={item} />)}
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
-
+        {/* Admin Section */}
         {user && isAdmin && (
-          <SidebarGroup>
-            <SidebarGroupLabel className="text-red-400/80 text-xs font-medium uppercase tracking-wider px-2 mb-2 mt-4">
-              Admin
-            </SidebarGroupLabel>
+          <SidebarGroup className="mt-auto border-t border-sidebar-border/50 pt-4">
+            {!collapsed && (
+              <SidebarGroupLabel className="text-xs font-semibold uppercase tracking-wider text-destructive/70 px-2 mb-2">
+                Administrator
+              </SidebarGroupLabel>
+            )}
             <SidebarGroupContent>
               <SidebarMenu>
                 <SidebarMenuItem>
                   <SidebarMenuButton asChild isActive={isActive("/admin")}>
-                    <NavLink to="/admin" className="flex items-center gap-3 px-3 py-2 rounded-md text-red-100 hover:bg-red-900/20 transition-colors text-sm font-medium">
+                    <NavLink to="/admin" className="h-10 rounded-lg text-destructive/90 hover:bg-destructive/10 hover:text-destructive transition-colors">
                       <Shield className="h-4 w-4" />
                       <span>Quản trị hệ thống</span>
                     </NavLink>
@@ -133,6 +159,43 @@ export function AppSidebar() {
           </SidebarGroup>
         )}
       </SidebarContent>
+
+      {/* User Footer */}
+      <SidebarFooter className="border-t border-sidebar-border/50 p-4">
+        {user ? (
+          <div className={cn("flex items-center gap-3", collapsed ? "justify-center" : "")}>
+            <Avatar className="h-9 w-9 rounded-lg border border-sidebar-border">
+              <AvatarImage src={user.user_metadata?.avatar_url} />
+              <AvatarFallback className="rounded-lg bg-sidebar-accent text-sidebar-foreground font-medium">
+                {user.email?.charAt(0).toUpperCase()}
+              </AvatarFallback>
+            </Avatar>
+            {!collapsed && (
+              <div className="flex flex-1 flex-col overflow-hidden">
+                <span className="truncate text-sm font-medium text-sidebar-foreground">
+                  {user.user_metadata?.full_name || "User"}
+                </span>
+                <span className="truncate text-xs text-sidebar-foreground/60">
+                  {user.email}
+                </span>
+              </div>
+            )}
+            {!collapsed && (
+              <button onClick={handleSignOut} className="text-sidebar-foreground/50 hover:text-sidebar-foreground transition-colors">
+                <LogOut className="h-4 w-4" />
+              </button>
+            )}
+          </div>
+        ) : (
+          <SidebarMenuButton asChild className="w-full justify-center bg-primary text-primary-foreground hover:bg-primary/90 shadow-sm">
+            <NavLink to="/auth">
+              <UserIcon className="h-4 w-4 mr-2" />
+              {!collapsed && "Đăng nhập"}
+            </NavLink>
+          </SidebarMenuButton>
+        )}
+      </SidebarFooter>
+      <SidebarRail />
     </Sidebar>
   );
 }

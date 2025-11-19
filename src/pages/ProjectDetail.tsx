@@ -37,7 +37,7 @@ import ProjectTimeline from "@/components/project/ProjectTimeline";
 import RiskAnalysis from "@/components/project/RiskAnalysis";
 import LocationAnalysis from "@/components/project/LocationAnalysis";
 import ProjectReviews from "@/components/project/ProjectReviews";
-import { ProjectAgents } from "@/components/project/ProjectAgents";
+import { ProjectInterestCard } from "@/components/project/ProjectInterestCard"; // Changed import
 import BottomNavigation from "@/components/layout/BottomNavigation";
 import { ProjectHero } from "@/components/project/detail/ProjectHero";
 import { formatCurrency } from "@/utils/formatCurrency";
@@ -300,8 +300,8 @@ const ProjectDetail = () => {
             {/* Right Column - Sidebar */}
             <div className="lg:col-span-1">
               <div className="sticky top-24 space-y-6">
-                {/* Agents Section */}
-                <ProjectAgents projectId={project.id} projectName={project.name} />
+                {/* NEW: Project Interest Card (Replaces Agents) */}
+                <ProjectInterestCard projectId={project.id} projectName={project.name} />
 
                 {/* Key Metrics */}
                 <Card className="card-elevated border-border/60">

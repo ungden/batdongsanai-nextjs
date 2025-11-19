@@ -36,11 +36,11 @@ const ProjectAnalysisHub = lazy(() => import("./pages/ProjectAnalysisHub"));
 // Admin Pages
 const AdminLayout = lazy(() => import('@/pages/admin/AdminLayout'));
 const AdminDashboard = lazy(() => import('@/pages/admin/Dashboard'));
-const ApprovalCenter = lazy(() => import('@/pages/admin/ApprovalCenter')); // New
+const ApprovalCenter = lazy(() => import('@/pages/admin/ApprovalCenter'));
 const ResearchFactory = lazy(() => import('@/pages/admin/ResearchFactory'));
 const MarketResearchFactory = lazy(() => import('@/pages/admin/MarketResearchFactory'));
 const CatalystFactory = lazy(() => import('@/pages/admin/CatalystFactory'));
-const ContentStudio = lazy(() => import('@/pages/admin/ContentStudio')); 
+const ContentStudio = lazy(() => import('@/pages/admin/ContentStudio'));
 const DataManagement = lazy(() => import('@/pages/admin/DataManagement'));
 const AnalyticsDashboard = lazy(() => import('@/pages/admin/AnalyticsDashboard'));
 const LeadManagement = lazy(() => import('@/pages/admin/LeadManagement'));
@@ -50,6 +50,10 @@ const AdminDevelopers = lazy(() => import('@/pages/admin/AdminDevelopers'));
 const AdminSettings = lazy(() => import('@/pages/admin/AdminSettings'));
 const AdminLogsPage = lazy(() => import('@/pages/admin/AdminLogs'));
 const AdminNews = lazy(() => import('@/pages/admin/AdminNews'));
+
+// New Workflow Pages
+const ProjectEnrichment = lazy(() => import('@/pages/admin/ProjectEnrichment'));
+const ProjectWorkspace = lazy(() => import('@/pages/admin/ProjectWorkspace'));
 
 // New Feature Pages
 const Portfolio = lazy(() => import('./pages/Portfolio'));
@@ -115,8 +119,13 @@ const App = () => (
               <Route path="/admin" element={<AdminLayout />}>
                 <Route index element={<Navigate to="/admin/dashboard" replace />} />
                 <Route path="dashboard" element={<AdminDashboard />} />
-                <Route path="approvals" element={<ApprovalCenter />} /> {/* New Route */}
+                <Route path="approvals" element={<ApprovalCenter />} />
                 <Route path="leads" element={<LeadManagement />} />
+                
+                {/* Workflow Routes */}
+                <Route path="enrichment" element={<ProjectEnrichment />} />
+                <Route path="enrichment/:id" element={<ProjectWorkspace />} />
+                
                 <Route path="data-management" element={<DataManagement />} />
                 <Route path="analytics" element={<AnalyticsDashboard />} />
                 

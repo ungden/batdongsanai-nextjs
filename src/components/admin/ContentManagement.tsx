@@ -51,6 +51,7 @@ const ContentManagement = ({ className }: ContentManagementProps) => {
   const [isAiGenerating, setIsAiGenerating] = useState(false);
   const [aiPrompt, setAiPrompt] = useState('');
   const [showAiTool, setShowAiTool] = useState(false);
+  const [aiTone, setAiTone] = useState('chuyên nghiệp');
 
   const [newItem, setNewItem] = useState({
     type: 'page' as 'page' | 'banner' | 'announcement' | 'seo',
@@ -77,7 +78,7 @@ const ContentManagement = ({ className }: ContentManagementProps) => {
         body: { 
           topic: prompt,
           type: itemType,
-          tone: 'chuyên nghiệp',
+          tone: aiTone,
           language: 'vi-VN'
         }
       });
@@ -412,12 +413,26 @@ const ContentManagement = ({ className }: ContentManagementProps) => {
               </div>
               
               {showAiTool && (
-                <div className="space-y-2 animate-in slide-in-from-top-2">
-                  <Input 
-                    placeholder="Nhập chủ đề, từ khóa hoặc yêu cầu (VD: Trang giới thiệu công ty...)" 
-                    value={aiPrompt}
-                    onChange={(e) => setAiPrompt(e.target.value)}
-                  />
+                <div className="space-y-3 animate-in slide-in-from-top-2 mt-3">
+                  <div className="grid grid-cols-3 gap-2">
+                    <div className="col-span-2">
+                      <Input 
+                        placeholder="Nhập chủ đề (VD: Trang giới thiệu công ty...)" 
+                        value={aiPrompt}
+                        onChange={(e) => setAiPrompt(e.target.value)}
+                      />
+                    </div>
+                    <select 
+                      className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                      value={aiTone}
+                      onChange={(e) => setAiTone(e.target.value)}
+                    >
+                      <option value="chuyên nghiệp">Chuyên nghiệp</option>
+                      <option value="thân thiện">Thân thiện</option>
+                      <option value="hào hứng">Hào hứng (Sale)</option>
+                      <option value="trang trọng">Trang trọng</option>
+                    </select>
+                  </div>
                   <Button 
                     size="sm" 
                     onClick={() => handleAiGenerate('new')} 

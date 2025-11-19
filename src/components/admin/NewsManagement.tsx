@@ -8,10 +8,11 @@ import { Badge } from '@/components/ui/badge';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from 'sonner';
-import { Plus, Edit, Trash2, Eye, Search, Calendar, User, Sparkles, Loader2, Wand2 } from 'lucide-react';
+import { Plus, Edit, Trash2, Eye, Search, Calendar, User, Sparkles, Loader2, Wand2, RefreshCw } from 'lucide-react';
 import { format } from 'date-fns';
 import { vi } from 'date-fns/locale';
 import { supabase } from '@/integrations/supabase/client';
+import { projectsData } from '@/data/projectsData'; // Import project data for context
 
 const NewsManagement = () => {
   const { contentItems, loading, createContentItem, updateContentItem, deleteContentItem } = useContent();
@@ -24,6 +25,18 @@ const NewsManagement = () => {
   const [isGenerating, setIsGenerating] = useState(false);
   const [aiPrompt, setAiPrompt] = useState('');
   const [showAiInput, setShowAiInput] = useState(false);
+  
+  // New AI Options
+  const [selectedProject, setSelectedProject] = useState<string>('none');
+  const [selectedTone, setSelectedTone] = useState<string>('chuyên nghiệp, khách quan');
+
+  const tones = [
+    { value: 'chuyên nghiệp, khách quan', label: 'Chuyên nghiệp' },
+    { value: 'hào hứng, bán hàng', label: 'Quảng cáo/Bán hàng' },
+    { value: 'phân tích sâu sắc', label: 'Phân tích chuyên sâu' },
+    { value: 'thân thiện, dễ hiểu', label: 'Blog/Chia sẻ' },
+    { value: 'cảnh báo, thận trọng', label: 'Cảnh báo rủi ro' }
+  ];
 
   const [formData, setFormData] = useState({
     title: '',
@@ -51,6 +64,70 @@ const NewsManagement = () => {
     setEditingItem(null);
     setShowAiInput(false);
     setAiPrompt('');
+    setSelectedProject('none');
+    setSelectedTone('chuyên nghiệp, khách quan');
+  };
+
+  const handleAiGenerate = async (mode: 'generate' | 'optimize' = 'generate') => {
+    if (mode === 'generate' && !aiPrompt.trim() && selectedProject === 'none') {
+      toast.error('Vui lòng nhập chủ đề hoặc chọn dự án');
+      return;
+    }
+    
+    if (mode === 'optimize' && !formData.content) {
+      toast.error('Cần có nội dung để tối ưu hóa');
+      return;
+    }
+
+    setIsGenerating(true);
+    try {
+      // Prepare context from project if selected
+      let contextData = '';
+      if (selectedProject !== 'none') {
+        const proj = projectsData.find(p => p.id === selectedProject);
+        if (proj) {
+          contextData = `DỰ ÁN: ${proj.name}, Vị trí: ${proj.location}, Chủ đầu tư: ${proj.developer}, Giá: ${proj.priceRange}, Tiện ích: ${proj.amenities?.join(', ')}`;
+        }
+      }
+
+      const { data, error } = await supabase.functions.invoke('generate-content', {
+        body: { 
+          action: mode,
+          topic: aiPrompt,
+          content: mode === 'optimize' ? formData.content : undefined,
+          context: contextData,
+          type: 'news',
+          tone: selectedTone,
+          language: 'vi-VN'
+        }
+      });
+
+      if (error) throw error;
+
+      const result = data.data;
+      
+      setFormData(prev => ({
+        ...prev,
+        title: result.title || prev.title,
+        content: result.content || prev.content,
+        meta_title: result.meta_title || result.title || prev.meta_title,
+        meta_description: result.meta_description || result.summary || prev.meta_description,
+        keywords: Array.isArray(result.keywords) ? result.keywords.join(', ') : (result.keywords || prev.keywords),
+      }));
+
+      if (result.improvements) {
+        toast.success(`Đã tối ưu! Cải thiện: ${result.improvements.length} điểm.`);
+      } else {
+        toast.success('Đã tạo nội dung thành công!');
+      }
+      
+      if (mode === 'generate') setShowAiInput(false);
+    } catch (error: any) {
+      console.error(error);
+      toast.error('Lỗi AI: ' + error.message);
+    } finally {
+      setIsGenerating(false);
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -78,46 +155,6 @@ const NewsManagement = () => {
       resetForm();
     } catch (error) {
       toast.error('Có lỗi xảy ra. Vui lòng thử lại.');
-    }
-  };
-
-  const handleAiGenerate = async () => {
-    if (!aiPrompt.trim()) {
-      toast.error('Vui lòng nhập chủ đề hoặc từ khóa');
-      return;
-    }
-
-    setIsGenerating(true);
-    try {
-      const { data, error } = await supabase.functions.invoke('generate-content', {
-        body: { 
-          topic: aiPrompt,
-          type: 'news',
-          tone: 'chuyên nghiệp, khách quan',
-          language: 'vi-VN'
-        }
-      });
-
-      if (error) throw error;
-
-      const result = data.data;
-      
-      setFormData(prev => ({
-        ...prev,
-        title: result.title || prev.title,
-        content: result.content || prev.content,
-        meta_title: result.meta_title || result.title || prev.meta_title,
-        meta_description: result.summary || result.meta_description || prev.meta_description,
-        keywords: Array.isArray(result.keywords) ? result.keywords.join(', ') : (result.keywords || prev.keywords),
-      }));
-
-      toast.success('Đã tạo nội dung thành công!');
-      setShowAiInput(false);
-    } catch (error: any) {
-      console.error(error);
-      toast.error('Lỗi tạo nội dung: ' + error.message);
-    } finally {
-      setIsGenerating(false);
     }
   };
 
@@ -224,31 +261,84 @@ const NewsManagement = () => {
           </CardHeader>
           <CardContent>
             {showAiInput && (
-              <div className="mb-6 p-4 bg-muted/50 rounded-lg border border-dashed border-primary/50 space-y-3">
-                <h4 className="font-semibold flex items-center text-primary">
-                  <Wand2 className="w-4 h-4 mr-2" />
-                  AI Generator
-                </h4>
-                <div className="flex gap-2">
-                  <Input 
-                    placeholder="Nhập chủ đề, từ khóa hoặc link nguồn tin tức..." 
-                    value={aiPrompt}
-                    onChange={(e) => setAiPrompt(e.target.value)}
-                    onKeyDown={(e) => e.key === 'Enter' && handleAiGenerate()}
-                    disabled={isGenerating}
-                  />
-                  <Button onClick={handleAiGenerate} disabled={isGenerating || !aiPrompt}>
-                    {isGenerating ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
-                    {isGenerating ? 'Đang viết...' : 'Tạo bài'}
+              <div className="mb-6 p-4 bg-muted/50 rounded-lg border border-dashed border-primary/50 space-y-4">
+                <div className="flex items-center justify-between">
+                  <h4 className="font-semibold flex items-center text-primary">
+                    <Wand2 className="w-4 h-4 mr-2" />
+                    AI Content Generator
+                  </h4>
+                  <Button variant="ghost" size="sm" onClick={() => setShowAiInput(false)} className="h-6 w-6 p-0">
+                    &times;
                   </Button>
                 </div>
-                <p className="text-xs text-muted-foreground">
-                  AI sẽ tự động tìm kiếm thông tin liên quan đến chủ đề, viết bài, tối ưu SEO và điền vào form bên dưới.
-                </p>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <label className="text-xs font-medium">Dự án liên quan (Ngữ cảnh)</label>
+                    <Select value={selectedProject} onValueChange={setSelectedProject}>
+                      <SelectTrigger className="bg-background">
+                        <SelectValue placeholder="Chọn dự án để viết bài..." />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="none">-- Không chọn dự án --</SelectItem>
+                        {projectsData.map(p => (
+                          <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <label className="text-xs font-medium">Giọng văn (Tone)</label>
+                    <Select value={selectedTone} onValueChange={setSelectedTone}>
+                      <SelectTrigger className="bg-background">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {tones.map(t => (
+                          <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-xs font-medium">Chủ đề / Từ khóa chính</label>
+                  <div className="flex gap-2">
+                    <Input 
+                      placeholder="VD: Xu hướng đầu tư Quận 9, Phân tích pháp lý..." 
+                      value={aiPrompt}
+                      onChange={(e) => setAiPrompt(e.target.value)}
+                      className="bg-background"
+                    />
+                    <Button onClick={() => handleAiGenerate('generate')} disabled={isGenerating}>
+                      {isGenerating ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
+                      Viết bài
+                    </Button>
+                  </div>
+                </div>
               </div>
             )}
 
             <form onSubmit={handleSubmit} className="space-y-4">
+              {/* AI Toolbar for Content */}
+              <div className="flex justify-end gap-2 mb-[-10px] relative z-10">
+                {formData.content && (
+                  <Button 
+                    type="button" 
+                    variant="secondary" 
+                    size="sm" 
+                    className="h-7 text-xs bg-emerald-100 text-emerald-700 hover:bg-emerald-200 border border-emerald-200"
+                    onClick={() => handleAiGenerate('optimize')}
+                    disabled={isGenerating}
+                  >
+                    {isGenerating ? <Loader2 className="w-3 h-3 animate-spin mr-1" /> : <RefreshCw className="w-3 h-3 mr-1" />}
+                    AI Tối ưu SEO & Văn phong
+                  </Button>
+                )}
+              </div>
+
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="title">Tiêu đề tin tức *</Label>

@@ -102,22 +102,14 @@ const ROICalculator = ({
     { name: 'Tiết kiệm', value: savingsReturn / 1000000000, color: '#64748b' }
   ];
 
-  const formatCurrency = (value: number) => {
-    return new Intl.NumberFormat('vi-VN', {
-      style: 'currency',
-      currency: 'VND',
-      maximumFractionDigits: 0
-    }).format(value);
-  };
-
   const formatBillion = (value: number) => {
     return `${(value / 1000000000).toFixed(2)} tỷ`;
   };
 
   return (
-    <Card className="rounded-2xl shadow-lg border-0 bg-white">
-      <CardHeader className="bg-gradient-to-r from-slate-50 to-blue-50/30 rounded-t-2xl border-b">
-        <CardTitle className="flex items-center gap-2">
+    <Card className="bg-card border-border shadow-sm">
+      <CardHeader className="bg-gradient-to-r from-slate-50 to-blue-50/30 dark:from-slate-900/50 dark:to-blue-900/20 border-b border-border/50 pb-4">
+        <CardTitle className="flex items-center gap-2 text-foreground">
           <Calculator className="w-5 h-5 text-primary" />
           Tính toán ROI & Phân tích đầu tư
         </CardTitle>
@@ -125,18 +117,18 @@ const ROICalculator = ({
       <CardContent className="p-6 space-y-6">
         {/* Scenario Selection */}
         <div className="space-y-2">
-          <Label className="text-sm font-semibold">Kịch bản đầu tư</Label>
+          <Label className="text-sm font-semibold text-foreground">Kịch bản đầu tư</Label>
           <Tabs value={scenario} onValueChange={(v) => setScenario(v as any)} className="w-full">
-            <TabsList className="grid w-full grid-cols-3 p-1 bg-slate-100 rounded-xl">
-              <TabsTrigger value="buy-to-live" className="rounded-lg">
+            <TabsList className="grid w-full grid-cols-3 p-1 bg-muted rounded-xl">
+              <TabsTrigger value="buy-to-live" className="rounded-lg data-[state=active]:bg-background data-[state=active]:text-foreground">
                 <Home className="w-4 h-4 mr-2" />
                 Mua để ở
               </TabsTrigger>
-              <TabsTrigger value="buy-to-rent" className="rounded-lg">
+              <TabsTrigger value="buy-to-rent" className="rounded-lg data-[state=active]:bg-background data-[state=active]:text-foreground">
                 <DollarSign className="w-4 h-4 mr-2" />
                 Mua cho thuê
               </TabsTrigger>
-              <TabsTrigger value="buy-to-flip" className="rounded-lg">
+              <TabsTrigger value="buy-to-flip" className="rounded-lg data-[state=active]:bg-background data-[state=active]:text-foreground">
                 <TrendingUp className="w-4 h-4 mr-2" />
                 Đầu tư ngắn hạn
               </TabsTrigger>
@@ -147,100 +139,100 @@ const ROICalculator = ({
         {/* Input Parameters */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="space-y-2">
-            <Label htmlFor="area" className="text-sm font-medium">Diện tích (m²)</Label>
+            <Label htmlFor="area" className="text-sm font-medium text-foreground">Diện tích (m²)</Label>
             <Input
               id="area"
               type="number"
               value={area}
               onChange={(e) => setArea(Number(e.target.value))}
-              className="h-11 rounded-xl"
+              className="h-11 rounded-xl bg-background border-input"
             />
           </div>
           
           <div className="space-y-2">
-            <Label htmlFor="downPayment" className="text-sm font-medium">Trả trước (%)</Label>
+            <Label htmlFor="downPayment" className="text-sm font-medium text-foreground">Trả trước (%)</Label>
             <Input
               id="downPayment"
               type="number"
               value={downPayment}
               onChange={(e) => setDownPayment(Number(e.target.value))}
-              className="h-11 rounded-xl"
+              className="h-11 rounded-xl bg-background border-input"
             />
           </div>
           
           <div className="space-y-2">
-            <Label htmlFor="loanTerm" className="text-sm font-medium">Thời hạn vay (năm)</Label>
+            <Label htmlFor="loanTerm" className="text-sm font-medium text-foreground">Thời hạn vay (năm)</Label>
             <Input
               id="loanTerm"
               type="number"
               value={loanTerm}
               onChange={(e) => setLoanTerm(Number(e.target.value))}
-              className="h-11 rounded-xl"
+              className="h-11 rounded-xl bg-background border-input"
             />
           </div>
           
           <div className="space-y-2">
-            <Label htmlFor="interestRate" className="text-sm font-medium">Lãi suất (%/năm)</Label>
+            <Label htmlFor="interestRate" className="text-sm font-medium text-foreground">Lãi suất (%/năm)</Label>
             <Input
               id="interestRate"
               type="number"
               step="0.1"
               value={interestRate}
               onChange={(e) => setInterestRate(Number(e.target.value))}
-              className="h-11 rounded-xl"
+              className="h-11 rounded-xl bg-background border-input"
             />
           </div>
           
           <div className="space-y-2">
-            <Label htmlFor="investmentPeriod" className="text-sm font-medium">Thời gian nắm giữ (năm)</Label>
+            <Label htmlFor="investmentPeriod" className="text-sm font-medium text-foreground">Thời gian nắm giữ (năm)</Label>
             <Input
               id="investmentPeriod"
               type="number"
               value={investmentPeriod}
               onChange={(e) => setInvestmentPeriod(Number(e.target.value))}
-              className="h-11 rounded-xl"
+              className="h-11 rounded-xl bg-background border-input"
             />
           </div>
           
           <div className="space-y-2">
-            <Label htmlFor="priceGrowth" className="text-sm font-medium">Tăng giá dự kiến (%/năm)</Label>
+            <Label htmlFor="priceGrowth" className="text-sm font-medium text-foreground">Tăng giá dự kiến (%/năm)</Label>
             <Input
               id="priceGrowth"
               type="number"
               step="0.1"
               value={priceGrowth}
               onChange={(e) => setPriceGrowth(Number(e.target.value))}
-              className="h-11 rounded-xl"
+              className="h-11 rounded-xl bg-background border-input"
             />
           </div>
         </div>
 
         {/* Key Results */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <div className="p-4 bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl">
-            <div className="text-xs text-slate-600 mb-1 font-medium">Tổng giá trị</div>
-            <div className="text-lg font-bold text-slate-900">
+          <div className="p-4 bg-blue-50/50 dark:bg-blue-950/30 border border-blue-100 dark:border-blue-900/50 rounded-xl">
+            <div className="text-xs text-muted-foreground mb-1 font-medium">Tổng giá trị</div>
+            <div className="text-lg font-bold text-foreground">
               {formatBillion(totalPrice)}
             </div>
           </div>
           
-          <div className="p-4 bg-gradient-to-br from-emerald-50 to-teal-50 rounded-xl">
-            <div className="text-xs text-slate-600 mb-1 font-medium">Vốn ban đầu</div>
-            <div className="text-lg font-bold text-emerald-600">
+          <div className="p-4 bg-emerald-50/50 dark:bg-emerald-950/30 border border-emerald-100 dark:border-emerald-900/50 rounded-xl">
+            <div className="text-xs text-muted-foreground mb-1 font-medium">Vốn ban đầu</div>
+            <div className="text-lg font-bold text-emerald-600 dark:text-emerald-400">
               {formatBillion(downPaymentAmount)}
             </div>
           </div>
           
-          <div className="p-4 bg-gradient-to-br from-amber-50 to-orange-50 rounded-xl">
-            <div className="text-xs text-slate-600 mb-1 font-medium">ROI</div>
-            <div className="text-lg font-bold text-amber-600">
+          <div className="p-4 bg-amber-50/50 dark:bg-amber-950/30 border border-amber-100 dark:border-amber-900/50 rounded-xl">
+            <div className="text-xs text-muted-foreground mb-1 font-medium">ROI</div>
+            <div className="text-lg font-bold text-amber-600 dark:text-amber-500">
               {roi.toFixed(1)}%
             </div>
           </div>
           
-          <div className="p-4 bg-gradient-to-br from-purple-50 to-pink-50 rounded-xl">
-            <div className="text-xs text-slate-600 mb-1 font-medium">ROI/năm</div>
-            <div className="text-lg font-bold text-purple-600">
+          <div className="p-4 bg-purple-50/50 dark:bg-purple-950/30 border border-purple-100 dark:border-purple-900/50 rounded-xl">
+            <div className="text-xs text-muted-foreground mb-1 font-medium">ROI/năm</div>
+            <div className="text-lg font-bold text-purple-600 dark:text-purple-400">
               {annualizedROI.toFixed(1)}%
             </div>
           </div>
@@ -248,52 +240,56 @@ const ROICalculator = ({
 
         {/* Detailed Breakdown */}
         <div className="space-y-3">
-          <h3 className="font-semibold text-slate-900">Chi tiết tài chính</h3>
+          <h3 className="font-semibold text-foreground">Chi tiết tài chính</h3>
           
           <div className="space-y-2">
-            <div className="flex justify-between p-3 bg-slate-50 rounded-xl">
-              <span className="text-sm text-slate-700">Trả góp hàng tháng</span>
-              <span className="font-bold text-slate-900">{formatCurrency(monthlyPayment)}</span>
+            <div className="flex justify-between p-3 bg-muted/30 rounded-xl">
+              <span className="text-sm text-muted-foreground">Trả góp hàng tháng</span>
+              <span className="font-bold text-foreground">
+                 {new Intl.NumberFormat('vi-VN').format(Math.round(monthlyPayment))}
+              </span>
             </div>
             
             {scenario === "buy-to-rent" && (
-              <div className="flex justify-between p-3 bg-emerald-50 rounded-xl">
-                <span className="text-sm text-slate-700">Thu nhập thuê/tháng</span>
-                <span className="font-bold text-emerald-600">{formatCurrency(rentalIncome)}</span>
+              <div className="flex justify-between p-3 bg-emerald-50/50 dark:bg-emerald-950/20 rounded-xl">
+                <span className="text-sm text-muted-foreground">Thu nhập thuê/tháng</span>
+                <span className="font-bold text-emerald-600 dark:text-emerald-400">
+                   {new Intl.NumberFormat('vi-VN').format(Math.round(rentalIncome))}
+                </span>
               </div>
             )}
             
-            <div className="flex justify-between p-3 bg-blue-50 rounded-xl">
-              <span className="text-sm text-slate-700">Giá trị sau {investmentPeriod} năm</span>
-              <span className="font-bold text-blue-600">{formatBillion(futureValue)}</span>
+            <div className="flex justify-between p-3 bg-blue-50/50 dark:bg-blue-950/20 rounded-xl">
+              <span className="text-sm text-muted-foreground">Giá trị sau {investmentPeriod} năm</span>
+              <span className="font-bold text-blue-600 dark:text-blue-400">{formatBillion(futureValue)}</span>
             </div>
             
-            <div className="flex justify-between p-3 bg-purple-50 rounded-xl">
-              <span className="text-sm text-slate-700">Lợi nhuận vốn</span>
-              <span className="font-bold text-purple-600">{formatBillion(capitalGain)}</span>
+            <div className="flex justify-between p-3 bg-purple-50/50 dark:bg-purple-950/20 rounded-xl">
+              <span className="text-sm text-muted-foreground">Lợi nhuận vốn</span>
+              <span className="font-bold text-purple-600 dark:text-purple-400">{formatBillion(capitalGain)}</span>
             </div>
             
             {scenario === "buy-to-rent" && (
               <>
-                <div className="flex justify-between p-3 bg-amber-50 rounded-xl">
-                  <span className="text-sm text-slate-700">Tổng thu nhập thuê</span>
-                  <span className="font-bold text-amber-600">{formatBillion(totalRentalIncome)}</span>
+                <div className="flex justify-between p-3 bg-amber-50/50 dark:bg-amber-950/20 rounded-xl">
+                  <span className="text-sm text-muted-foreground">Tổng thu nhập thuê</span>
+                  <span className="font-bold text-amber-600 dark:text-amber-500">{formatBillion(totalRentalIncome)}</span>
                 </div>
                 
-                <div className="flex justify-between p-3 bg-slate-50 rounded-xl">
-                  <span className="text-sm text-slate-700">Tổng trả ngân hàng</span>
-                  <span className="font-bold text-slate-900">{formatBillion(totalLoanPayment)}</span>
+                <div className="flex justify-between p-3 bg-muted/30 rounded-xl">
+                  <span className="text-sm text-muted-foreground">Tổng trả ngân hàng</span>
+                  <span className="font-bold text-foreground">{formatBillion(totalLoanPayment)}</span>
                 </div>
                 
-                <div className="flex justify-between p-3 bg-emerald-50 rounded-xl border-2 border-emerald-200">
-                  <span className="text-sm font-semibold text-slate-700">Cash flow ròng</span>
-                  <span className="font-bold text-emerald-600">{formatBillion(netCashFlow)}</span>
+                <div className="flex justify-between p-3 bg-emerald-50/50 dark:bg-emerald-950/20 rounded-xl border border-emerald-200/50 dark:border-emerald-900/50">
+                  <span className="text-sm font-semibold text-foreground">Cash flow ròng</span>
+                  <span className="font-bold text-emerald-600 dark:text-emerald-400">{formatBillion(netCashFlow)}</span>
                 </div>
               </>
             )}
             
-            <div className="flex justify-between p-4 bg-gradient-to-br from-primary/10 to-accent/10 rounded-xl border-2 border-primary/30">
-              <span className="font-semibold text-slate-900">Tổng lợi nhuận</span>
+            <div className="flex justify-between p-4 bg-primary/5 rounded-xl border border-primary/20 mt-2">
+              <span className="font-semibold text-foreground">Tổng lợi nhuận</span>
               <span className="font-bold text-xl text-primary">{formatBillion(totalReturn)}</span>
             </div>
           </div>
@@ -302,7 +298,7 @@ const ROICalculator = ({
         {/* Cash Flow Chart */}
         {scenario === "buy-to-rent" && (
           <div className="space-y-3">
-            <h3 className="font-semibold text-slate-900">Dòng tiền theo năm</h3>
+            <h3 className="font-semibold text-foreground">Dòng tiền theo năm</h3>
             <div className="h-[300px]">
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={cashFlowData}>
@@ -311,12 +307,12 @@ const ROICalculator = ({
                   <YAxis stroke="#64748b" style={{ fontSize: '12px' }} />
                   <Tooltip 
                     formatter={(value: number) => `${value.toFixed(1)}M`}
-                    contentStyle={{ borderRadius: '12px', border: '2px solid #e2e8f0' }}
+                    contentStyle={{ borderRadius: '12px', border: '1px solid var(--border)', backgroundColor: 'var(--card)' }}
                   />
                   <Legend />
-                  <Bar dataKey="rental" fill="#10b981" name="Thu nhập thuê" radius={[8, 8, 0, 0]} />
-                  <Bar dataKey="loan" fill="#ef4444" name="Trả ngân hàng" radius={[8, 8, 0, 0]} />
-                  <Bar dataKey="net" fill="#2563eb" name="Cash flow ròng" radius={[8, 8, 0, 0]} />
+                  <Bar dataKey="rental" fill="#10b981" name="Thu nhập thuê" radius={[4, 4, 0, 0]} />
+                  <Bar dataKey="loan" fill="#ef4444" name="Trả ngân hàng" radius={[4, 4, 0, 0]} />
+                  <Bar dataKey="net" fill="#2563eb" name="Cash flow ròng" radius={[4, 4, 0, 0]} />
                 </BarChart>
               </ResponsiveContainer>
             </div>
@@ -325,18 +321,18 @@ const ROICalculator = ({
 
         {/* Investment Comparison */}
         <div className="space-y-3">
-          <h3 className="font-semibold text-slate-900">So sánh với kênh đầu tư khác</h3>
+          <h3 className="font-semibold text-foreground">So sánh với kênh đầu tư khác</h3>
           <div className="h-[250px]">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={comparisonData} layout="vertical">
                 <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
                 <XAxis type="number" stroke="#64748b" style={{ fontSize: '12px' }} />
-                <YAxis dataKey="name" type="category" stroke="#64748b" style={{ fontSize: '12px' }} />
+                <YAxis dataKey="name" type="category" stroke="#64748b" style={{ fontSize: '12px' }} width={80} />
                 <Tooltip 
                   formatter={(value: number) => `${value.toFixed(2)} tỷ`}
-                  contentStyle={{ borderRadius: '12px', border: '2px solid #e2e8f0' }}
+                  contentStyle={{ borderRadius: '12px', border: '1px solid var(--border)', backgroundColor: 'var(--card)' }}
                 />
-                <Bar dataKey="value" radius={[0, 8, 8, 0]}>
+                <Bar dataKey="value" radius={[0, 4, 4, 0]}>
                   {comparisonData.map((entry, index) => (
                     <Bar key={`cell-${index}`} dataKey="value" fill={entry.color} />
                   ))}
@@ -345,12 +341,12 @@ const ROICalculator = ({
             </ResponsiveContainer>
           </div>
           
-          <div className="p-4 bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl border border-blue-200">
+          <div className="p-4 bg-blue-50/50 dark:bg-blue-950/20 rounded-xl border border-blue-200/50 dark:border-blue-900/50">
             <div className="flex items-start gap-3">
-              <AlertCircle className="w-5 h-5 text-blue-600 mt-0.5 flex-shrink-0" />
+              <AlertCircle className="w-5 h-5 text-blue-600 dark:text-blue-400 mt-0.5 flex-shrink-0" />
               <div>
-                <div className="font-semibold text-blue-900 mb-1">Lưu ý quan trọng</div>
-                <p className="text-sm text-blue-700 leading-relaxed">
+                <div className="font-semibold text-blue-900 dark:text-blue-300 mb-1">Lưu ý quan trọng</div>
+                <p className="text-sm text-blue-700 dark:text-blue-400 leading-relaxed">
                   Các con số trên chỉ mang tính chất tham khảo. ROI thực tế phụ thuộc vào nhiều yếu tố như: 
                   vị trí, thời điểm mua/bán, chi phí phát sinh, thuế, và biến động thị trường. 
                   Nên tham khảo ý kiến chuyên gia trước khi đầu tư.

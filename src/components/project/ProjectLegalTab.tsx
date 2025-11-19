@@ -1,4 +1,4 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { CheckCircle, Clock, AlertTriangle, TrendingUp, Calendar } from "lucide-react";
 import { Project } from "@/types/project";
@@ -78,11 +78,11 @@ const ProjectLegalTab = ({ project }: ProjectLegalTabProps) => {
   const getRiskBadge = (riskLevel: string) => {
     switch (riskLevel) {
       case "low":
-        return <Badge variant="secondary" className="bg-success/10 text-success">Thấp</Badge>;
+        return <Badge variant="secondary" className="bg-success/10 text-success hover:bg-success/20 border-success/20">Thấp</Badge>;
       case "medium":
-        return <Badge variant="secondary" className="bg-warning/10 text-warning">Trung bình</Badge>;
+        return <Badge variant="secondary" className="bg-warning/10 text-warning hover:bg-warning/20 border-warning/20">Trung bình</Badge>;
       case "high":
-        return <Badge variant="secondary" className="bg-destructive/10 text-destructive">Cao</Badge>;
+        return <Badge variant="secondary" className="bg-destructive/10 text-destructive hover:bg-destructive/20 border-destructive/20">Cao</Badge>;
       default:
         return <Badge variant="secondary">Chưa xác định</Badge>;
     }
@@ -95,21 +95,33 @@ const ProjectLegalTab = ({ project }: ProjectLegalTabProps) => {
   };
 
   const overallScore = Math.round((riskStats.low * 100 + riskStats.medium * 50) / legalCriteria.length);
-  const scoreColor = overallScore >= 80 ? "text-success" : overallScore >= 60 ? "text-warning" : "text-destructive";
-  const scoreBg = overallScore >= 80 ? "bg-success/10" : overallScore >= 60 ? "bg-warning/10" : "bg-destructive/10";
+  
+  // Dynamic classes based on score
+  const scoreColorClass = overallScore >= 80 ? "text-success" : overallScore >= 60 ? "text-warning" : "text-destructive";
+  const scoreBorderClass = overallScore >= 80 ? "border-success" : overallScore >= 60 ? "border-warning" : "border-destructive";
+  
+  // Card background based on score with dark mode support
+  const cardBgClass = overallScore >= 80 
+    ? "bg-success/10 dark:bg-success/20" 
+    : overallScore >= 60 
+      ? "bg-warning/10 dark:bg-warning/20" 
+      : "bg-destructive/10 dark:bg-destructive/20";
 
   return (
     <div className="space-y-6">
       {/* Legal Score Dashboard */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Score Gauge */}
-        <Card className={`${scoreBg} border-current/20`}>
+        <Card className={`${cardBgClass} border-none shadow-sm`}>
           <CardContent className="p-6">
             <div className="text-center">
-              <div className="relative mx-auto w-24 h-24 mb-4">
-                <div className="absolute inset-0 rounded-full border-8 border-muted"></div>
+              <div className="relative mx-auto w-32 h-32 mb-4">
+                {/* Gauge Background */}
+                <div className="absolute inset-0 rounded-full border-8 border-background/30"></div>
+                
+                {/* Gauge Value */}
                 <div 
-                  className={`absolute inset-0 rounded-full border-8 border-transparent ${scoreColor.replace('text-', 'border-')} transform -rotate-90`}
+                  className={`absolute inset-0 rounded-full border-8 border-transparent ${scoreBorderClass} transform -rotate-90 transition-all duration-1000 ease-out`}
                   style={{
                     borderTopColor: 'currentColor',
                     borderRightColor: overallScore > 25 ? 'currentColor' : 'transparent',
@@ -117,46 +129,55 @@ const ProjectLegalTab = ({ project }: ProjectLegalTabProps) => {
                     borderLeftColor: overallScore > 75 ? 'currentColor' : 'transparent',
                   }}
                 ></div>
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <span className={`text-2xl font-bold ${scoreColor}`}>{overallScore}</span>
+                
+                <div className="absolute inset-0 flex flex-col items-center justify-center">
+                  <span className={`text-3xl font-black ${scoreColorClass}`}>{overallScore}</span>
+                  <span className="text-xs font-medium uppercase opacity-70">Điểm số</span>
                 </div>
               </div>
-              <h3 className="font-bold text-lg">Điểm pháp lý</h3>
-              <p className="text-sm text-muted-foreground">
-                {overallScore >= 80 ? "Tốt" : overallScore >= 60 ? "Trung bình" : "Cần lưu ý"}
+              
+              <h3 className="font-bold text-xl mb-1">Điểm pháp lý</h3>
+              <p className="text-sm opacity-80 max-w-[200px] mx-auto">
+                {overallScore >= 80 ? "Hồ sơ pháp lý rất tốt, rủi ro thấp" : overallScore >= 60 ? "Hồ sơ pháp lý ở mức trung bình" : "Cần cân nhắc kỹ về pháp lý"}
               </p>
             </div>
           </CardContent>
         </Card>
 
         {/* Risk Breakdown */}
-        <Card>
+        <Card className="bg-card border-border">
           <CardContent className="p-6">
-            <h3 className="font-bold text-lg mb-4 flex items-center gap-2">
+            <h3 className="font-bold text-lg mb-5 flex items-center gap-2 text-foreground">
               <TrendingUp className="w-5 h-5 text-primary" />
               Phân tích rủi ro
             </h3>
-            <div className="space-y-3">
-              <div className="flex items-center justify-between p-3 bg-success/10 rounded-lg">
+            <div className="space-y-4">
+              <div className="flex items-center justify-between p-3 bg-success/10 border border-success/20 rounded-xl">
                 <div className="flex items-center gap-3">
-                  <CheckCircle className="w-6 h-6 text-success" />
-                  <span className="font-medium">Thấp</span>
+                  <div className="p-1.5 bg-success/20 rounded-full text-success">
+                    <CheckCircle className="w-4 h-4" />
+                  </div>
+                  <span className="font-medium text-foreground">Rủi ro thấp</span>
                 </div>
-                <div className="text-2xl font-bold text-success">{riskStats.low}</div>
+                <div className="text-xl font-bold text-success">{riskStats.low}</div>
               </div>
-              <div className="flex items-center justify-between p-3 bg-warning/10 rounded-lg">
+              <div className="flex items-center justify-between p-3 bg-warning/10 border border-warning/20 rounded-xl">
                 <div className="flex items-center gap-3">
-                  <Clock className="w-6 h-6 text-warning" />
-                  <span className="font-medium">Trung bình</span>
+                  <div className="p-1.5 bg-warning/20 rounded-full text-warning">
+                    <Clock className="w-4 h-4" />
+                  </div>
+                  <span className="font-medium text-foreground">Trung bình</span>
                 </div>
-                <div className="text-2xl font-bold text-warning">{riskStats.medium}</div>
+                <div className="text-xl font-bold text-warning">{riskStats.medium}</div>
               </div>
-              <div className="flex items-center justify-between p-3 bg-destructive/10 rounded-lg">
+              <div className="flex items-center justify-between p-3 bg-destructive/10 border border-destructive/20 rounded-xl">
                 <div className="flex items-center gap-3">
-                  <AlertTriangle className="w-6 h-6 text-destructive" />
-                  <span className="font-medium">Cao</span>
+                  <div className="p-1.5 bg-destructive/20 rounded-full text-destructive">
+                    <AlertTriangle className="w-4 h-4" />
+                  </div>
+                  <span className="font-medium text-foreground">Rủi ro cao</span>
                 </div>
-                <div className="text-2xl font-bold text-destructive">{riskStats.high}</div>
+                <div className="text-xl font-bold text-destructive">{riskStats.high}</div>
               </div>
             </div>
           </CardContent>
@@ -165,25 +186,27 @@ const ProjectLegalTab = ({ project }: ProjectLegalTabProps) => {
 
       {/* Legal Matrix - Visual Cards */}
       <div className="grid gap-4">
-        <h3 className="text-xl font-bold">Ma trận pháp lý</h3>
+        <h3 className="text-xl font-bold text-foreground">Chi tiết hồ sơ pháp lý</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {legalCriteria.map((criteria, index) => (
             <Card 
               key={index} 
-              className={`animate-fade-in hover-scale cursor-pointer transition-all duration-200 ${
-                criteria.status === 'approved' ? 'bg-success/5 border-success/20' :
-                criteria.status === 'pending' ? 'bg-warning/5 border-warning/20' :
-                'bg-destructive/5 border-destructive/20'
+              className={`border shadow-sm transition-all duration-200 hover:shadow-md ${
+                criteria.status === 'approved' ? 'bg-card border-success/20 hover:border-success/50' :
+                criteria.status === 'pending' ? 'bg-card border-warning/20 hover:border-warning/50' :
+                'bg-card border-destructive/20 hover:border-destructive/50'
               }`}
             >
               <CardContent className="p-5">
                 <div className="flex items-start justify-between mb-3">
-                  <div className="flex items-center gap-3">
-                    {getStatusIcon(criteria.status)}
+                  <div className="flex items-start gap-3">
+                    <div className="mt-0.5">
+                       {getStatusIcon(criteria.status)}
+                    </div>
                     <div>
-                      <h4 className="font-semibold">{criteria.name}</h4>
-                      <div className="flex items-center gap-2 mt-1">
-                        <Badge variant="outline" className="text-xs">
+                      <h4 className="font-bold text-base text-foreground">{criteria.name}</h4>
+                      <div className="flex items-center gap-2 mt-1.5">
+                        <Badge variant="outline" className="text-xs bg-background/50">
                           {getStatusText(criteria.status)}
                         </Badge>
                         {getRiskBadge(criteria.riskLevel)}
@@ -192,13 +215,13 @@ const ProjectLegalTab = ({ project }: ProjectLegalTabProps) => {
                   </div>
                 </div>
                 
-                <p className="text-sm text-muted-foreground mb-3">
+                <p className="text-sm text-muted-foreground mb-3 bg-muted/30 p-2 rounded-lg border border-border/50">
                   {criteria.description}
                 </p>
                 
-                <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                  <Calendar className="w-3 h-3" />
-                  <span>{criteria.date}</span>
+                <div className="flex items-center gap-2 text-xs font-medium text-muted-foreground">
+                  <Calendar className="w-3.5 h-3.5" />
+                  <span>Cập nhật: {criteria.date}</span>
                 </div>
               </CardContent>
             </Card>

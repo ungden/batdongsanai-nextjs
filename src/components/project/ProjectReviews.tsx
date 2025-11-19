@@ -26,7 +26,7 @@ interface ProjectReviewsProps {
 const ProjectReviews = ({ projectId, projectName }: ProjectReviewsProps) => {
   const [activeFilter, setActiveFilter] = useState<"all" | "positive" | "negative">("all");
 
-  // Mock data - in real app, this would come from database
+  // Mock data
   const overallRating = 4.6;
   const totalReviews = 127;
   
@@ -39,11 +39,11 @@ const ProjectReviews = ({ projectId, projectName }: ProjectReviewsProps) => {
   ];
 
   const categoryRatings = [
-    { category: "Vị trí", score: 4.8, icon: Home, color: "text-blue-600" },
-    { category: "Giá cả", score: 4.2, icon: DollarSign, color: "text-emerald-600" },
-    { category: "Pháp lý", score: 4.9, icon: Shield, color: "text-purple-600" },
-    { category: "Tiện ích", score: 4.5, icon: Users, color: "text-amber-600" },
-    { category: "Chất lượng", score: 4.7, icon: CheckCircle, color: "text-teal-600" }
+    { category: "Vị trí", score: 4.8, icon: Home, color: "text-blue-600 dark:text-blue-400" },
+    { category: "Giá cả", score: 4.2, icon: DollarSign, color: "text-emerald-600 dark:text-emerald-400" },
+    { category: "Pháp lý", score: 4.9, icon: Shield, color: "text-purple-600 dark:text-purple-400" },
+    { category: "Tiện ích", score: 4.5, icon: Users, color: "text-amber-600 dark:text-amber-400" },
+    { category: "Chất lượng", score: 4.7, icon: CheckCircle, color: "text-teal-600 dark:text-teal-400" }
   ];
 
   const reviews = [
@@ -119,7 +119,7 @@ const ProjectReviews = ({ projectId, projectName }: ProjectReviewsProps) => {
             className={`w-4 h-4 ${
               star <= rating
                 ? "fill-amber-400 text-amber-400"
-                : "text-slate-300"
+                : "text-muted-foreground/30"
             }`}
           />
         ))}
@@ -128,9 +128,9 @@ const ProjectReviews = ({ projectId, projectName }: ProjectReviewsProps) => {
   };
 
   return (
-    <Card className="rounded-2xl shadow-lg border-0 bg-white">
-      <CardHeader className="bg-gradient-to-r from-slate-50 to-blue-50/30 rounded-t-2xl border-b">
-        <CardTitle className="flex items-center gap-2">
+    <Card className="bg-card border-border shadow-sm">
+      <CardHeader className="bg-gradient-to-r from-slate-50 to-blue-50/30 dark:from-slate-900/50 dark:to-blue-900/20 rounded-t-xl border-b border-border/50">
+        <CardTitle className="flex items-center gap-2 text-foreground">
           <MessageSquare className="w-5 h-5 text-primary" />
           Đánh giá từ người dùng
         </CardTitle>
@@ -139,14 +139,14 @@ const ProjectReviews = ({ projectId, projectName }: ProjectReviewsProps) => {
         {/* Overall Rating */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {/* Left: Overall Score */}
-          <div className="flex flex-col items-center justify-center p-6 bg-gradient-to-br from-amber-50 to-orange-50 rounded-2xl border border-amber-200">
-            <div className="text-6xl font-black text-slate-900 mb-2">
+          <div className="flex flex-col items-center justify-center p-6 bg-gradient-to-br from-amber-50 to-orange-50 dark:from-amber-950/30 dark:to-orange-950/20 rounded-2xl border border-amber-200 dark:border-amber-900/50">
+            <div className="text-6xl font-black text-foreground mb-2">
               {overallRating}
             </div>
             <div className="flex gap-1 mb-2">
               {renderStars(Math.round(overallRating))}
             </div>
-            <div className="text-sm text-slate-600">
+            <div className="text-sm text-muted-foreground">
               Dựa trên {totalReviews} đánh giá
             </div>
           </div>
@@ -156,11 +156,11 @@ const ProjectReviews = ({ projectId, projectName }: ProjectReviewsProps) => {
             {ratingBreakdown.map((item) => (
               <div key={item.stars} className="flex items-center gap-3">
                 <div className="flex items-center gap-1 w-16">
-                  <span className="text-sm font-medium text-slate-700">{item.stars}</span>
+                  <span className="text-sm font-medium text-foreground">{item.stars}</span>
                   <Star className="w-3 h-3 fill-amber-400 text-amber-400" />
                 </div>
-                <Progress value={item.percentage} className="h-2 flex-1" />
-                <span className="text-sm text-slate-600 w-12 text-right">
+                <Progress value={item.percentage} className="h-2 flex-1 bg-muted" />
+                <span className="text-sm text-muted-foreground w-12 text-right">
                   {item.count}
                 </span>
               </div>
@@ -170,16 +170,16 @@ const ProjectReviews = ({ projectId, projectName }: ProjectReviewsProps) => {
 
         {/* Category Ratings */}
         <div className="space-y-3">
-          <h3 className="font-semibold text-slate-900">Đánh giá theo tiêu chí</h3>
+          <h3 className="font-semibold text-foreground">Đánh giá theo tiêu chí</h3>
           <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
             {categoryRatings.map((item, index) => {
               const IconComponent = item.icon;
               return (
-                <div key={index} className="p-4 bg-gradient-to-br from-slate-50 to-slate-100/50 rounded-xl text-center">
+                <div key={index} className="p-4 bg-muted/30 rounded-xl text-center border border-border/50">
                   <IconComponent className={`w-5 h-5 mx-auto mb-2 ${item.color}`} />
-                  <div className="text-xs text-slate-600 mb-1">{item.category}</div>
+                  <div className="text-xs text-muted-foreground mb-1">{item.category}</div>
                   <div className="flex items-center justify-center gap-1">
-                    <span className="text-lg font-bold text-slate-900">{item.score}</span>
+                    <span className="text-lg font-bold text-foreground">{item.score}</span>
                     <Star className="w-3 h-3 fill-amber-400 text-amber-400" />
                   </div>
                 </div>
@@ -219,7 +219,7 @@ const ProjectReviews = ({ projectId, projectName }: ProjectReviewsProps) => {
         {/* Reviews List */}
         <div className="space-y-4">
           {filteredReviews.map((review) => (
-            <Card key={review.id} className="rounded-xl border-0 bg-gradient-to-br from-slate-50 to-slate-100/50">
+            <Card key={review.id} className="rounded-xl border-0 bg-muted/20">
               <CardContent className="p-4">
                 <div className="flex items-start gap-4">
                   <Avatar className="w-12 h-12">
@@ -231,9 +231,9 @@ const ProjectReviews = ({ projectId, projectName }: ProjectReviewsProps) => {
                     <div className="flex items-center justify-between">
                       <div>
                         <div className="flex items-center gap-2">
-                          <span className="font-semibold text-slate-900">{review.author}</span>
+                          <span className="font-semibold text-foreground">{review.author}</span>
                           {review.verified && (
-                            <Badge className="bg-blue-100 text-blue-700 border-blue-200 text-xs">
+                            <Badge className="bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300 border-blue-200 dark:border-blue-800 text-xs">
                               <CheckCircle className="w-3 h-3 mr-1" />
                               Đã xác thực
                             </Badge>
@@ -242,21 +242,21 @@ const ProjectReviews = ({ projectId, projectName }: ProjectReviewsProps) => {
                             {review.type === "owner" ? "Chủ nhà" : "Nhà đầu tư"}
                           </Badge>
                         </div>
-                        <div className="text-xs text-slate-600 mt-1">{review.date}</div>
+                        <div className="text-xs text-muted-foreground mt-1">{review.date}</div>
                       </div>
                       {renderStars(review.rating)}
                     </div>
                     
-                    <p className="text-sm text-slate-700 leading-relaxed">
+                    <p className="text-sm text-foreground/90 leading-relaxed">
                       {review.content}
                     </p>
                     
                     <div className="flex items-center gap-4 pt-2">
-                      <button className="flex items-center gap-1 text-xs text-slate-600 hover:text-primary transition-colors">
+                      <button className="flex items-center gap-1 text-xs text-muted-foreground hover:text-primary transition-colors">
                         <ThumbsUp className="w-3 h-3" />
                         <span>Hữu ích ({review.helpful})</span>
                       </button>
-                      <button className="flex items-center gap-1 text-xs text-slate-600 hover:text-primary transition-colors">
+                      <button className="flex items-center gap-1 text-xs text-muted-foreground hover:text-primary transition-colors">
                         <MessageSquare className="w-3 h-3" />
                         <span>Trả lời</span>
                       </button>
@@ -276,17 +276,17 @@ const ProjectReviews = ({ projectId, projectName }: ProjectReviewsProps) => {
         </div>
 
         {/* Expert Review */}
-        <div className="p-4 bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl border border-blue-200">
+        <div className="p-4 bg-blue-50/50 dark:bg-blue-950/20 rounded-xl border border-blue-200 dark:border-blue-900/50">
           <div className="flex items-start gap-3">
-            <div className="p-3 bg-white rounded-xl shadow-sm">
-              <TrendingUp className="w-6 h-6 text-blue-600" />
+            <div className="p-3 bg-background rounded-xl shadow-sm text-blue-600 dark:text-blue-400">
+              <TrendingUp className="w-6 h-6" />
             </div>
             <div className="flex-1">
               <div className="flex items-center gap-2 mb-2">
-                <h3 className="font-semibold text-blue-900">Đánh giá từ chuyên gia PropertyHub</h3>
+                <h3 className="font-semibold text-blue-900 dark:text-blue-300">Đánh giá từ chuyên gia PropertyHub</h3>
                 <Badge className="bg-blue-600 text-white text-xs">Chuyên gia</Badge>
               </div>
-              <p className="text-sm text-blue-700 leading-relaxed">
+              <p className="text-sm text-blue-800 dark:text-blue-400 leading-relaxed">
                 {projectName} là một dự án đáng chú ý với điểm mạnh về vị trí và pháp lý. 
                 Chủ đầu tư uy tín, tiến độ ổn định. Giá hiện tại hợp lý so với thị trường. 
                 Phù hợp cho cả mục đích ở và đầu tư. Tuy nhiên, nhà đầu tư nên lưu ý về 

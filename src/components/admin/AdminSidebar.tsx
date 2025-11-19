@@ -53,18 +53,10 @@ export function AdminSidebar() {
   const location = useLocation();
   const collapsed = state === "collapsed";
 
-  const isActive = (path: string) => location.pathname.startsWith(path);
-
-  const getNavClassName = (path: string) => {
-    return isActive(path)
-      ? "bg-sidebar-accent text-sidebar-accent-foreground font-semibold shadow-sm border-r-2 border-sidebar-primary"
-      : "text-sidebar-foreground/70 hover:bg-sidebar-accent/50 hover:text-sidebar-accent-foreground font-medium transition-all duration-200";
-  };
-
   return (
     <Sidebar
       className={cn(
-        "transition-all duration-300 ease-in-out border-r border-sidebar-border bg-sidebar",
+        "border-r border-sidebar-border bg-sidebar transition-all duration-300",
         collapsed ? "w-16" : "w-64"
       )}
       collapsible="icon"
@@ -85,13 +77,20 @@ export function AdminSidebar() {
 
       <SidebarContent className="px-3 py-4 flex flex-col h-full overflow-y-auto custom-scrollbar bg-sidebar">
         <div className="space-y-6">
+          {/* Home Link */}
           <SidebarGroup>
             <SidebarGroupContent>
               <SidebarMenu>
                 <SidebarMenuItem>
-                  <SidebarMenuButton asChild>
-                    <NavLink to="/" className="block w-full rounded-lg py-2.5 px-3 flex items-center gap-3 hover:bg-sidebar-accent text-sidebar-foreground/70 font-medium transition-colors">
-                      <Home className="h-5 w-5" />
+                  <SidebarMenuButton asChild tooltip="Về trang chủ">
+                    <NavLink 
+                      to="/" 
+                      className={({ isActive }) => cn(
+                        "flex w-full items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors",
+                        "text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+                      )}
+                    >
+                      <Home className="h-5 w-5 flex-shrink-0" />
                       {!collapsed && <span>Về trang chủ</span>}
                     </NavLink>
                   </SidebarMenuButton>
@@ -100,6 +99,7 @@ export function AdminSidebar() {
             </SidebarGroupContent>
           </SidebarGroup>
 
+          {/* Management Group */}
           <SidebarGroup className="space-y-2">
             {!collapsed && <SidebarGroupLabel className="px-2 text-xs uppercase tracking-wide text-sidebar-foreground/50 font-bold">Quản lý</SidebarGroupLabel>}
             <SidebarGroupContent>
@@ -107,14 +107,25 @@ export function AdminSidebar() {
                 {mainItems.map((item) => (
                   <SidebarMenuItem key={item.title}>
                     <SidebarMenuButton asChild tooltip={item.title}>
-                      <NavLink to={item.url} className={`${getNavClassName(item.url)} block w-full rounded-md py-2 px-3 flex items-center gap-3 relative group`}>
+                      <NavLink 
+                        to={item.url} 
+                        className={({ isActive }) => cn(
+                          "flex w-full items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors relative group",
+                          isActive 
+                            ? "bg-sidebar-accent text-sidebar-accent-foreground font-semibold shadow-sm border-l-4 border-sidebar-primary pl-2" 
+                            : "text-sidebar-foreground/70 hover:bg-sidebar-accent/50 hover:text-sidebar-accent-foreground"
+                        )}
+                      >
                         <item.icon className="h-5 w-5 flex-shrink-0" />
                         {!collapsed && (
                           <>
                             <span className="flex-1 truncate">{item.title}</span>
                             {item.badge && (
                               <Badge 
-                                className={`ml-auto text-[10px] px-1.5 h-5 ${item.badgeColor || "bg-sidebar-primary/10 text-sidebar-primary border-sidebar-primary/20"}`}
+                                className={cn(
+                                  "ml-auto text-[10px] px-1.5 h-5", 
+                                  item.badgeColor || "bg-sidebar-primary/10 text-sidebar-primary border-sidebar-primary/20"
+                                )}
                                 variant="outline"
                               >
                                 {item.badge}
@@ -130,6 +141,7 @@ export function AdminSidebar() {
             </SidebarGroupContent>
           </SidebarGroup>
 
+          {/* AI Tools Group */}
           <SidebarGroup className="space-y-2">
             {!collapsed && <SidebarGroupLabel className="px-2 text-xs uppercase tracking-wide text-blue-500 font-bold">Công cụ AI</SidebarGroupLabel>}
             <SidebarGroupContent>
@@ -137,7 +149,15 @@ export function AdminSidebar() {
                 {aiTools.map((item) => (
                   <SidebarMenuItem key={item.title}>
                     <SidebarMenuButton asChild tooltip={item.title}>
-                      <NavLink to={item.url} className={`${getNavClassName(item.url)} block w-full rounded-md py-2 px-3 flex items-center gap-3 relative`}>
+                      <NavLink 
+                        to={item.url} 
+                        className={({ isActive }) => cn(
+                          "flex w-full items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors relative",
+                          isActive 
+                            ? "bg-sidebar-accent text-sidebar-accent-foreground font-semibold shadow-sm border-l-4 border-blue-500 pl-2" 
+                            : "text-sidebar-foreground/70 hover:bg-sidebar-accent/50 hover:text-sidebar-accent-foreground"
+                        )}
+                      >
                         <item.icon className="h-5 w-5 flex-shrink-0" />
                         {!collapsed && (
                           <>

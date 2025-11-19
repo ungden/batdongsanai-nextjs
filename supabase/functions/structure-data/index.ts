@@ -21,7 +21,7 @@ async function callGemini(apiKey: string, prompt: string) {
     contents: [{ parts: [{ text: prompt }] }],
     generationConfig: {
       temperature: 0.1,
-      responseMimeType: "application/json", // Ép kiểu JSON ở đây
+      responseMimeType: "application/json",
       maxOutputTokens: 8192,
     }
   };
@@ -45,32 +45,60 @@ serve(async (req: Request) => {
 
   try {
     const { content, type } = await req.json()
-    
-    // Lấy API Key từ Supabase Secrets (Deno env)
-    // Lưu ý: Bạn cần đảm bảo biến môi trường GEMINI_API_KEY đã được set
-    // Trong Deno Deploy/Supabase Edge Functions: Deno.env.get('GEMINI_API_KEY')
     const apiKey = Deno.env.get('GEMINI_API_KEY')
     if (!apiKey) throw new Error('GEMINI_API_KEY not set')
 
     let prompt = "";
 
-    if (type === 'project_list') { // Cho AI Scout
+    if (type === 'project_detail') {
+      prompt = `
+      Bạn là Data Engineer. Nhiệm vụ: Trích xuất thông tin từ văn bản báo cáo thành JSON chuẩn để import vào Database.
+      
+      Văn bản nguồn:
+      ${content}
+      
+      YÊU CẦU QUAN TRỌNG:
+      1. Chỉ trích xuất các con số (loại bỏ chữ "tỷ", "triệu", "m2").
+      2. Giá tiền: Chuyển hết về đơn vị VNĐ (Ví dụ: 60 triệu -> 60000000).
+      3. Nếu không có thông tin, để null.
+      
+      OUTPUT JSON SCHEMA (Bắt buộc tuân thủ):
+      {
+        "overview": {
+          "description": "string (Tóm tắt dự án chuẩn SEO)",
+          "developer": "string",
+          "location": "string (Địa chỉ chi tiết)",
+          "city": "string",
+          "district": "string"
+        },
+        "specs": {
+          "total_units": number,
+          "total_floors": number,
+          "blocks": number,
+          "density_construction": number,
+          "handover_standard": "string"
+        },
+        "pricing": {
+          "price_per_sqm": number (Giá hiện tại trung bình),
+          "launch_price": number (Giá mở bán),
+          "price_range": "string (Ví dụ: 3 - 5 tỷ)"
+        },
+        "legal": {
+          "legal_status": "string (Ví dụ: Sổ hồng, HĐMB)",
+          "completion_date": "string (Ví dụ: Q4/2025)"
+        },
+        "amenities": ["string"] (Danh sách tiện ích)
+      }`;
+    }
+    else if (type === 'project_list') {
       prompt = `Extract list of real estate projects from the text below into JSON.
       Text:
       ${content}
       
       Output Schema:
       { "projects": [{ "name": "string", "developer": "string", "location": "string", "status": "string", "type": "string", "confidence": "number" }], "summary": "string" }`;
-    } 
-    else if (type === 'project_detail') { // Cho Master Editor
-      prompt = `Extract project details from the text below into JSON.
-      Text:
-      ${content}
-      
-      Output Schema:
-      { "overview": {"description": "string"}, "specs": {"total_units": number, "total_floors": number}, "pricing": {"price_per_sqm": number, "launch_price": number, "price_range": "string"}, "amenities": ["string"] }`;
     }
-    else if (type === 'raw_list') { // Cho Batch Import
+    else if (type === 'raw_list') {
       prompt = `Convert this raw list into structured JSON Array.
       List:
       ${content}

@@ -11,8 +11,7 @@ declare const Deno: {
   env: { get(key: string): string | undefined };
 };
 
-const MODEL_RESEARCH = "gemini-2.5-pro-preview-03-25"; 
-// const MODEL_FORMAT = "gemini-2.0-flash"; // Removed, not needed here anymore
+const MODEL_RESEARCH = "gemini-2.0-flash"; // Sử dụng bản Flash cho tốc độ và tool search tốt
 
 async function callGeminiSearch(apiKey: string, prompt: string) {
   const url = `https://generativelanguage.googleapis.com/v1beta/models/${MODEL_RESEARCH}:generateContent?key=${apiKey}`;
@@ -22,7 +21,7 @@ async function callGeminiSearch(apiKey: string, prompt: string) {
     tools: [{ google_search: {} }],
     generationConfig: {
       temperature: 0.1,
-      maxOutputTokens: 8192,
+      maxOutputTokens: 8192, // Cho phép output dài để chứa chi tiết
     }
   };
 
@@ -43,7 +42,6 @@ async function callGeminiSearch(apiKey: string, prompt: string) {
 }
 
 async function callGeminiBasic(apiKey: string, prompt: string) {
-  // Dùng cho batch extract bước 1 (đọc hiểu text thô, không search)
   const url = `https://generativelanguage.googleapis.com/v1beta/models/${MODEL_RESEARCH}:generateContent?key=${apiKey}`;
    const payload = {
     contents: [{ parts: [{ text: prompt }] }],
@@ -70,7 +68,6 @@ serve(async (req: Request) => {
     let resultText = "";
 
     if (mode === 'batch_extract') {
-      // Bước 1: Đọc text thô và chuẩn hóa thành danh sách dạng text
       const prompt = `
       Nhiệm vụ: Đọc văn bản bên dưới và liệt kê danh sách các dự án BĐS.
       Định dạng dòng: "Tên Dự Án | Chủ Đầu Tư | Vị Trí"
@@ -81,18 +78,55 @@ serve(async (req: Request) => {
     } 
     else if (mode === 'scout') {
       const prompt = `Bạn là chuyên gia dữ liệu BĐS. Tìm kiếm thông tin mới nhất về: "${query}".
-      Liệt kê các dự án BĐS liên quan tìm thấy. Với mỗi dự án, cung cấp: Tên, Chủ đầu tư, Vị trí cụ thể, Trạng thái hiện tại.
-      Trả về báo cáo dạng văn bản chi tiết.`;
+      Liệt kê các dự án BĐS liên quan tìm thấy.
+      `;
       resultText = await callGeminiSearch(apiKey, prompt);
     } 
     else if (mode === 'deep_scan') {
-      const prompt = `Bạn là chuyên gia Thẩm định giá. Tìm kiếm chi tiết về dự án: "${query}".
-      Thu thập: Tổng quan, Thông số (số căn, tầng), Giá bán (mở bán, hiện tại, phí QL), Tiện ích, Tình trạng pháp lý.
-      Trả về báo cáo dạng văn bản chi tiết.`;
+      // PROMPT CHI TIẾT TỪNG MỤC NHƯ YÊU CẦU NGƯỜI DÙNG
+      const prompt = `
+      Bạn là Chuyên gia Thẩm định Bất động sản cao cấp.
+      Nhiệm vụ: Thực hiện "Audit" toàn diện về dự án: "${query}".
+      
+      Yêu cầu: Sử dụng Google Search để tìm dữ liệu số liệu cụ thể. Nếu không tìm thấy chính xác, hãy ước lượng dựa trên dữ liệu khu vực lân cận.
+      
+      Báo cáo phải trình bày rõ ràng theo ĐÚNG cấu trúc sau:
+
+      1. TỔNG QUAN & VỊ TRÍ (Overview):
+         - Tên chính thức:
+         - Chủ đầu tư (Developer):
+         - Địa chỉ chính xác:
+         - Quận/Huyện & Tỉnh/Thành:
+         - Mô tả vị trí (tiềm năng, kết nối giao thông):
+
+      2. QUY MÔ & THÔNG SỐ (Specs):
+         - Tổng diện tích đất (ha):
+         - Mật độ xây dựng (%):
+         - Tổng số block/tòa:
+         - Số tầng (Floors):
+         - Tổng số căn hộ (Units):
+         - Các loại diện tích (m2):
+
+      3. GIÁ BÁN & TÀI CHÍNH (Pricing):
+         - Giá mở bán đợt đầu (Launch Price): ... VNĐ/m2 (năm nào?)
+         - Giá thị trường hiện tại (Current Price): ... VNĐ/m2 (trung bình)
+         - Khoảng giá (Price Range): Ví dụ "3 - 5 tỷ"
+         - Chính sách thanh toán nổi bật:
+
+      4. PHÁP LÝ & TIẾN ĐỘ (Legal & Status):
+         - Tình trạng pháp lý (Sổ hồng/HĐMB/Đang hoàn thiện):
+         - Giấy phép xây dựng: (Có/Chưa)
+         - Tình trạng xây dựng hiện tại (Đang làm móng/Cất nóc/Bàn giao):
+         - Thời gian bàn giao (Dự kiến/Thực tế):
+
+      5. TIỆN ÍCH (Amenities):
+         - Liệt kê ít nhất 10 tiện ích nội khu và ngoại khu quan trọng.
+
+      Hãy đảm bảo số liệu (Giá, Số lượng) là con số cụ thể để có thể trích xuất vào database.
+      `;
       resultText = await callGeminiSearch(apiKey, prompt);
     }
 
-    // CHỈ TRẢ VỀ TEXT, KHÔNG PARSE JSON
     return new Response(JSON.stringify({ data: resultText }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       status: 200,

@@ -18,15 +18,32 @@ interface MasterEditorProps {
   onSave?: () => void;
 }
 
+// Helper an toàn để parse số, tránh NaN
+const safeParseInt = (val: any): number | null => {
+  if (val === null || val === undefined) return null;
+  if (typeof val === 'number') return isNaN(val) ? null : val;
+  
+  // Xử lý string: "5000 căn", "30.5"
+  const str = String(val).replace(/,/g, ''); // Xóa dấu phẩy
+  const num = parseInt(str.replace(/\D/g, '')); // Chỉ lấy số
+  return isNaN(num) ? null : num;
+};
+
+const safeParseFloat = (val: any): number | null => {
+  if (val === null || val === undefined) return null;
+  if (typeof val === 'number') return isNaN(val) ? null : val;
+  const match = String(val).match(/(\d+(\.\d+)?)/);
+  return match ? parseFloat(match[0]) : null;
+}
+
 // Helper to map flat JSON keys to our DB structure
 const mapAiDataToFields = (aiData: any, section: string, currentData: any) => {
   const newData = { ...currentData };
   
+  // Hàm tìm kiếm linh hoạt trong JSON AI trả về
   const find = (keys: string[]) => {
     for (const k of keys) {
-      // Check root
       if (aiData[k] !== undefined && aiData[k] !== null) return aiData[k];
-      // Check nested common keys
       if (aiData.overview?.[k]) return aiData.overview[k];
       if (aiData.specs?.[k]) return aiData.specs[k];
       if (aiData.pricing?.[k]) return aiData.pricing[k];
@@ -38,22 +55,25 @@ const mapAiDataToFields = (aiData: any, section: string, currentData: any) => {
   if (section === 'overview') {
     const desc = find(['description', 'summary']);
     if (desc) newData.description = desc;
-    const dev = find(['developer']);
+    const dev = find(['developer', 'chu_dau_tu']);
     if (dev) newData.developer = dev;
-    const loc = find(['location']);
+    const loc = find(['location', 'dia_chi']);
     if (loc) newData.location = loc;
-    const city = find(['city']);
+    const city = find(['city', 'thanh_pho']);
     if (city) newData.city = city;
-    const dist = find(['district']);
+    const dist = find(['district', 'quan_huyen']);
     if (dist) newData.district = dist;
   }
 
   if (section === 'specs') {
-    const units = find(['total_units', 'totalUnits']);
-    if (units) newData.total_units = typeof units === 'string' ? parseInt(units.replace(/\D/g, '')) : units;
+    const units = find(['total_units', 'totalUnits', 'so_can_ho']);
+    if (units) newData.total_units = safeParseInt(units);
     
-    const floors = find(['total_floors', 'floors']);
-    if (floors) newData.floors = typeof floors === 'string' ? parseInt(floors.replace(/\D/g, '')) : floors;
+    const floors = find(['total_floors', 'floors', 'so_tang']);
+    if (floors) newData.floors = safeParseInt(floors);
+
+    const blocks = find(['blocks', 'so_block']);
+    if (blocks) newData.blocks = safeParseInt(blocks);
     
     const types = find(['apartment_types']);
     if (types && Array.isArray(types)) newData.apartment_types = types;
@@ -64,10 +84,10 @@ const mapAiDataToFields = (aiData: any, section: string, currentData: any) => {
 
   if (section === 'financial') {
     const price = find(['price_per_sqm', 'current_price']);
-    if (price) newData.price_per_sqm = typeof price === 'string' ? parseInt(price.replace(/\D/g, '')) : price;
+    if (price) newData.price_per_sqm = safeParseInt(price);
     
     const launch = find(['launch_price']);
-    if (launch) newData.launch_price = typeof launch === 'string' ? parseInt(launch.replace(/\D/g, '')) : launch;
+    if (launch) newData.launch_price = safeParseInt(launch);
     
     const range = find(['price_range']);
     if (range) newData.price_range = range;
@@ -79,14 +99,19 @@ const mapAiDataToFields = (aiData: any, section: string, currentData: any) => {
     
     const date = find(['completion_date']);
     if (date) newData.completion_date = date;
+
+    // Logic tự động chấm điểm pháp lý đơn giản
+    if (newData.legal_status?.toLowerCase().includes('sổ') || newData.legal_status?.toLowerCase().includes('hđmb')) {
+       if (!newData.legal_score) newData.legal_score = 8;
+    }
   }
 
   if (section === 'amenities') {
     const amenities = find(['amenities', 'tien_ich']);
     if (amenities && Array.isArray(amenities)) {
-      // Merge unique
       const existing = Array.isArray(newData.amenities) ? newData.amenities : [];
       const combined = [...existing, ...amenities];
+      // Deduplicate
       newData.amenities = [...new Set(combined)];
     }
   }
@@ -140,7 +165,7 @@ export default function MasterProjectEditor({ projectId, onSave }: MasterEditorP
     if (!isAuto) setAuditStatus('running');
     
     try {
-      // 1. Research
+      // 1. Research (Deep Scan)
       const { data: resData, error: resError } = await supabase.functions.invoke('research-project', {
         body: { query: data.name, mode: 'deep_scan', section }
       });
@@ -207,7 +232,10 @@ export default function MasterProjectEditor({ projectId, onSave }: MasterEditorP
         setLogs(prev => [...prev, `❌ Thất bại: ${sec.label}`]);
       }
       
-      setProgress(((i + 1) / sections.length) * 100);
+      // Delay nhẹ để tránh rate limit
+      await new Promise(r => setTimeout(r, 1000));
+      
+      setProgress(Math.round(((i + 1) / sections.length) * 100));
     }
 
     setAuditStatus('completed');
@@ -220,29 +248,31 @@ export default function MasterProjectEditor({ projectId, onSave }: MasterEditorP
   return (
     <div className="space-y-4">
       {/* Actions Bar */}
-      <div className="flex justify-between items-center bg-card p-4 rounded-lg border shadow-sm">
-        <div className="flex items-center gap-4">
-          <h2 className="text-xl font-bold text-foreground">{data.name}</h2>
+      <div className="flex flex-col md:flex-row justify-between items-center bg-card p-4 rounded-lg border shadow-sm gap-4">
+        <div className="flex items-center gap-4 w-full md:w-auto">
+          <h2 className="text-xl font-bold text-foreground truncate max-w-[200px]">{data.name}</h2>
           
           {auditStatus === 'running' ? (
-             <div className="flex items-center gap-3 bg-blue-50 px-4 py-2 rounded-full border border-blue-100">
+             <div className="flex flex-1 md:flex-none items-center gap-3 bg-blue-50 px-4 py-2 rounded-full border border-blue-100">
                <Loader2 className="w-4 h-4 animate-spin text-blue-600" />
-               <span className="text-xs font-medium text-blue-700">AI đang làm việc: {currentStep}</span>
-               <Progress value={progress} className="w-24 h-2" />
+               <div className="flex flex-col w-full md:w-auto">
+                 <span className="text-xs font-medium text-blue-700 whitespace-nowrap">AI đang làm việc: {currentStep}</span>
+                 <Progress value={progress} className="w-24 h-1.5 mt-1" />
+               </div>
              </div>
           ) : (
              <Button 
                variant="secondary" 
                size="sm" 
                onClick={runFullAudit} 
-               className="border border-purple-200 bg-purple-50 text-purple-700 hover:bg-purple-100"
+               className="border border-purple-200 bg-purple-50 text-purple-700 hover:bg-purple-100 w-full md:w-auto"
              >
                <Sparkles className="w-4 h-4 mr-2" />
                Chạy Full Audit (AI)
              </Button>
           )}
         </div>
-        <Button onClick={() => handleSave()} disabled={saving} className="bg-green-600 hover:bg-green-700 text-white font-bold shadow-md">
+        <Button onClick={() => handleSave()} disabled={saving} className="bg-green-600 hover:bg-green-700 text-white font-bold shadow-md w-full md:w-auto">
           {saving ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Save className="w-4 h-4 mr-2" />}
           Lưu thủ công
         </Button>
@@ -257,12 +287,12 @@ export default function MasterProjectEditor({ projectId, onSave }: MasterEditorP
 
       {/* Tabs Form */}
       <Tabs defaultValue="overview" className="w-full">
-        <TabsList className="w-full justify-start h-12 bg-muted/50 p-1 border-b">
-          <TabsTrigger value="overview" className="px-6">Tổng quan</TabsTrigger>
-          <TabsTrigger value="specs" className="px-6">Thông số</TabsTrigger>
-          <TabsTrigger value="financial" className="px-6">Giá & TC</TabsTrigger>
-          <TabsTrigger value="legal" className="px-6">Pháp lý</TabsTrigger>
-          <TabsTrigger value="amenities" className="px-6">Tiện ích</TabsTrigger>
+        <TabsList className="w-full justify-start h-auto p-1 bg-muted/50 border-b overflow-x-auto">
+          <TabsTrigger value="overview" className="px-4 py-2">Tổng quan</TabsTrigger>
+          <TabsTrigger value="specs" className="px-4 py-2">Thông số</TabsTrigger>
+          <TabsTrigger value="financial" className="px-4 py-2">Giá & TC</TabsTrigger>
+          <TabsTrigger value="legal" className="px-4 py-2">Pháp lý</TabsTrigger>
+          <TabsTrigger value="amenities" className="px-4 py-2">Tiện ích</TabsTrigger>
         </TabsList>
 
         {/* OVERVIEW TAB */}
@@ -274,7 +304,7 @@ export default function MasterProjectEditor({ projectId, onSave }: MasterEditorP
                     <ScanSearch className="w-3 h-3 mr-2" /> Scan lại mục này
                  </Button>
               </div>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid md:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label>Tên dự án</Label>
                   <Input value={data.name || ''} onChange={(e) => handleChange('name', e.target.value)} />
@@ -284,7 +314,7 @@ export default function MasterProjectEditor({ projectId, onSave }: MasterEditorP
                   <Input value={data.developer || ''} onChange={(e) => handleChange('developer', e.target.value)} />
                 </div>
               </div>
-              <div className="grid grid-cols-3 gap-4">
+              <div className="grid md:grid-cols-3 gap-4">
                 <div className="space-y-2">
                   <Label>Tỉnh/Thành phố</Label>
                   <Input value={data.city || ''} onChange={(e) => handleChange('city', e.target.value)} />
@@ -315,18 +345,18 @@ export default function MasterProjectEditor({ projectId, onSave }: MasterEditorP
                     <ScanSearch className="w-3 h-3 mr-2" /> Scan lại mục này
                  </Button>
               </div>
-              <div className="grid grid-cols-3 gap-4">
+              <div className="grid md:grid-cols-3 gap-4">
                 <div className="space-y-2">
                   <Label>Tổng số căn</Label>
-                  <Input type="number" value={data.total_units || ''} onChange={(e) => handleChange('total_units', e.target.value)} />
+                  <Input type="number" value={data.total_units || ''} onChange={(e) => handleChange('total_units', safeParseInt(e.target.value))} />
                 </div>
                 <div className="space-y-2">
                   <Label>Số tầng</Label>
-                  <Input type="number" value={data.floors || ''} onChange={(e) => handleChange('floors', e.target.value)} />
+                  <Input type="number" value={data.floors || ''} onChange={(e) => handleChange('floors', safeParseInt(e.target.value))} />
                 </div>
                 <div className="space-y-2">
                   <Label>Số Block</Label>
-                  <Input type="number" value={data.blocks || ''} onChange={(e) => handleChange('blocks', e.target.value)} />
+                  <Input type="number" value={data.blocks || ''} onChange={(e) => handleChange('blocks', safeParseInt(e.target.value))} />
                 </div>
               </div>
               <div className="space-y-2">
@@ -350,14 +380,14 @@ export default function MasterProjectEditor({ projectId, onSave }: MasterEditorP
                     <ScanSearch className="w-3 h-3 mr-2" /> Scan lại mục này
                  </Button>
               </div>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid md:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label className="text-blue-600 font-bold">Giá bán hiện tại (VNĐ/m2)</Label>
-                  <Input type="number" value={data.price_per_sqm || ''} onChange={(e) => handleChange('price_per_sqm', e.target.value)} />
+                  <Input type="number" value={data.price_per_sqm || ''} onChange={(e) => handleChange('price_per_sqm', safeParseInt(e.target.value))} />
                 </div>
                 <div className="space-y-2">
                   <Label>Giá mở bán (VNĐ/m2)</Label>
-                  <Input type="number" value={data.launch_price || ''} onChange={(e) => handleChange('launch_price', e.target.value)} />
+                  <Input type="number" value={data.launch_price || ''} onChange={(e) => handleChange('launch_price', safeParseInt(e.target.value))} />
                 </div>
               </div>
               <div className="space-y-2">
@@ -380,7 +410,7 @@ export default function MasterProjectEditor({ projectId, onSave }: MasterEditorP
               <div className="flex items-center gap-4">
                   <div className="space-y-2 flex-1">
                     <Label>Điểm pháp lý (0-10)</Label>
-                    <Input type="number" max={10} value={data.legal_score || ''} onChange={(e) => handleChange('legal_score', e.target.value)} />
+                    <Input type="number" max={10} value={data.legal_score || ''} onChange={(e) => handleChange('legal_score', safeParseInt(e.target.value))} />
                   </div>
                   <div className="space-y-2 flex-1">
                     <Label>Trạng thái</Label>

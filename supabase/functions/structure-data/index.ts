@@ -15,13 +15,39 @@ declare const Deno: {
 
 const MODEL_FORMAT = "gemini-2.0-flash";
 
+// Hàm trích xuất JSON an toàn từ văn bản AI trả về
+function extractJSON(text: string): any {
+  try {
+    // 1. Thử parse trực tiếp
+    return JSON.parse(text);
+  } catch (e) {
+    // 2. Tìm block JSON trong markdown
+    const match = text.match(/```(?:json)?\s*([\s\S]*?)\s*```/);
+    if (match && match[1]) {
+      try { return JSON.parse(match[1]); } catch (e2) { /* tiếp tục thử */ }
+    }
+    
+    // 3. Tìm cặp ngoặc nhọn { } ngoài cùng
+    const firstOpen = text.indexOf('{');
+    const lastClose = text.lastIndexOf('}');
+    if (firstOpen !== -1 && lastClose !== -1) {
+      try { 
+        return JSON.parse(text.substring(firstOpen, lastClose + 1)); 
+      } catch (e3) { 
+        console.error("JSON extraction failed:", e3);
+      }
+    }
+    throw new Error("Không thể định dạng JSON từ phản hồi của AI.");
+  }
+}
+
 async function callGemini(apiKey: string, prompt: string) {
   const url = `https://generativelanguage.googleapis.com/v1beta/models/${MODEL_FORMAT}:generateContent?key=${apiKey}`;
   const payload = {
     contents: [{ parts: [{ text: prompt }] }],
     generationConfig: {
       temperature: 0.1,
-      responseMimeType: "application/json",
+      responseMimeType: "application/json", // Ép kiểu JSON ngay từ model
       maxOutputTokens: 8192,
     }
   };
@@ -52,22 +78,24 @@ serve(async (req: Request) => {
 
     if (type === 'project_detail') {
       prompt = `
-      Bạn là Data Engineer. Nhiệm vụ: Trích xuất thông tin từ văn bản báo cáo thành JSON chuẩn để import vào Database.
+      Nhiệm vụ: Chuyển đổi thông tin BĐS sau thành JSON chuẩn.
       
-      Văn bản nguồn:
+      DỮ LIỆU ĐẦU VÀO:
+      """
       ${content}
+      """
       
-      YÊU CẦU QUAN TRỌNG:
-      1. Chỉ trích xuất các con số (loại bỏ chữ "tỷ", "triệu", "m2").
-      2. Giá tiền: Chuyển hết về đơn vị VNĐ (Ví dụ: 60 triệu -> 60000000).
-      3. Nếu không có thông tin, để null.
+      QUY TẮC QUAN TRỌNG:
+      1. Chỉ lấy con số (Ví dụ: "5 tỷ" -> 5000000000, "60tr/m2" -> 60000000).
+      2. Nếu không tìm thấy thông tin, hãy để null. Đừng bịa đặt.
+      3. Đảm bảo JSON hợp lệ, không thêm chú thích.
       
-      OUTPUT JSON SCHEMA (Bắt buộc tuân thủ):
+      JSON SCHEMA:
       {
         "overview": {
-          "description": "string (Tóm tắt dự án chuẩn SEO)",
+          "description": "string (tóm tắt ngắn gọn)",
           "developer": "string",
-          "location": "string (Địa chỉ chi tiết)",
+          "location": "string",
           "city": "string",
           "district": "string"
         },
@@ -79,39 +107,29 @@ serve(async (req: Request) => {
           "handover_standard": "string"
         },
         "pricing": {
-          "price_per_sqm": number (Giá hiện tại trung bình),
-          "launch_price": number (Giá mở bán),
-          "price_range": "string (Ví dụ: 3 - 5 tỷ)"
+          "price_per_sqm": number,
+          "launch_price": number,
+          "price_range": "string"
         },
         "legal": {
-          "legal_status": "string (Ví dụ: Sổ hồng, HĐMB)",
-          "completion_date": "string (Ví dụ: Q4/2025)"
+          "legal_status": "string",
+          "completion_date": "string"
         },
-        "amenities": ["string"] (Danh sách tiện ích)
+        "amenities": ["string"]
       }`;
     }
     else if (type === 'project_list') {
-      prompt = `Extract list of real estate projects from the text below into JSON.
-      Text:
-      ${content}
-      
-      Output Schema:
-      { "projects": [{ "name": "string", "developer": "string", "location": "string", "status": "string", "type": "string", "confidence": "number" }], "summary": "string" }`;
+      prompt = `Extract list of real estate projects to JSON. Input: ${content}`;
     }
     else if (type === 'raw_list') {
-      prompt = `Convert this raw list into structured JSON Array.
-      List:
-      ${content}
-      
-      Output Schema:
-      { "projects": [{ "name": "string", "developer": "string", "location": "string", "type": "string", "raw_text": "string" }] }`;
+      prompt = `Convert list to JSON Array. Input: ${content}`;
     }
     else {
       throw new Error("Invalid type");
     }
 
     const jsonString = await callGemini(apiKey, prompt);
-    const data = JSON.parse(jsonString);
+    const data = extractJSON(jsonString); // Sử dụng hàm trích xuất an toàn
 
     return new Response(JSON.stringify({ data }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },

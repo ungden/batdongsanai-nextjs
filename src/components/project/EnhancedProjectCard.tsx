@@ -35,15 +35,6 @@ const EnhancedProjectCard = ({ project, onClick }: EnhancedProjectCardProps) => 
     }
   };
 
-  const getStatusText = (status: string) => {
-    switch (status) {
-      case "good": return "Pháp lý đầy đủ";
-      case "warning": return "Cần xem xét";
-      case "danger": return "Có rủi ro";
-      default: return "Chưa xác định";
-    }
-  };
-
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat('vi-VN').format(price);
   };
@@ -78,38 +69,27 @@ const EnhancedProjectCard = ({ project, onClick }: EnhancedProjectCardProps) => 
   if (isMobile) {
     return (
       <Card 
-        className="w-full max-w-sm mx-auto overflow-hidden group border border-border/60 bg-card shadow-sm hover:shadow-md transition-all duration-300 cursor-pointer"
+        className="w-full max-w-sm mx-auto overflow-hidden group border border-border bg-card shadow-sm hover:shadow-md transition-all duration-300 cursor-pointer"
         onClick={() => onClick(project.id)}
       >
-        <div className="flex h-[200px]">
+        <div className="flex h-[180px]">
           {/* Left Image Section */}
-          <div className="relative w-[140px] flex-shrink-0 overflow-hidden border-r border-border/50">
+          <div className="relative w-[130px] flex-shrink-0 overflow-hidden border-r border-border">
             <img 
               src={project.image} 
               alt={project.name}
               loading="lazy"
               className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
             />
-            
-            {/* Gradient Overlay */}
-            <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-60" />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent" />
             
             {/* Sold Badge */}
             {soldPercentage && (
               <div className="absolute top-2 left-2">
-                <Badge className="bg-emerald-500/90 text-white border-0 text-[10px] px-1.5 py-0.5 backdrop-blur-sm">
+                <Badge className="bg-emerald-600/90 text-white border-0 text-[10px] px-1.5 py-0.5 backdrop-blur-sm">
                   <TrendingUp className="w-3 h-3 mr-0.5" />
                   {soldPercentage}%
                 </Badge>
-              </div>
-            )}
-
-            {/* Warning Badge */}
-            {project.warnings.length > 0 && (
-              <div className="absolute bottom-2 left-2">
-                 <Badge className="bg-destructive/90 text-white border-0 text-[10px] w-5 h-5 flex items-center justify-center rounded-full p-0 backdrop-blur-sm">
-                    {project.warnings.length}
-                 </Badge>
               </div>
             )}
           </div>
@@ -117,25 +97,17 @@ const EnhancedProjectCard = ({ project, onClick }: EnhancedProjectCardProps) => 
           {/* Right Content Section */}
           <div className="flex-1 p-3 flex flex-col justify-between bg-card relative">
             <div className="space-y-2">
-              {/* Project Name */}
-              <h3 className="font-bold text-sm leading-tight text-foreground line-clamp-2 group-hover:text-primary transition-colors">
+              <h3 className="font-bold text-sm leading-tight text-card-foreground line-clamp-2 group-hover:text-primary transition-colors">
                 {project.name}
               </h3>
               
-              {/* Meta info */}
               <div className="space-y-1">
                 <div className="flex items-center text-xs text-muted-foreground">
                   <MapPin className="w-3 h-3 mr-1.5 flex-shrink-0" />
                   <span className="line-clamp-1">{project.location}</span>
                 </div>
-
-                <div className="flex items-center text-xs text-muted-foreground">
-                  <User className="w-3 h-3 mr-1.5 flex-shrink-0" />
-                  <span className="line-clamp-1">{project.developer}</span>
-                </div>
               </div>
 
-              {/* Badges */}
               {badges.length > 0 && (
                 <div className="flex flex-wrap gap-1">
                   {badges.slice(0, 2).map((b) => (
@@ -147,7 +119,6 @@ const EnhancedProjectCard = ({ project, onClick }: EnhancedProjectCardProps) => 
               )}
             </div>
 
-            {/* Bottom Price & Status */}
             <div className="space-y-2 mt-auto">
               <div className="space-y-0.5">
                  <div className="text-base font-bold text-primary leading-none">
@@ -157,27 +128,11 @@ const EnhancedProjectCard = ({ project, onClick }: EnhancedProjectCardProps) => 
                    {formatPrice(project.pricePerSqm)} /m²
                  </div>
               </div>
-
-              <div className="flex items-center justify-between">
-                <StatusBadge variant={getStatusVariant(project.status)} className="text-[10px] px-2 h-5">
-                  <Award className="w-3 h-3 mr-1" />
-                  {project.legalScore}/10
-                </StatusBadge>
-                <div className="text-[10px] text-muted-foreground flex items-center">
-                  <Calendar className="w-3 h-3 mr-1" />
-                  <span className="truncate max-w-[60px]">
-                    {project.completionDate}
-                  </span>
-                </div>
-              </div>
             </div>
-          </div>
-        </div>
-
-        {/* Favorite Button */}
-        <div className="absolute top-2 right-2 z-10" onClick={(e) => e.stopPropagation()}>
-          <div className="bg-card/80 backdrop-blur-sm rounded-full p-1 shadow-sm border border-border/50">
-            <FavoriteButton projectId={project.id} projectName={project.name} className="h-6 w-6" />
+            
+            <div className="absolute bottom-3 right-3">
+                <FavoriteButton projectId={project.id} projectName={project.name} className="h-7 w-7" />
+            </div>
           </div>
         </div>
       </Card>
@@ -187,32 +142,29 @@ const EnhancedProjectCard = ({ project, onClick }: EnhancedProjectCardProps) => 
   // Desktop Layout
   return (
     <Card 
-      className="w-full overflow-hidden group border border-border/60 bg-card shadow-sm hover:shadow-md hover:border-primary/40 transition-all duration-300 cursor-pointer"
+      className="w-full overflow-hidden group border border-border bg-card shadow-sm hover:shadow-lg hover:border-primary/30 transition-all duration-300 cursor-pointer"
       onClick={() => onClick(project.id)}
     >
-      <div className="flex h-[240px]">
+      <div className="flex h-[220px]">
         {/* Hero Image Section */}
-        <div className="relative w-[280px] flex-shrink-0 overflow-hidden border-r border-border/50 bg-muted">
+        <div className="relative w-[260px] flex-shrink-0 overflow-hidden border-r border-border bg-muted">
           <img 
             src={project.image} 
             alt={project.name}
             loading="lazy"
             className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
           />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent" />
           
-          <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-50" />
-          
-          {/* Sold Badge */}
           {soldPercentage && (
             <div className="absolute top-3 left-3">
-              <Badge className="bg-emerald-500/90 text-white border-0 backdrop-blur-sm shadow-sm font-semibold">
+              <Badge className="bg-emerald-600/90 text-white border-0 backdrop-blur-sm shadow-sm font-semibold">
                 <TrendingUp className="w-3.5 h-3.5 mr-1" />
                 {soldPercentage}% đã bán
               </Badge>
             </div>
           )}
 
-          {/* Warning Badge */}
           {project.warnings.length > 0 && (
             <div className="absolute bottom-3 left-3">
               <Badge className="bg-destructive/90 text-white border-0 backdrop-blur-sm shadow-sm h-6 w-6 rounded-full flex items-center justify-center p-0">
@@ -225,15 +177,14 @@ const EnhancedProjectCard = ({ project, onClick }: EnhancedProjectCardProps) => 
         {/* Content Section */}
         <div className="flex-1 p-5 flex flex-col justify-between bg-card relative">
           
-          {/* Header Section */}
-          <div className="space-y-3">
+          <div className="space-y-2">
             <div className="flex justify-between items-start">
               <div className="space-y-1 flex-1 min-w-0 pr-4">
-                <h3 className="font-bold text-xl text-foreground group-hover:text-primary transition-colors truncate">
+                <h3 className="font-bold text-xl text-card-foreground group-hover:text-primary transition-colors truncate">
                   {project.name}
                 </h3>
                 <div className="flex items-center text-sm text-muted-foreground">
-                   <MapPin className="w-4 h-4 mr-1.5 text-muted-foreground/70" />
+                   <MapPin className="w-4 h-4 mr-1.5 opacity-70" />
                    <span className="truncate">{project.location}</span>
                 </div>
               </div>
@@ -241,11 +192,10 @@ const EnhancedProjectCard = ({ project, onClick }: EnhancedProjectCardProps) => 
             </div>
 
             <div className="flex items-center text-sm text-muted-foreground">
-              <User className="w-4 h-4 mr-1.5 text-muted-foreground/70" />
+              <User className="w-4 h-4 mr-1.5 opacity-70" />
               <span className="font-medium">{project.developer}</span>
             </div>
 
-            {/* Badges */}
             {badges.length > 0 && (
               <div className="flex flex-wrap gap-1.5 pt-1">
                 {badges.map((b) => (
@@ -263,8 +213,7 @@ const EnhancedProjectCard = ({ project, onClick }: EnhancedProjectCardProps) => 
             )}
           </div>
 
-          {/* Price Section */}
-          <div className="flex items-end justify-between mt-4 pt-4 border-t border-border/50">
+          <div className="flex items-end justify-between mt-4 pt-4 border-t border-border">
             <div>
               <div className="flex items-baseline gap-2">
                 <span className="text-2xl font-bold text-primary">{project.priceRange}</span>
@@ -289,9 +238,7 @@ const EnhancedProjectCard = ({ project, onClick }: EnhancedProjectCardProps) => 
             )}
           </div>
 
-          {/* Bottom Stats */}
-          <div className="flex items-center justify-between mt-4">
-             {/* Progress */}
+          <div className="flex items-center justify-between mt-3">
              <div className="flex-1 max-w-[180px] space-y-1.5">
                <div className="flex justify-between text-xs font-medium text-muted-foreground">
                  <span>Tiến độ</span>
@@ -301,14 +248,8 @@ const EnhancedProjectCard = ({ project, onClick }: EnhancedProjectCardProps) => 
              </div>
 
              <div className="flex items-center gap-3">
-                <div className="text-xs text-muted-foreground flex flex-col items-end">
-                  <span className="font-medium text-foreground flex items-center gap-1">
-                    <Calendar className="w-3.5 h-3.5" />
-                    {project.completionDate}
-                  </span>
-                </div>
-                <StatusBadge variant={getStatusVariant(project.status)} className="h-7 px-3">
-                  <Award className="w-3.5 h-3.5 mr-1.5" />
+                <StatusBadge variant={getStatusVariant(project.status)} className="h-6 px-2 text-xs">
+                  <Award className="w-3 h-3 mr-1" />
                   {project.legalScore}/10
                 </StatusBadge>
              </div>

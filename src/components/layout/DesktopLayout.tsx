@@ -26,17 +26,16 @@ const DesktopLayout: React.FC<DesktopLayoutProps> = ({ children, title, subtitle
       <div className="flex min-h-screen w-full bg-background text-foreground">
         <AppSidebar />
         
-        <div className="flex flex-1 flex-col min-w-0 overflow-hidden">
+        <div className="flex flex-1 flex-col min-w-0 overflow-hidden bg-background/50">
           {showHeader && (
-            <header className="sticky top-0 z-10 flex h-16 shrink-0 items-center gap-4 border-b border-border/60 bg-background/80 px-6 backdrop-blur-lg transition-all">
+            <header className="sticky top-0 z-20 flex h-16 shrink-0 items-center gap-4 border-b border-border/40 bg-background/80 px-6 backdrop-blur-xl transition-all">
               <div className="flex items-center gap-2">
-                <SidebarTrigger className="-ml-2" />
+                <SidebarTrigger className="-ml-2 hover:bg-accent hover:text-accent-foreground" />
                 <Separator orientation="vertical" className="mr-2 h-4" />
                 
-                {/* Breadcrumbs or Title */}
                 <div className="hidden md:flex flex-col">
                    {title ? (
-                     <h1 className="text-sm font-semibold leading-none">{title}</h1>
+                     <h1 className="text-sm font-semibold leading-none text-foreground">{title}</h1>
                    ) : (
                     <Breadcrumb>
                       <BreadcrumbList>
@@ -47,7 +46,7 @@ const DesktopLayout: React.FC<DesktopLayoutProps> = ({ children, title, subtitle
                           <div key={index} className="flex items-center">
                              <BreadcrumbSeparator />
                              <BreadcrumbItem>
-                               <BreadcrumbPage className="capitalize">{segment.replace(/-/g, ' ')}</BreadcrumbPage>
+                               <BreadcrumbPage className="capitalize text-foreground">{segment.replace(/-/g, ' ')}</BreadcrumbPage>
                              </BreadcrumbItem>
                           </div>
                         ))}
@@ -59,9 +58,6 @@ const DesktopLayout: React.FC<DesktopLayoutProps> = ({ children, title, subtitle
               </div>
 
               <div className="ml-auto flex items-center gap-3">
-                <div className="hidden md:flex items-center gap-2">
-                   {/* Add global search here if needed */}
-                </div>
                 <ThemeToggle />
                 <NotificationBell />
                 <Separator orientation="vertical" className="h-6 mx-1" />

@@ -12,7 +12,7 @@ import {
   BarChart3, AlertTriangle, Eye, Info, Building2, Users, Calendar, Star,
   Calculator, Loader2
 } from "lucide-react";
-import { useProjectDetail } from "@/hooks/useProjects"; // Use the new hook
+import { useProjectDetail } from "@/hooks/useProjects";
 import { useProjectViews } from "@/hooks/useProjectViews";
 import { usePermissions } from "@/hooks/usePermissions";
 import ImprovedConsultationForm from "@/components/consultation/ImprovedConsultationForm";
@@ -50,7 +50,6 @@ const ProjectDetail = () => {
   const [showConsultationForm, setShowConsultationForm] = useState(false);
   const [activeTab, setActiveTab] = useState("overview");
 
-  // Use the hook instead of static data
   const { project, loading } = useProjectDetail(id);
 
   useEffect(() => {
@@ -61,7 +60,7 @@ const ProjectDetail = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 flex items-center justify-center">
+      <div className="min-h-screen bg-background flex items-center justify-center">
         <Loader2 className="w-8 h-8 animate-spin text-primary" />
       </div>
     );
@@ -69,9 +68,9 @@ const ProjectDetail = () => {
 
   if (!project) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 flex items-center justify-center">
+      <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
-          <h1 className="text-2xl font-bold mb-4">Không tìm thấy dự án</h1>
+          <h1 className="text-2xl font-bold mb-4 text-foreground">Không tìm thấy dự án</h1>
           <Button onClick={() => navigate('/projects')} className="rounded-xl">
             Quay lại danh sách dự án
           </Button>
@@ -106,8 +105,6 @@ const ProjectDetail = () => {
   const faqSchema = generateFAQSchema(faqData);
 
   const handleCalculate = () => {
-    // Navigate to calculator with pre-filled data
-    // Assuming standard 70m2 apartment for quick calculation
     navigate(`/calculator?price=${project.pricePerSqm}&area=70`);
   };
 
@@ -124,31 +121,30 @@ const ProjectDetail = () => {
       
       <BreadcrumbSchema items={breadcrumbItems} />
 
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/20 to-slate-100">
+      <div className="min-h-screen bg-gradient-to-br from-background via-muted/20 to-background">
         <ProjectHero project={project} />
 
-        {/* Main Content with Soft Backgrounds */}
         <div className="container mx-auto px-4 md:px-6 py-8 pb-24">
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             {/* Left Column - Main Content */}
             <div className="lg:col-span-2 space-y-6">
-              {/* Price Card - Soft Gradient */}
-              <Card className="rounded-2xl shadow-lg border-0 bg-gradient-to-br from-white via-blue-50/30 to-slate-50">
+              {/* Price Card */}
+              <Card className="card-elevated border-primary/10 bg-gradient-to-br from-card via-blue-50/10 to-muted/50">
                 <CardContent className="p-6">
                   <div className="flex items-center justify-between">
                     <div>
-                      <div className="text-sm text-slate-600 mb-1 font-medium">Giá bán dự án</div>
-                      <div className="text-3xl md:text-4xl font-bold text-slate-900 mb-2">
+                      <div className="text-sm text-muted-foreground mb-1 font-medium">Giá bán dự án</div>
+                      <div className="text-3xl md:text-4xl font-bold text-foreground mb-2">
                         {project.priceRange}
                       </div>
-                      <div className="text-base text-slate-600">
+                      <div className="text-base text-muted-foreground">
                         {formatCurrency(project.pricePerSqm)} VNĐ/m²
                       </div>
                     </div>
                     <div className="text-right space-y-2">
                       <Button 
                         onClick={handleCalculate}
-                        className="bg-gradient-to-r from-primary to-accent text-white shadow-lg hover:shadow-xl transition-all"
+                        className="bg-gradient-to-r from-primary to-blue-600 text-white shadow-lg hover:shadow-xl transition-all"
                       >
                         <Calculator className="w-4 h-4 mr-2" />
                         Tính toán vay
@@ -159,19 +155,19 @@ const ProjectDetail = () => {
               </Card>
 
               {/* VIP Analysis CTA */}
-              <Card className="rounded-2xl shadow-lg border-2 border-primary/20 bg-gradient-to-br from-amber-50 via-orange-50/50 to-purple-50/30 overflow-hidden">
-                <div className="absolute top-0 right-0 w-48 h-48 bg-gradient-to-br from-amber-500/20 to-purple-500/20 rounded-full blur-3xl" />
+              <Card className="rounded-2xl shadow-lg border border-amber-200/30 bg-gradient-to-br from-amber-50/50 via-orange-50/30 to-purple-50/30 dark:from-amber-950/20 dark:to-purple-950/20 overflow-hidden relative">
+                <div className="absolute top-0 right-0 w-48 h-48 bg-gradient-to-br from-amber-500/10 to-purple-500/10 rounded-full blur-3xl pointer-events-none" />
                 <CardContent className="relative p-6">
                   <div className="flex items-center gap-4">
-                    <div className="p-4 bg-gradient-to-br from-amber-500 to-purple-600 rounded-2xl shadow-xl">
+                    <div className="p-4 bg-gradient-to-br from-amber-500 to-purple-600 rounded-2xl shadow-xl shrink-0">
                       <FileText className="w-8 h-8 text-white" />
                     </div>
                     <div className="flex-1">
                       <div className="flex items-center gap-2 mb-2">
-                        <h3 className="text-xl font-bold text-slate-900">Báo cáo phân tích chuyên sâu</h3>
+                        <h3 className="text-xl font-bold text-foreground">Báo cáo phân tích chuyên sâu</h3>
                         {!isVIP && <Crown className="w-5 h-5 text-amber-500" />}
                       </div>
-                      <p className="text-sm text-slate-600 mb-3">
+                      <p className="text-sm text-muted-foreground mb-3">
                         Phân tích tài chính, pháp lý, thị trường và kỹ thuật chi tiết
                       </p>
                       <AnalysisButton projectId={project.id} className="w-full md:w-auto" />
@@ -187,138 +183,110 @@ const ProjectDetail = () => {
                 </Card>
               )}
 
-              {/* Price History Chart */}
-              {project.priceHistory && project.priceHistory.length > 0 && (
-                <PriceHistoryChart
-                  priceHistory={project.priceHistory}
-                  launchPrice={project.launchPrice}
-                  currentPrice={project.currentPrice || project.pricePerSqm}
-                  projectName={project.name}
-                />
-              )}
-
-              {/* ROI Calculator */}
-              <ROICalculator
-                pricePerSqm={project.pricePerSqm}
-                averageRentalPrice={project.averageRentalPrice}
-                rentalYield={project.rentalYield}
-                projectName={project.name}
-              />
-
-              {/* Project Comparison */}
-              <ProjectComparison currentProject={project} />
-
-              {/* Timeline */}
-              <ProjectTimeline
-                completionDate={project.completionDate}
-                soldUnits={project.soldUnits}
-                totalUnits={project.totalUnits}
-              />
-
-              {/* Risk Analysis */}
-              <RiskAnalysis project={project} />
-
-              {/* Location Analysis */}
-              <LocationAnalysis
-                projectName={project.name}
-                location={project.location}
-                district={project.district}
-                city={project.city}
-              />
-
-              {/* Project Reviews */}
-              <ProjectReviews
-                projectId={project.id}
-                projectName={project.name}
-              />
-
-              {/* Tabs Section */}
-              <Card className="rounded-2xl shadow-lg border-0 bg-white">
+              {/* Components based on Tabs but rendered as sections for better SEO/UX in this layout structure */}
+              {/* (Or keep Tabs if preferred, but styles needed fixing) */}
+              
+              <Card className="rounded-2xl shadow-lg border-border bg-card">
                 <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-                  <div className="border-b bg-gradient-to-r from-slate-50 to-blue-50/30">
-                    <TabsList className="w-full h-auto p-3 bg-transparent justify-start overflow-x-auto">
-                      <TabsTrigger value="overview" className="data-[state=active]:bg-white data-[state=active]:text-primary data-[state=active]:shadow-md rounded-xl px-5 py-3 font-semibold text-sm transition-all whitespace-nowrap">
+                  <div className="border-b border-border bg-muted/30">
+                    <TabsList className="w-full h-auto p-3 bg-transparent justify-start overflow-x-auto no-scrollbar">
+                      <TabsTrigger value="overview" className="data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow-sm rounded-xl px-5 py-3 font-semibold text-sm transition-all whitespace-nowrap">
                         <Info className="w-4 h-4 mr-2" />
                         Tổng quan
                       </TabsTrigger>
-                      <TabsTrigger value="market" className="data-[state=active]:bg-white data-[state=active]:text-primary data-[state=active]:shadow-md rounded-xl px-5 py-3 font-semibold text-sm transition-all whitespace-nowrap">
+                      <TabsTrigger value="market" className="data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow-sm rounded-xl px-5 py-3 font-semibold text-sm transition-all whitespace-nowrap">
                         <TrendingUp className="w-4 h-4 mr-2" />
                         <span className="hidden sm:inline">Market Analysis</span>
                         <span className="sm:hidden">Market</span>
                       </TabsTrigger>
-                      <TabsTrigger value="legal" className="data-[state=active]:bg-white data-[state=active]:text-primary data-[state=active]:shadow-md rounded-xl px-5 py-3 font-semibold text-sm transition-all whitespace-nowrap">
+                      <TabsTrigger value="legal" className="data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow-sm rounded-xl px-5 py-3 font-semibold text-sm transition-all whitespace-nowrap">
                         <Shield className="w-4 h-4 mr-2" />
                         Pháp lý
                       </TabsTrigger>
-                      <TabsTrigger value="payment" className="data-[state=active]:bg-white data-[state=active]:text-primary data-[state=active]:shadow-md rounded-xl px-5 py-3 font-semibold text-sm transition-all whitespace-nowrap">
+                      <TabsTrigger value="payment" className="data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow-sm rounded-xl px-5 py-3 font-semibold text-sm transition-all whitespace-nowrap">
                         <DollarSign className="w-4 h-4 mr-2" />
                         Thanh toán
                       </TabsTrigger>
-                      <TabsTrigger value="progress" className="data-[state=active]:bg-white data-[state=active]:text-primary data-[state=active]:shadow-md rounded-xl px-5 py-3 font-semibold text-sm transition-all whitespace-nowrap">
+                      <TabsTrigger value="progress" className="data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow-sm rounded-xl px-5 py-3 font-semibold text-sm transition-all whitespace-nowrap">
                         <Activity className="w-4 h-4 mr-2" />
                         Tiến độ
-                      </TabsTrigger>
-                      <TabsTrigger value="pricing" className="data-[state=active]:bg-white data-[state=active]:text-primary data-[state=active]:shadow-md rounded-xl px-5 py-3 font-semibold text-sm transition-all whitespace-nowrap">
-                        <BarChart3 className="w-4 h-4 mr-2" />
-                        Phân tích giá
-                      </TabsTrigger>
-                      <TabsTrigger value="rental" className="data-[state=active]:bg-white data-[state=active]:text-primary data-[state=active]:shadow-md rounded-xl px-5 py-3 font-semibold text-sm transition-all whitespace-nowrap">
-                        <Home className="w-4 h-4 mr-2" />
-                        Cho thuê
-                      </TabsTrigger>
-                      <TabsTrigger value="policies" className="data-[state=active]:bg-white data-[state=active]:text-primary data-[state=active]:shadow-md rounded-xl px-5 py-3 font-semibold text-sm transition-all whitespace-nowrap">
-                        <FileText className="w-4 h-4 mr-2" />
-                        Chính sách TT
                       </TabsTrigger>
                     </TabsList>
                   </div>
                   
                   <div className="p-6">
-                    <TabsContent value="overview" className="mt-0">
+                    <TabsContent value="overview" className="mt-0 space-y-8">
                       <ProjectOverview
                         project={project}
                         onConsultationClick={() => setShowConsultationForm(true)}
                       />
+                      <ProjectComparison currentProject={project} />
+                      <RiskAnalysis project={project} />
+                      <LocationAnalysis
+                        projectName={project.name}
+                        location={project.location}
+                        district={project.district}
+                        city={project.city}
+                      />
+                       <ProjectReviews
+                        projectId={project.id}
+                        projectName={project.name}
+                      />
                     </TabsContent>
-                    <TabsContent value="market" className="mt-0">
+
+                    <TabsContent value="market" className="mt-0 space-y-8">
                       <StockStyleDashboard
                         projectId={project.id}
                         projectName={project.name}
                         currentPrice={project.pricePerSqm}
                       />
-                    </TabsContent>
-                    <TabsContent value="legal" className="mt-0">
-                      <ProjectLegalTab project={project} />
-                    </TabsContent>
-                    <TabsContent value="payment" className="mt-0">
-                      <ProjectPaymentTab project={project} />
-                    </TabsContent>
-                    <TabsContent value="progress" className="mt-0">
-                      <ProjectProgressTab project={project} />
-                    </TabsContent>
-                    <TabsContent value="pricing" className="mt-0">
+                       <PriceHistoryChart
+                        priceHistory={project.priceHistory || []}
+                        launchPrice={project.launchPrice}
+                        currentPrice={project.currentPrice || project.pricePerSqm}
+                        projectName={project.name}
+                      />
                       <PricingInsights
                         projectId={project.id}
                         currentPrice={project.pricePerSqm}
                       />
-                    </TabsContent>
-                    <TabsContent value="rental" className="mt-0">
                       <RentalYieldAnalysis
                         projectId={project.id}
                         purchasePrice={project.pricePerSqm * 70}
                       />
                     </TabsContent>
-                    <TabsContent value="policies" className="mt-0">
+
+                    <TabsContent value="legal" className="mt-0">
+                      <ProjectLegalTab project={project} />
+                    </TabsContent>
+
+                    <TabsContent value="payment" className="mt-0 space-y-8">
+                      <ProjectPaymentTab project={project} />
+                      <ROICalculator
+                        pricePerSqm={project.pricePerSqm}
+                        averageRentalPrice={project.averageRentalPrice}
+                        rentalYield={project.rentalYield}
+                        projectName={project.name}
+                      />
                       <PaymentPoliciesCard projectId={project.id} />
+                    </TabsContent>
+
+                    <TabsContent value="progress" className="mt-0 space-y-8">
+                      <ProjectProgressTab project={project} />
+                      <ProjectTimeline
+                        completionDate={project.completionDate}
+                        soldUnits={project.soldUnits}
+                        totalUnits={project.totalUnits}
+                      />
                     </TabsContent>
                   </div>
                 </Tabs>
               </Card>
 
               {/* FAQ Section */}
-              <Card className="rounded-2xl shadow-lg border-0 bg-white">
-                <CardHeader className="bg-gradient-to-r from-slate-50 to-blue-50/30 rounded-t-2xl border-b">
-                  <CardTitle className="text-lg flex items-center gap-2 text-slate-900">
+              <Card className="rounded-2xl shadow-lg border-border bg-card">
+                <CardHeader className="bg-muted/20 rounded-t-2xl border-b border-border/50">
+                  <CardTitle className="text-lg flex items-center gap-2 text-foreground">
                     <Info className="w-5 h-5 text-primary" />
                     Câu hỏi thường gặp
                   </CardTitle>
@@ -337,21 +305,21 @@ const ProjectDetail = () => {
 
             {/* Right Column - Sidebar */}
             <div className="lg:col-span-1">
-              <div className="sticky top-6 space-y-6">
+              <div className="sticky top-24 space-y-6">
                 {/* Agents Section */}
                 <ProjectAgents projectId={project.id} projectName={project.name} />
 
                 {/* Key Metrics */}
-                <Card className="rounded-2xl shadow-lg border-0 bg-white">
-                  <CardHeader className="bg-gradient-to-r from-slate-50 to-blue-50/30 rounded-t-2xl border-b border-slate-200/50 pb-3">
-                    <CardTitle className="text-base flex items-center gap-2 text-slate-900">
+                <Card className="card-elevated">
+                  <CardHeader className="bg-muted/30 rounded-t-2xl border-b border-border/50 pb-3">
+                    <CardTitle className="text-base flex items-center gap-2 text-foreground">
                       <BarChart3 className="w-4 h-4 text-primary" />
                       Chỉ số quan trọng
                     </CardTitle>
                   </CardHeader>
                   <CardContent className="p-4 space-y-3">
-                    <div className="flex justify-between items-center p-4 bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl shadow-sm border border-blue-100">
-                      <span className="text-sm font-medium flex items-center gap-2 text-slate-700">
+                    <div className="flex justify-between items-center p-4 bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-950/30 dark:to-indigo-950/30 rounded-xl shadow-sm border border-blue-100 dark:border-blue-900">
+                      <span className="text-sm font-medium flex items-center gap-2 text-muted-foreground">
                         <Star className="w-4 h-4 text-primary" />
                         Điểm pháp lý
                       </span>
@@ -364,12 +332,12 @@ const ProjectDetail = () => {
                       { label: "Đã bán", value: project.soldUnits || 'N/A', icon: Users },
                       { label: "Bàn giao", value: project.completionDate, icon: Calendar }
                     ].map((item, index) => (
-                      <div key={index} className="flex justify-between items-center p-3 bg-gradient-to-br from-slate-50 to-slate-100/50 rounded-xl hover:shadow-md transition-all duration-200">
-                        <span className="text-sm flex items-center gap-2 text-slate-700">
-                          <item.icon className="w-4 h-4 text-slate-500" />
+                      <div key={index} className="flex justify-between items-center p-3 bg-muted/30 rounded-xl hover:bg-muted/50 transition-all duration-200">
+                        <span className="text-sm flex items-center gap-2 text-muted-foreground">
+                          <item.icon className="w-4 h-4" />
                           {item.label}
                         </span>
-                        <span className="font-semibold text-slate-900">{item.value}</span>
+                        <span className="font-semibold text-foreground">{item.value}</span>
                       </div>
                     ))}
                   </CardContent>
@@ -377,43 +345,23 @@ const ProjectDetail = () => {
 
                 {/* Legal Warnings */}
                 {project.warnings.length > 0 && (
-                  <Card className="rounded-2xl shadow-lg border-0 bg-gradient-to-br from-amber-50 via-orange-50/50 to-yellow-50">
-                    <CardHeader className="pb-3 border-b border-amber-200/50">
-                      <CardTitle className="text-base text-amber-700 flex items-center gap-2">
+                  <Card className="card-elevated bg-gradient-to-br from-amber-50/50 via-orange-50/30 to-yellow-50/30 dark:from-amber-950/20 dark:to-yellow-950/10">
+                    <CardHeader className="pb-3 border-b border-amber-200/20">
+                      <CardTitle className="text-base text-amber-600 dark:text-amber-400 flex items-center gap-2">
                         <AlertTriangle className="w-4 h-4" />
                         Cảnh báo pháp lý
                       </CardTitle>
                     </CardHeader>
                     <CardContent className="p-4 space-y-2">
                       {project.warnings.slice(0, 3).map((warning, index) => (
-                        <div key={index} className="flex items-start gap-2 p-3 bg-white/70 backdrop-blur-sm rounded-xl shadow-sm">
+                        <div key={index} className="flex items-start gap-2 p-3 bg-background/60 backdrop-blur-sm rounded-xl shadow-sm border border-border/50">
                           <div className="w-2 h-2 bg-amber-500 rounded-full mt-2 flex-shrink-0" />
-                          <span className="text-sm leading-relaxed text-slate-700">{warning}</span>
+                          <span className="text-sm leading-relaxed text-foreground">{warning}</span>
                         </div>
                       ))}
-                      {project.warnings.length > 3 && (
-                        <div className="text-xs text-center py-2 text-amber-700 font-medium">
-                          +{project.warnings.length - 3} cảnh báo khác
-                        </div>
-                      )}
                     </CardContent>
                   </Card>
                 )}
-
-                {/* View Counter */}
-                <Card className="rounded-2xl shadow-lg border-0 bg-gradient-to-br from-slate-50 to-blue-50/30">
-                  <CardContent className="p-4">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2 text-slate-600">
-                        <Eye className="w-4 h-4" />
-                        <span className="text-sm font-medium">Lượt xem</span>
-                      </div>
-                      <span className="font-bold text-lg text-primary">
-                        {Math.floor(Math.random() * 5000) + 1000}
-                      </span>
-                    </div>
-                  </CardContent>
-                </Card>
               </div>
             </div>
           </div>

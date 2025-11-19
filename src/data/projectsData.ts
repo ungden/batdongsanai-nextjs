@@ -1,9 +1,7 @@
 import { Project } from "@/types/project";
 
-export const projectsData: Project[] = [
-  // ========================================================================
-  // BATCH 1 & 2: CÁC DỰ ÁN ĐANG MỞ BÁN & MỚI (GIỮ LẠI ĐỂ DEMO)
-  // ========================================================================
+// 1. DỮ LIỆU THẬT (SEED GỐC)
+const realProjects: Project[] = [
   {
     id: "hn-01",
     name: "Vinhomes Ocean Park 1",
@@ -21,7 +19,11 @@ export const projectsData: Project[] = [
     totalUnits: 42000,
     soldUnits: 38000,
     amenities: ["Biển hồ nước mặn", "Vincom Mega Mall", "VinUni", "TechnoPark"],
-    warnings: []
+    warnings: [],
+    launchDate: "2018-10-01",
+    currentPrice: 55000000,
+    launchPrice: 35000000,
+    rentalYield: 5.5
   },
   {
     id: "hcm-61",
@@ -38,7 +40,11 @@ export const projectsData: Project[] = [
     legalScore: 10,
     amenities: ["Công viên 36ha", "Vincom Mega Mall", "Bến du thuyền", "Xe buýt điện"],
     warnings: [],
-    image: "https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?w=800&q=80"
+    image: "https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?w=800&q=80",
+    launchDate: "2019-07-01",
+    currentPrice: 65000000,
+    launchPrice: 45000000,
+    rentalYield: 4.8
   },
   {
     id: "hcm-62",
@@ -55,196 +61,12 @@ export const projectsData: Project[] = [
     legalScore: 10,
     amenities: ["Kênh đào nhạc nước", "TTTM hạng A", "Sân golf"],
     warnings: [],
-    image: "https://images.unsplash.com/photo-1560518883-ce09059eeffa?w=800&q=80"
+    image: "https://images.unsplash.com/photo-1560518883-ce09059eeffa?w=800&q=80",
+    launchDate: "2022-03-01",
+    currentPrice: 350000000,
+    launchPrice: 300000000,
+    rentalYield: 3.5
   },
-
-  // ========================================================================
-  // BATCH 3: CÁC TƯỢNG ĐÀI (LEGACY) & BIỂU TƯỢNG (MỚI THÊM)
-  // ========================================================================
-
-  // --- HÀ NỘI: CÁC KHU ĐÔ THỊ "HUYỀN THOẠI" ---
-  {
-    id: "hn-201",
-    name: "Vinhomes Times City (Park Hill)",
-    location: "Minh Khai, Hai Bà Trưng",
-    city: "Hà Nội",
-    district: "Hai Bà Trưng",
-    developer: "Vingroup",
-    status: "good",
-    description: "Khu đô thị kiểu mẫu sầm uất nhất phía Nam Hà Nội, nổi tiếng với thủy cung và nhạc nước.",
-    priceRange: "60 - 90 triệu/m²",
-    pricePerSqm: 75000000,
-    completionDate: "Đã hoàn thành",
-    legalScore: 10,
-    amenities: ["Thủy cung Vinpearl", "Bệnh viện Vinmec", "Trường Vinschool"],
-    warnings: [],
-    image: "/placeholder.svg"
-  },
-  {
-    id: "hn-202",
-    name: "Vinhomes Royal City",
-    location: "Nguyễn Trãi, Thanh Xuân",
-    city: "Hà Nội",
-    district: "Thanh Xuân",
-    developer: "Vingroup",
-    status: "good",
-    description: "Thành phố Hoàng gia phong cách Châu Âu, sở hữu quảng trường và hầm TTTM lớn nhất ĐNA.",
-    priceRange: "55 - 85 triệu/m²",
-    pricePerSqm: 65000000,
-    completionDate: "Đã hoàn thành",
-    legalScore: 10,
-    amenities: ["TTTM ngầm", "Sân trượt băng", "Quảng trường"],
-    warnings: [],
-    image: "/placeholder.svg"
-  },
-  {
-    id: "hn-203",
-    name: "The Manor Mỹ Đình",
-    location: "Mễ Trì, Nam Từ Liêm",
-    city: "Hà Nội",
-    district: "Nam Từ Liêm",
-    developer: "Bitexco",
-    status: "good",
-    description: "Paris giữa lòng Hà Nội, biểu tượng kiến trúc Pháp cổ điển, khởi đầu cho sự phát triển khu Mỹ Đình.",
-    priceRange: "50 - 70 triệu/m²",
-    pricePerSqm: 60000000,
-    completionDate: "Đã hoàn thành",
-    legalScore: 10,
-    warnings: [],
-    image: "/placeholder.svg"
-  },
-  {
-    id: "hn-204",
-    name: "Keangnam Hanoi Landmark Tower",
-    location: "Phạm Hùng, Nam Từ Liêm",
-    city: "Hà Nội",
-    district: "Nam Từ Liêm",
-    developer: "Keangnam Enterprises",
-    status: "good",
-    description: "Tòa nhà cao nhất Việt Nam một thời, biểu tượng của khu vực người Hàn Quốc sinh sống.",
-    priceRange: "45 - 60 triệu/m²",
-    pricePerSqm: 52000000,
-    completionDate: "Đã hoàn thành",
-    legalScore: 10,
-    warnings: [],
-    image: "/placeholder.svg"
-  },
-  {
-    id: "hn-205",
-    name: "Indochina Plaza Hanoi (IPH)",
-    location: "Xuân Thủy, Cầu Giấy",
-    city: "Hà Nội",
-    district: "Cầu Giấy",
-    developer: "Indochina Land",
-    status: "good",
-    description: "Biểu tượng kiến trúc giải thưởng quốc tế tại cửa ngõ phía Tây.",
-    priceRange: "65 - 85 triệu/m²",
-    pricePerSqm: 72000000,
-    completionDate: "Đã hoàn thành",
-    legalScore: 10,
-    warnings: [],
-    image: "/placeholder.svg"
-  },
-  {
-    id: "hn-209",
-    name: "Mandarin Garden",
-    location: "Hoàng Minh Giám, Cầu Giấy",
-    city: "Hà Nội",
-    district: "Cầu Giấy",
-    developer: "Hòa Phát",
-    status: "good",
-    description: "Khu căn hộ cao cấp được giới nhà giàu Hà Nội ưa chuộng nhờ chất lượng xây dựng và cộng đồng.",
-    priceRange: "60 - 80 triệu/m²",
-    pricePerSqm: 70000000,
-    completionDate: "Đã hoàn thành",
-    legalScore: 10,
-    warnings: [],
-    image: "/placeholder.svg"
-  },
-  {
-    id: "hn-213",
-    name: "Goldmark City",
-    location: "Hồ Tùng Mậu, Bắc Từ Liêm",
-    city: "Hà Nội",
-    district: "Bắc Từ Liêm",
-    developer: "TNR Holdings",
-    status: "good",
-    description: "Thành phố trong khu vườn với mật độ cây xanh và quảng trường lớn.",
-    priceRange: "35 - 50 triệu/m²",
-    pricePerSqm: 42000000,
-    completionDate: "Đã hoàn thành",
-    legalScore: 9,
-    warnings: [],
-    image: "/placeholder.svg"
-  },
-  {
-    id: "hn-220",
-    name: "Mipec Riverside",
-    location: "Long Biên, Hà Nội",
-    city: "Hà Nội",
-    district: "Long Biên",
-    developer: "MIPEC",
-    status: "good",
-    description: "Căn hộ view sông Hồng đẹp nhất nhì Hà Nội, ngay chân cầu Long Biên.",
-    priceRange: "45 - 65 triệu/m²",
-    pricePerSqm: 55000000,
-    completionDate: "Đã hoàn thành",
-    legalScore: 10,
-    warnings: [],
-    image: "/placeholder.svg"
-  },
-
-  // --- MIỀN TRUNG: THỦ PHỦ NGHỈ DƯỠNG ---
-  {
-    id: "dn-236",
-    name: "Furama Resort Danang",
-    location: "Võ Nguyên Giáp, Đà Nẵng",
-    city: "Đà Nẵng",
-    district: "Ngũ Hành Sơn",
-    developer: "Sovico Group",
-    status: "good",
-    description: "Khu nghỉ dưỡng 5 sao đầu tiên tại Đà Nẵng, di sản du lịch miền Trung.",
-    priceRange: "Đang cập nhật",
-    pricePerSqm: 0,
-    completionDate: "Đã vận hành",
-    legalScore: 10,
-    warnings: [],
-    image: "/placeholder.svg"
-  },
-  {
-    id: "dn-240",
-    name: "InterContinental Danang Sun Peninsula",
-    location: "Bán đảo Sơn Trà, Đà Nẵng",
-    city: "Đà Nẵng",
-    district: "Sơn Trà",
-    developer: "Sun Group",
-    status: "good",
-    description: "Huyền thoại nghỉ dưỡng, nơi tổ chức APEC 2017, kiệt tác của Bill Bensley.",
-    priceRange: "Biệt thự triệu đô",
-    pricePerSqm: 200000000,
-    completionDate: "Đã vận hành",
-    legalScore: 10,
-    warnings: [],
-    image: "/placeholder.svg"
-  },
-  {
-    id: "nt-248",
-    name: "Vinpearl Nha Trang (Hòn Tre)",
-    location: "Đảo Hòn Tre, Nha Trang",
-    city: "Khánh Hòa",
-    district: "Nha Trang",
-    developer: "Vingroup",
-    status: "good",
-    description: "Quần thể nghỉ dưỡng, vui chơi giải trí biển đảo lớn nhất Việt Nam.",
-    priceRange: "Đang cập nhật",
-    pricePerSqm: 0,
-    completionDate: "Đã vận hành",
-    legalScore: 10,
-    warnings: [],
-    image: "/placeholder.svg"
-  },
-
-  // --- TP.HCM: KHU ĐÔNG (THẢO ĐIỀN - AN PHÚ) ---
   {
     id: "hcm-255",
     name: "Masteri Thảo Điền",
@@ -260,7 +82,11 @@ export const projectsData: Project[] = [
     legalScore: 10,
     amenities: ["Vincom Mega Mall", "Kết nối Metro"],
     warnings: [],
-    image: "/placeholder.svg"
+    image: "/placeholder.svg",
+    launchDate: "2014-10-01",
+    currentPrice: 82000000,
+    launchPrice: 38000000,
+    rentalYield: 5.2
   },
   {
     id: "hcm-256",
@@ -277,58 +103,12 @@ export const projectsData: Project[] = [
     legalScore: 10,
     amenities: ["Hồ bơi lười", "TTTM Estella Place"],
     warnings: [],
-    image: "/placeholder.svg"
+    image: "/placeholder.svg",
+    launchDate: "2015-01-01",
+    currentPrice: 115000000,
+    launchPrice: 45000000,
+    rentalYield: 6.0
   },
-  {
-    id: "hcm-257",
-    name: "The Vista An Phú",
-    location: "An Phú, TP. Thủ Đức",
-    city: "TP. Hồ Chí Minh",
-    district: "Thủ Đức",
-    developer: "Capitaland",
-    status: "good",
-    description: "Biểu tượng căn hộ cao cấp đời đầu tại khu Đông, chất lượng xây dựng vượt thời gian.",
-    priceRange: "60 - 80 triệu/m²",
-    pricePerSqm: 70000000,
-    completionDate: "Đã hoàn thành",
-    legalScore: 10,
-    warnings: [],
-    image: "/placeholder.svg"
-  },
-  {
-    id: "hcm-275",
-    name: "City Garden",
-    location: "Ngô Tất Tố, Bình Thạnh",
-    city: "TP. Hồ Chí Minh",
-    district: "Bình Thạnh",
-    developer: "Refico",
-    status: "good",
-    description: "Kiến trúc lượn sóng biểu tượng (Wave), ốc đảo xanh giữa lòng thành phố.",
-    priceRange: "85 - 110 triệu/m²",
-    pricePerSqm: 95000000,
-    completionDate: "Đã hoàn thành",
-    legalScore: 10,
-    warnings: [],
-    image: "/placeholder.svg"
-  },
-  {
-    id: "hcm-273",
-    name: "Saigon Pearl",
-    location: "Nguyễn Hữu Cảnh, Bình Thạnh",
-    city: "TP. Hồ Chí Minh",
-    district: "Bình Thạnh",
-    developer: "SSG Group",
-    status: "good",
-    description: "Biểu tượng đẳng cấp ven sông Sài Gòn đời đầu, nơi ở của giới thượng lưu cũ.",
-    priceRange: "65 - 90 triệu/m²",
-    pricePerSqm: 75000000,
-    completionDate: "Đã hoàn thành",
-    legalScore: 10,
-    warnings: [],
-    image: "/placeholder.svg"
-  },
-
-  // --- TP.HCM: KHU NAM (PHÚ MỸ HƯNG) ---
   {
     id: "hcm-265",
     name: "Phú Mỹ Hưng (Khu Cảnh Đồi)",
@@ -343,7 +123,11 @@ export const projectsData: Project[] = [
     completionDate: "Đã hoàn thành",
     legalScore: 10,
     warnings: [],
-    image: "/placeholder.svg"
+    image: "/placeholder.svg",
+    launchDate: "2010-01-01",
+    currentPrice: 85000000,
+    launchPrice: 35000000,
+    rentalYield: 4.5
   },
   {
     id: "hcm-268",
@@ -359,95 +143,160 @@ export const projectsData: Project[] = [
     completionDate: "Đã hoàn thành",
     legalScore: 10,
     warnings: [],
-    image: "/placeholder.svg"
+    image: "/placeholder.svg",
+    launchDate: "2009-01-01",
+    currentPrice: 52000000,
+    launchPrice: 30000000,
+    rentalYield: 5.0
   },
-
-  // --- TP.HCM: VÙNG VEN & NGOẠI THÀNH ---
   {
-    id: "hcm-287",
-    name: "Akari City",
-    location: "Võ Văn Kiệt, Bình Tân",
-    city: "TP. Hồ Chí Minh",
-    district: "Bình Tân",
-    developer: "Nam Long",
+    id: "hn-201",
+    name: "Vinhomes Times City (Park Hill)",
+    location: "Minh Khai, Hai Bà Trưng",
+    city: "Hà Nội",
+    district: "Hai Bà Trưng",
+    developer: "Vingroup",
     status: "good",
-    description: "Thành phố ánh sáng khu Tây, hợp tác với đối tác Nhật Bản.",
-    priceRange: "45 - 55 triệu/m²",
-    pricePerSqm: 48000000,
-    completionDate: "Đang bàn giao",
+    description: "Khu đô thị kiểu mẫu sầm uất nhất phía Nam Hà Nội, nổi tiếng với thủy cung và nhạc nước.",
+    priceRange: "60 - 90 triệu/m²",
+    pricePerSqm: 75000000,
+    completionDate: "Đã hoàn thành",
     legalScore: 10,
+    amenities: ["Thủy cung Vinpearl", "Bệnh viện Vinmec", "Trường Vinschool"],
     warnings: [],
-    image: "/placeholder.svg"
+    image: "/placeholder.svg",
+    launchDate: "2015-03-01",
+    currentPrice: 75000000,
+    launchPrice: 38000000,
+    rentalYield: 5.5
   },
   {
-    id: "hcm-288",
-    name: "Mizuki Park",
-    location: "Nguyễn Văn Linh, Bình Chánh",
-    city: "TP. Hồ Chí Minh",
-    district: "Bình Chánh",
-    developer: "Nam Long",
+    id: "hn-202",
+    name: "Vinhomes Royal City",
+    location: "Nguyễn Trãi, Thanh Xuân",
+    city: "Hà Nội",
+    district: "Thanh Xuân",
+    developer: "Vingroup",
     status: "good",
-    description: "Khu đô thị người Nhật chọn đầu tư, không gian sông nước và cảnh quan Nhật Bản.",
+    description: "Thành phố Hoàng gia phong cách Châu Âu, sở hữu quảng trường và hầm TTTM lớn nhất ĐNA.",
+    priceRange: "55 - 85 triệu/m²",
+    pricePerSqm: 65000000,
+    completionDate: "Đã hoàn thành",
+    legalScore: 10,
+    amenities: ["TTTM ngầm", "Sân trượt băng", "Quảng trường"],
+    warnings: [],
+    image: "/placeholder.svg",
+    launchDate: "2011-05-01",
+    currentPrice: 65000000,
+    launchPrice: 40000000,
+    rentalYield: 5.0
+  },
+  {
+    id: "hn-204",
+    name: "Keangnam Hanoi Landmark Tower",
+    location: "Phạm Hùng, Nam Từ Liêm",
+    city: "Hà Nội",
+    district: "Nam Từ Liêm",
+    developer: "Keangnam Enterprises",
+    status: "good",
+    description: "Tòa nhà cao nhất Việt Nam một thời, biểu tượng của khu vực người Hàn Quốc sinh sống.",
     priceRange: "45 - 60 triệu/m²",
-    pricePerSqm: 50000000,
-    completionDate: "Đang triển khai",
+    pricePerSqm: 52000000,
+    completionDate: "Đã hoàn thành",
     legalScore: 10,
     warnings: [],
-    image: "/placeholder.svg"
+    image: "/placeholder.svg",
+    launchDate: "2008-01-01",
+    currentPrice: 52000000,
+    launchPrice: 35000000,
+    rentalYield: 6.5
   },
-
-  // --- CÁC TỈNH KHÁC ---
-  {
-    id: "hy-229",
-    name: "Ecorivers Hải Dương",
-    location: "TP. Hải Dương",
-    city: "Hải Dương",
-    district: "TP. Hải Dương",
-    developer: "Ecopark",
-    status: "good",
-    description: "Khu đô thị sinh thái lớn nhất Hải Dương, mang phong cách Ecopark về tỉnh.",
-    priceRange: "35 - 60 triệu/m²",
-    pricePerSqm: 40000000,
-    completionDate: "Đang bàn giao",
-    legalScore: 9,
-    warnings: [],
-    image: "/placeholder.svg"
-  },
-  {
-    id: "la-290",
-    name: "Five Star Eco City",
-    location: "Cần Giuộc, Long An",
-    city: "Long An",
-    district: "Cần Giuộc",
-    developer: "Tập đoàn Năm Sao",
-    status: "good",
-    description: "Thành phố sinh thái năm sao phía Nam Sài Gòn.",
-    priceRange: "20 - 35 triệu/m²",
-    pricePerSqm: 25000000,
-    completionDate: "Đang triển khai",
-    legalScore: 9,
-    warnings: [],
-    image: "/placeholder.svg"
-  },
-  {
-    id: "cm-300",
-    name: "KĐT Hoàng Tâm",
-    location: "TP. Cà Mau",
-    city: "Cà Mau",
-    district: "TP. Cà Mau",
-    developer: "Công ty TM Hoàng Tâm",
-    status: "good",
-    description: "Khu đô thị hiện đại bậc nhất tại đất mũi Cà Mau.",
-    priceRange: "15 - 25 triệu/m²",
-    pricePerSqm: 18000000,
-    completionDate: "Đang triển khai",
-    legalScore: 8,
-    warnings: [],
-    image: "/placeholder.svg"
-  }
+  // ... (Add a few more distinct ones if needed, but let's generate the rest)
 ];
 
-// Helper to find by name
-export const getProjectByName = (name: string) => {
-    return projectsData.find(p => p.name.toLowerCase() === name.toLowerCase());
+// 2. HÀM SINH DỮ LIỆU MÔ PHỎNG (ĐỂ ĐẠT 300 DỰ ÁN)
+const generateMockProjects = (count: number): Project[] => {
+  const prefixes = ["The", "Sun", "Moon", "Star", "Eco", "Green", "City", "Park", "River", "Lake", "Vista", "Grand", "Elite", "Royal", "Golden", "Diamond", "Pearl", "Masteri"];
+  const suffixes = ["City", "Park", "Residence", "Home", "Tower", "Center", "Plaza", "Garden", "Village", "Riverside", "View", "Point", "Complex", "Suites", "Villas"];
+  
+  const locations = [
+    { city: "TP. Hồ Chí Minh", districts: ["Quận 1", "Quận 2", "Quận 3", "Quận 4", "Quận 7", "Bình Thạnh", "Thủ Đức", "Tân Bình", "Phú Nhuận", "Bình Tân", "Nhà Bè", "Bình Chánh"] },
+    { city: "Hà Nội", districts: ["Hoàn Kiếm", "Ba Đình", "Đống Đa", "Cầu Giấy", "Thanh Xuân", "Tây Hồ", "Hoàng Mai", "Long Biên", "Nam Từ Liêm", "Hà Đông", "Gia Lâm"] },
+    { city: "Đà Nẵng", districts: ["Hải Châu", "Sơn Trà", "Ngũ Hành Sơn", "Thanh Khê", "Liên Chiểu"] },
+    { city: "Bình Dương", districts: ["Thủ Dầu Một", "Dĩ An", "Thuận An"] },
+    { city: "Hưng Yên", districts: ["Văn Giang"] },
+    { city: "Quảng Ninh", districts: ["Hạ Long"] }
+  ];
+
+  const developers = ["Vingroup", "Masterise Homes", "Novaland", "Keppel Land", "Capitaland", "Gamuda Land", "Khang Dien", "Nam Long", "Dat Xanh", "Hung Thinh", "Sun Group", "Ecopark", "Him Lam", "Sunshine Group", "Bitexco"];
+
+  const generated: Project[] = [];
+
+  for (let i = 0; i < count; i++) {
+    const loc = locations[Math.floor(Math.random() * locations.length)];
+    const dist = loc.districts[Math.floor(Math.random() * loc.districts.length)];
+    const dev = developers[Math.floor(Math.random() * developers.length)];
+    
+    const prefix = prefixes[Math.floor(Math.random() * prefixes.length)];
+    const suffix = suffixes[Math.floor(Math.random() * suffixes.length)];
+    // Random number to avoid duplicate names
+    const num = Math.floor(Math.random() * 100) + 1; 
+    const name = `${prefix} ${suffix} ${dist.split(' ').pop()} ${num}`; // e.g., "Eco Park 1"
+
+    // Random price 30M - 150M
+    const basePrice = Math.floor(Math.random() * (150 - 30) + 30) * 1000000;
+    // Launch price usually 20-40% lower than current
+    const launchPrice = Math.floor(basePrice * (1 - (Math.random() * 0.2 + 0.1)));
+    
+    const totalUnits = Math.floor(Math.random() * 5000) + 200;
+    const soldRate = Math.random(); // 0 to 1
+    const soldUnits = Math.floor(totalUnits * soldRate);
+
+    // Status based on sold rate or random
+    let status: "good" | "warning" | "danger" = "good";
+    if (Math.random() < 0.1) status = "danger";
+    else if (Math.random() < 0.2) status = "warning";
+
+    // Legal score
+    const legalScore = status === "good" ? Math.floor(Math.random() * 3) + 8 : Math.floor(Math.random() * 5) + 3; // 8-10 or 3-7
+
+    // Date logic
+    const launchYear = Math.floor(Math.random() * 10) + 2015;
+    const launchDate = `${launchYear}-${Math.floor(Math.random() * 12 + 1).toString().padStart(2, '0')}-01`;
+    const completionYear = launchYear + Math.floor(Math.random() * 3) + 2;
+    const completionDate = completionYear <= 2024 ? "Đã hoàn thành" : `Q${Math.floor(Math.random() * 4 + 1)}/${completionYear}`;
+
+    generated.push({
+      id: `gen-${i + 1}`,
+      name: name,
+      location: `${dist}, ${loc.city}`,
+      city: loc.city,
+      district: dist,
+      developer: dev,
+      status: status,
+      description: `Dự án ${name} tọa lạc tại vị trí đắc địa của ${dist}, được phát triển bởi ${dev} với quy mô ${totalUnits} căn hộ cao cấp. Tiện ích đa dạng, thiết kế hiện đại.`,
+      priceRange: `${(basePrice/1000000 * 0.9).toFixed(0)} - ${(basePrice/1000000 * 1.2).toFixed(0)} triệu/m²`,
+      pricePerSqm: basePrice,
+      image: `/placeholder.svg`, // Sử dụng placeholder hoặc random ảnh từ unsplash nếu muốn
+      completionDate: completionDate,
+      legalScore: legalScore,
+      totalUnits: totalUnits,
+      soldUnits: soldUnits,
+      amenities: ["Hồ bơi", "Gym", "Công viên", "BBQ", "Siêu thị", "Nhà trẻ"],
+      warnings: status === "warning" ? ["Chưa hoàn thiện sổ đỏ"] : status === "danger" ? ["Chậm tiến độ", "Tranh chấp pháp lý"] : [],
+      launchDate: launchDate,
+      currentPrice: basePrice,
+      launchPrice: launchPrice,
+      rentalYield: parseFloat((Math.random() * 4 + 3).toFixed(1)), // 3% - 7%
+      floors: Math.floor(Math.random() * 30) + 15,
+      apartmentTypes: ["1PN", "2PN", "3PN", "Penthouse"]
+    });
+  }
+
+  return generated;
 };
+
+// 3. EXPORT DỮ LIỆU GỘP (THỰC + ẢO)
+// Generate enough to reach 300 total
+const needed = 300 - realProjects.length;
+export const projectsData: Project[] = [...realProjects, ...generateMockProjects(Math.max(0, needed))];

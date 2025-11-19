@@ -17,10 +17,14 @@ import {
   Upload,
   Trash2,
   Edit3,
-  Plus
+  Plus,
+  Sparkles,
+  Loader2,
+  Wand2
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useContent } from '@/hooks/useContent';
+import { supabase } from '@/integrations/supabase/client';
 
 interface ContentManagementProps {
   className?: string;
@@ -42,6 +46,12 @@ const ContentManagement = ({ className }: ContentManagementProps) => {
   const [activeTab, setActiveTab] = useState('pages');
   const [editingItem, setEditingItem] = useState<any>(null);
   const [showCreateDialog, setShowCreateDialog] = useState(false);
+  
+  // AI State
+  const [isAiGenerating, setIsAiGenerating] = useState(false);
+  const [aiPrompt, setAiPrompt] = useState('');
+  const [showAiTool, setShowAiTool] = useState(false);
+
   const [newItem, setNewItem] = useState({
     type: 'page' as 'page' | 'banner' | 'announcement' | 'seo',
     title: '',
@@ -51,6 +61,56 @@ const ContentManagement = ({ className }: ContentManagementProps) => {
     meta_title: '',
     meta_description: ''
   });
+
+  const handleAiGenerate = async (target: 'new' | 'edit') => {
+    const prompt = aiPrompt;
+    if (!prompt.trim()) {
+      toast({ title: "Thiếu thông tin", description: "Vui lòng nhập chủ đề hoặc yêu cầu.", variant: "destructive" });
+      return;
+    }
+
+    setIsAiGenerating(true);
+    try {
+      const itemType = target === 'new' ? newItem.type : (editingItem?.type || 'page');
+      
+      const { data, error } = await supabase.functions.invoke('generate-content', {
+        body: { 
+          topic: prompt,
+          type: itemType,
+          tone: 'chuyên nghiệp',
+          language: 'vi-VN'
+        }
+      });
+
+      if (error) throw error;
+      const result = data.data;
+
+      if (target === 'new') {
+        setNewItem(prev => ({
+          ...prev,
+          title: result.title || prev.title,
+          content: result.content || prev.content,
+          slug: result.slug || prev.slug,
+          meta_description: result.meta_description || prev.meta_description,
+        }));
+      } else if (editingItem) {
+        setEditingItem((prev: any) => ({
+          ...prev,
+          title: result.title || prev.title,
+          content: result.content || prev.content,
+          slug: result.slug || prev.slug,
+        }));
+      }
+
+      toast({ title: "AI hoàn tất", description: "Đã tạo nội dung thành công." });
+      setAiPrompt('');
+      setShowAiTool(false);
+    } catch (e: any) {
+      toast({ title: "Lỗi AI", description: e.message, variant: "destructive" });
+    } finally {
+      setIsAiGenerating(false);
+    }
+  };
 
   const handleCreate = async () => {
     await createContentItem(newItem);
@@ -338,6 +398,39 @@ const ContentManagement = ({ className }: ContentManagementProps) => {
             <DialogHeader>
               <DialogTitle>Tạo nội dung mới</DialogTitle>
             </DialogHeader>
+
+            {/* AI Tool Section */}
+            <div className="bg-muted/30 p-3 rounded-md border border-dashed mb-4">
+              <div className="flex items-center justify-between mb-2 cursor-pointer" onClick={() => setShowAiTool(!showAiTool)}>
+                <div className="flex items-center text-sm font-medium text-primary">
+                  <Sparkles className="w-4 h-4 mr-2" />
+                  Sử dụng AI để tạo nội dung tự động
+                </div>
+                <Button variant="ghost" size="sm" className="h-6 text-xs">
+                  {showAiTool ? 'Ẩn' : 'Hiện'}
+                </Button>
+              </div>
+              
+              {showAiTool && (
+                <div className="space-y-2 animate-in slide-in-from-top-2">
+                  <Input 
+                    placeholder="Nhập chủ đề, từ khóa hoặc yêu cầu (VD: Trang giới thiệu công ty...)" 
+                    value={aiPrompt}
+                    onChange={(e) => setAiPrompt(e.target.value)}
+                  />
+                  <Button 
+                    size="sm" 
+                    onClick={() => handleAiGenerate('new')} 
+                    disabled={isAiGenerating || !aiPrompt}
+                    className="w-full"
+                  >
+                    {isAiGenerating ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Wand2 className="w-4 h-4 mr-2" />}
+                    Tạo nội dung ngay
+                  </Button>
+                </div>
+              )}
+            </div>
+
             <div className="space-y-4">
               <div>
                 <label className="text-sm font-medium">Loại nội dung</label>
@@ -408,6 +501,39 @@ const ContentManagement = ({ className }: ContentManagementProps) => {
                 <DialogHeader>
                   <DialogTitle>Chỉnh sửa nội dung</DialogTitle>
                 </DialogHeader>
+                
+                <div className="flex justify-end">
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={() => setShowAiTool(!showAiTool)}
+                    className="text-primary border-primary/30"
+                  >
+                    <Sparkles className="w-3 h-3 mr-2" />
+                    AI Hỗ trợ
+                  </Button>
+                </div>
+
+                {showAiTool && (
+                   <div className="bg-muted/30 p-3 rounded-md border border-dashed mb-2">
+                    <div className="space-y-2">
+                      <Input 
+                        placeholder="Yêu cầu sửa đổi (VD: Viết lại trang trọng hơn...)" 
+                        value={aiPrompt}
+                        onChange={(e) => setAiPrompt(e.target.value)}
+                      />
+                      <Button 
+                        size="sm" 
+                        onClick={() => handleAiGenerate('edit')} 
+                        disabled={isAiGenerating || !aiPrompt}
+                        className="w-full"
+                      >
+                        {isAiGenerating ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Thực hiện'}
+                      </Button>
+                    </div>
+                  </div>
+                )}
+
                 <div className="space-y-4">
                   <div>
                     <label className="text-sm font-medium">Tiêu đề</label>

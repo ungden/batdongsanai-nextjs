@@ -8,9 +8,10 @@ import { Badge } from '@/components/ui/badge';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from 'sonner';
-import { Plus, Edit, Trash2, Eye, Search, Calendar, User } from 'lucide-react';
+import { Plus, Edit, Trash2, Eye, Search, Calendar, User, Sparkles, Loader2, Wand2 } from 'lucide-react';
 import { format } from 'date-fns';
 import { vi } from 'date-fns/locale';
+import { supabase } from '@/integrations/supabase/client';
 
 const NewsManagement = () => {
   const { contentItems, loading, createContentItem, updateContentItem, deleteContentItem } = useContent();
@@ -18,6 +19,11 @@ const NewsManagement = () => {
   const [editingItem, setEditingItem] = useState<any>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState('all');
+  
+  // AI Generation State
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [aiPrompt, setAiPrompt] = useState('');
+  const [showAiInput, setShowAiInput] = useState(false);
 
   const [formData, setFormData] = useState({
     title: '',
@@ -43,6 +49,8 @@ const NewsManagement = () => {
     });
     setIsEditing(false);
     setEditingItem(null);
+    setShowAiInput(false);
+    setAiPrompt('');
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -70,6 +78,46 @@ const NewsManagement = () => {
       resetForm();
     } catch (error) {
       toast.error('Có lỗi xảy ra. Vui lòng thử lại.');
+    }
+  };
+
+  const handleAiGenerate = async () => {
+    if (!aiPrompt.trim()) {
+      toast.error('Vui lòng nhập chủ đề hoặc từ khóa');
+      return;
+    }
+
+    setIsGenerating(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('generate-content', {
+        body: { 
+          topic: aiPrompt,
+          type: 'news',
+          tone: 'chuyên nghiệp, khách quan',
+          language: 'vi-VN'
+        }
+      });
+
+      if (error) throw error;
+
+      const result = data.data;
+      
+      setFormData(prev => ({
+        ...prev,
+        title: result.title || prev.title,
+        content: result.content || prev.content,
+        meta_title: result.meta_title || result.title || prev.meta_title,
+        meta_description: result.summary || result.meta_description || prev.meta_description,
+        keywords: Array.isArray(result.keywords) ? result.keywords.join(', ') : (result.keywords || prev.keywords),
+      }));
+
+      toast.success('Đã tạo nội dung thành công!');
+      setShowAiInput(false);
+    } catch (error: any) {
+      console.error(error);
+      toast.error('Lỗi tạo nội dung: ' + error.message);
+    } finally {
+      setIsGenerating(false);
     }
   };
 
@@ -136,19 +184,70 @@ const NewsManagement = () => {
           <h2 className="text-2xl font-bold">Quản Lý Tin Tức Bất Động Sản</h2>
           <p className="text-muted-foreground">Tạo và quản lý tin tức, bài viết về thị trường bất động sản</p>
         </div>
-        <Button onClick={() => setIsEditing(true)}>
-          <Plus className="w-4 h-4 mr-2" />
-          Thêm tin tức mới
-        </Button>
+        <div className="flex gap-2">
+          {!isEditing && (
+            <Button onClick={() => {
+              resetForm();
+              setIsEditing(true);
+              setShowAiInput(true);
+            }} variant="outline" className="border-dashed border-primary text-primary hover:bg-primary/10">
+              <Sparkles className="w-4 h-4 mr-2" />
+              AI Soạn thảo nhanh
+            </Button>
+          )}
+          <Button onClick={() => {
+            resetForm();
+            setIsEditing(true);
+          }}>
+            <Plus className="w-4 h-4 mr-2" />
+            Thêm tin tức mới
+          </Button>
+        </div>
       </div>
 
       {/* Form tạo/chỉnh sửa */}
       {isEditing && (
-        <Card>
+        <Card className="border-2 border-primary/20">
           <CardHeader>
-            <CardTitle>{editingItem ? 'Chỉnh sửa tin tức' : 'Tạo tin tức mới'}</CardTitle>
+            <div className="flex justify-between items-center">
+              <CardTitle>{editingItem ? 'Chỉnh sửa tin tức' : 'Tạo tin tức mới'}</CardTitle>
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                onClick={() => setShowAiInput(!showAiInput)}
+                className="text-muted-foreground"
+              >
+                <Sparkles className="w-4 h-4 mr-2" />
+                {showAiInput ? 'Ẩn công cụ AI' : 'Mở công cụ AI'}
+              </Button>
+            </div>
           </CardHeader>
           <CardContent>
+            {showAiInput && (
+              <div className="mb-6 p-4 bg-muted/50 rounded-lg border border-dashed border-primary/50 space-y-3">
+                <h4 className="font-semibold flex items-center text-primary">
+                  <Wand2 className="w-4 h-4 mr-2" />
+                  AI Generator
+                </h4>
+                <div className="flex gap-2">
+                  <Input 
+                    placeholder="Nhập chủ đề, từ khóa hoặc link nguồn tin tức..." 
+                    value={aiPrompt}
+                    onChange={(e) => setAiPrompt(e.target.value)}
+                    onKeyDown={(e) => e.key === 'Enter' && handleAiGenerate()}
+                    disabled={isGenerating}
+                  />
+                  <Button onClick={handleAiGenerate} disabled={isGenerating || !aiPrompt}>
+                    {isGenerating ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
+                    {isGenerating ? 'Đang viết...' : 'Tạo bài'}
+                  </Button>
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  AI sẽ tự động tìm kiếm thông tin liên quan đến chủ đề, viết bài, tối ưu SEO và điền vào form bên dưới.
+                </p>
+              </div>
+            )}
+
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">

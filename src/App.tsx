@@ -33,7 +33,7 @@ const DeveloperDetail = lazy(() => import("./pages/DeveloperDetail"));
 const Developers = lazy(() => import("./pages/Developers"));
 const ProjectAnalysisHub = lazy(() => import("./pages/ProjectAnalysisHub"));
 
-// New Admin imports
+// Admin Pages
 const AdminLayout = lazy(() => import('@/pages/admin/AdminLayout'));
 const AdminDashboard = lazy(() => import('@/pages/admin/Dashboard'));
 const ResearchFactory = lazy(() => import('@/pages/admin/ResearchFactory'));
@@ -42,6 +42,12 @@ const CatalystFactory = lazy(() => import('@/pages/admin/CatalystFactory'));
 const DataManagement = lazy(() => import('@/pages/admin/DataManagement'));
 const AnalyticsDashboard = lazy(() => import('@/pages/admin/AnalyticsDashboard'));
 const LeadManagement = lazy(() => import('@/pages/admin/LeadManagement'));
+const AdminUsers = lazy(() => import('@/pages/admin/AdminUsers'));
+const AdminProjects = lazy(() => import('@/pages/admin/AdminProjects'));
+const AdminDevelopers = lazy(() => import('@/pages/admin/AdminDevelopers'));
+const AdminSettings = lazy(() => import('@/pages/admin/AdminSettings'));
+const AdminLogsPage = lazy(() => import('@/pages/admin/AdminLogs'));
+const AdminNews = lazy(() => import('@/pages/admin/AdminNews'));
 
 // New Feature Pages
 const Portfolio = lazy(() => import('./pages/Portfolio'));
@@ -102,6 +108,8 @@ const App = () => (
               <Route path="/market-overview" element={<MarketOverview />} />
               <Route path="/developers" element={<Developers />} />
               <Route path="/developers/:developerId" element={<DeveloperDetail />} />
+              
+              {/* Admin Routes */}
               <Route path="/admin" element={<AdminLayout />}>
                 <Route index element={<Navigate to="/admin/dashboard" replace />} />
                 <Route path="dashboard" element={<AdminDashboard />} />
@@ -111,13 +119,16 @@ const App = () => (
                 <Route path="research-factory" element={<ResearchFactory />} />
                 <Route path="market-research-factory" element={<MarketResearchFactory />} />
                 <Route path="catalyst-factory" element={<CatalystFactory />} />
-                {/* Placeholder routes for future admin pages */}
-                <Route path="users" element={<AdminDashboard />} />
-                <Route path="projects" element={<AdminDashboard />} />
-                <Route path="developers" element={<AdminDashboard />} />
-                <Route path="settings" element={<AdminDashboard />} />
-                <Route path="logs" element={<AdminDashboard />} />
+                
+                {/* Functional Admin Pages */}
+                <Route path="users" element={<AdminUsers />} />
+                <Route path="projects" element={<AdminProjects />} />
+                <Route path="developers" element={<AdminDevelopers />} />
+                <Route path="settings" element={<AdminSettings />} />
+                <Route path="logs" element={<AdminLogsPage />} />
+                <Route path="news" element={<AdminNews />} />
               </Route>
+              
               <Route path="/project-analysis" element={<ProjectAnalysisHub />} />
               <Route path="*" element={<NotFound />} />
             </Routes>

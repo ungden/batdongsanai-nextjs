@@ -11,36 +11,69 @@ declare const Deno: {
   env: { get(key: string): string | undefined };
 };
 
-// Hàm xử lý JSON mạnh mẽ hơn: Lọc sạch markdown và tìm cặp ngoặc hợp lệ
-function extractJSON(text: string): any {
+// Hàm gọi AI cơ bản
+async function callGemini(apiKey: string, prompt: string, jsonMode: boolean = false) {
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
+  
+  const payload: any = {
+    contents: [{
+      parts: [{ text: prompt }]
+    }],
+    generationConfig: {
+      temperature: 0.1,
+    }
+  };
+
+  if (jsonMode) {
+    payload.generationConfig.responseMimeType = "application/json";
+  }
+
+  const response = await fetch(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload)
+  });
+
+  if (!response.ok) {
+    const errText = await response.text();
+    throw new Error(`Gemini API Error: ${errText}`);
+  }
+
+  const data = await response.json();
+  return data.candidates?.[0]?.content?.parts?.[0]?.text || "";
+}
+
+// Hàm làm sạch JSON
+function cleanAndParseJSON(text: string): any {
   try {
-    // 1. Loại bỏ markdown code blocks (```json, ```)
-    let cleanText = text.replace(/```json/gi, '').replace(/```/g, '').trim();
-
-    // 2. Tìm vị trí bắt đầu của JSON object ({) hoặc array ([)
-    const firstOpenBrace = cleanText.indexOf('{');
-    const firstOpenBracket = cleanText.indexOf('[');
+    // Bước 1: Xóa markdown
+    let clean = text.replace(/```json/gi, '').replace(/```/g, '').trim();
     
-    let startIdx = -1;
-    let endIdx = -1;
+    // Bước 2: Tìm điểm bắt đầu và kết thúc của JSON (Object hoặc Array)
+    const firstBrace = clean.indexOf('{');
+    const firstBracket = clean.indexOf('[');
+    const lastBrace = clean.lastIndexOf('}');
+    const lastBracket = clean.lastIndexOf(']');
 
-    // Xác định xem là Object hay Array dựa vào cái nào xuất hiện trước
-    if (firstOpenBrace !== -1 && (firstOpenBracket === -1 || firstOpenBrace < firstOpenBracket)) {
-       startIdx = firstOpenBrace;
-       endIdx = cleanText.lastIndexOf('}');
-    } else if (firstOpenBracket !== -1) {
-       startIdx = firstOpenBracket;
-       endIdx = cleanText.lastIndexOf(']');
+    let start = -1; 
+    let end = -1;
+
+    // Ưu tiên Array [...] nếu xuất hiện trước hoặc nếu mode batch thường trả về array
+    if (firstBracket !== -1 && (firstBrace === -1 || firstBracket < firstBrace)) {
+      start = firstBracket;
+      end = lastBracket;
+    } else if (firstBrace !== -1) {
+      start = firstBrace;
+      end = lastBrace;
     }
 
-    // 3. Cắt chuỗi JSON hợp lệ
-    if (startIdx !== -1 && endIdx !== -1) {
-      cleanText = cleanText.substring(startIdx, endIdx + 1);
+    if (start !== -1 && end !== -1) {
+      clean = clean.substring(start, end + 1);
     }
 
-    return JSON.parse(cleanText);
+    return JSON.parse(clean);
   } catch (e) {
-    console.error("Failed to parse JSON. Raw text:", text);
+    console.error("JSON Parse Error. Raw text:", text);
     return null;
   }
 }
@@ -50,117 +83,123 @@ serve(async (req: Request) => {
 
   try {
     const { query, mode = 'scout', raw_content } = await req.json()
-    
     const apiKey = Deno.env.get('GEMINI_API_KEY')
     if (!apiKey) throw new Error('GEMINI_API_KEY not set')
 
-    let systemPrompt = ""
-    let userPrompt = ""
-    let useSearchTool = true;
+    let resultData;
 
     if (mode === 'batch_extract') {
-      // CHẾ ĐỘ BATCH: Trích xuất thuần túy từ văn bản, KHÔNG SEARCH
-      useSearchTool = false;
+      // === CHIẾN LƯỢC 2 BƯỚC CHO BATCH IMPORT ===
       
-      systemPrompt = `Bạn là một API chuyển đổi dữ liệu (Data Parser).
-      NHIỆM VỤ:
-      1. Đọc danh sách văn bản thô đầu vào.
-      2. Trích xuất thông tin từng dự án thành JSON Array.
-      3. KHÔNG thêm bớt thông tin không có trong văn bản. Nếu thiếu, để "Đang cập nhật".
-      4. TRẢ VỀ CHỈ MỘT JSON DUY NHẤT. KHÔNG MARKDOWN, KHÔNG GIẢI THÍCH.
+      // BƯỚC 1: Trích xuất & Chuẩn hóa thô (Raw Normalization)
+      // Mục tiêu: Biến đống text lộn xộn thành cấu trúc dễ đọc (CSV-like)
+      const step1Prompt = `
+      Bạn là trợ lý xử lý dữ liệu. Nhiệm vụ: Đọc văn bản bên dưới và liệt kê các dự án BĐS.
       
-      OUTPUT FORMAT:
+      Yêu cầu:
+      - Mỗi dự án một dòng.
+      - Định dạng dòng: "Tên Dự Án | Chủ Đầu Tư | Vị Trí"
+      - Nếu thiếu thông tin nào, ghi "Đang cập nhật".
+      - Không thêm lời dẫn, không đánh số thứ tự.
+      
+      Văn bản nguồn:
+      ${raw_content}
+      `;
+
+      const rawList = await callGemini(apiKey, step1Prompt, false);
+      
+      // BƯỚC 2: Định dạng JSON (JSON Formatting)
+      // Mục tiêu: Chuyển danh sách sạch ở Bước 1 thành JSON hợp lệ
+      const step2Prompt = `
+      Nhiệm vụ: Chuyển danh sách văn bản sau thành JSON Array.
+      
+      Danh sách:
+      ${rawList}
+
+      Output Format (JSON):
       {
         "projects": [
           {
-            "name": "Tên dự án (Viết hoa chữ cái đầu)",
-            "developer": "Tên CĐT hoặc 'Đang cập nhật'",
-            "location": "Vị trí/Quận huyện hoặc 'Đang cập nhật'",
-            "type": "Căn hộ/Nhà phố/Đất nền",
-            "raw_text": "Dòng văn bản gốc"
+            "name": "string",
+            "developer": "string",
+            "location": "string",
+            "type": "string (Căn hộ/Nhà phố/Đất nền - tự suy luận từ tên)",
+            "raw_text": "string (dòng gốc)"
           }
         ]
-      }`
-      
-      userPrompt = `DỮ LIỆU ĐẦU VÀO:\n${raw_content || query}`
-    } 
-    else if (mode === 'scout') {
-      // CHẾ ĐỘ SCOUT: Tìm kiếm thông tin mới
-      systemPrompt = `Bạn là chuyên gia dữ liệu BĐS. Sử dụng Google Search để tìm thông tin mới nhất.
-      Output JSON format (NO MARKDOWN):
-      {
-        "projects": [
-          {
-            "name": "Tên đầy đủ",
-            "developer": "Chủ đầu tư",
-            "location": "Vị trí cụ thể",
-            "status": "Trạng thái (Sắp mở bán/Đang bán/Đã bàn giao)",
-            "type": "Loại hình",
-            "confidence": "High/Medium/Low"
-          }
-        ],
-        "summary": "Tóm tắt ngắn kết quả"
-      }`
-      userPrompt = `Tìm kiếm thông tin dự án: ${query}`
-    } else {
-      // CHẾ ĐỘ DEEP SCAN: Phân tích sâu 1 dự án
-      systemPrompt = `Bạn là chuyên gia Thẩm định giá BĐS. Tìm kiếm và tổng hợp thông tin chi tiết.
-      Output JSON format (NO MARKDOWN):
-      {
-        "overview": { "description": "..." },
-        "specs": { "total_units": 0, "total_floors": 0 },
-        "pricing": { "price_per_sqm": 0, "currency": "VND" },
-        "amenities": ["..."]
-      }`
-      userPrompt = `Deep Scan dự án: ${query}`
-    }
-
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
-    
-    const payload: any = {
-      contents: [{
-        parts: [{ text: systemPrompt + "\n\n" + userPrompt }]
-      }],
-      generationConfig: {
-        temperature: 0.1,
-        // Bắt buộc trả về JSON mode để giảm lỗi parsing
-        responseMimeType: "application/json" 
       }
-    };
+      `;
 
-    // Chỉ bật Google Search khi KHÔNG PHẢI là batch_extract
-    if (useSearchTool) {
-      payload.tools = [{ google_search: {} }];
+      const jsonResult = await callGemini(apiKey, step2Prompt, true);
+      resultData = cleanAndParseJSON(jsonResult);
+
+      // Fallback: Nếu Bước 2 fail JSON, thử parse thủ công từ Bước 1
+      if (!resultData || !resultData.projects) {
+         console.log("Step 2 JSON failed, parsing raw list manually");
+         const lines = rawList.split('\n').filter((l: string) => l.includes('|'));
+         const manualProjects = lines.map((line: string) => {
+            const [name, developer, location] = line.split('|').map((s: string) => s.trim());
+            return {
+                name: name || "Không rõ",
+                developer: developer || "Đang cập nhật",
+                location: location || "Đang cập nhật",
+                type: "Đang cập nhật",
+                raw_text: line
+            };
+         });
+         resultData = { projects: manualProjects };
+      }
+
+    } else if (mode === 'scout' || mode === 'deep_scan') {
+      // Giữ nguyên logic cũ cho các mode khác (vì nó dùng Google Search Tool)
+      // Nhưng thêm lớp bảo vệ JSON parsing
+      
+      let systemPrompt = "";
+      let userPrompt = "";
+      
+      if (mode === 'scout') {
+        systemPrompt = `Bạn là chuyên gia dữ liệu BĐS. Tìm kiếm thông tin mới nhất và trả về JSON.
+        Format: { "projects": [{ "name", "developer", "location", "status", "type", "confidence" }], "summary" }`;
+        userPrompt = `Tìm kiếm: ${query}`;
+      } else {
+        systemPrompt = `Bạn là chuyên gia Thẩm định giá. Tìm kiếm chi tiết dự án và trả về JSON.
+        Format: { "overview": {}, "specs": {}, "pricing": {}, "amenities": [] }`;
+        userPrompt = `Deep scan: ${query}`;
+      }
+
+      // Gọi Gemini với Search Tool (cần dùng endpoint có tool)
+      // Lưu ý: Đoạn code cũ dùng fetch trực tiếp với tool config
+      const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
+      const payload = {
+        contents: [{ parts: [{ text: systemPrompt + "\n\n" + userPrompt }] }],
+        tools: [{ google_search: {} }],
+        generationConfig: { temperature: 0.1, responseMimeType: "application/json" }
+      };
+
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      
+      if (!response.ok) throw new Error(await response.text());
+      const data = await response.json();
+      const text = data.candidates?.[0]?.content?.parts?.[0]?.text || "";
+      
+      resultData = cleanAndParseJSON(text);
     }
 
-    console.log(`Calling Gemini (Mode: ${mode})...`);
-    
-    const response = await fetch(url, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload)
-    });
-
-    if (!response.ok) {
-      const errText = await response.text();
-      throw new Error(`Gemini API Error: ${errText}`);
+    if (!resultData) {
+      throw new Error("Failed to parse result data after all attempts.");
     }
 
-    const data = await response.json();
-    const textResponse = data.candidates?.[0]?.content?.parts?.[0]?.text;
-    
-    if (!textResponse) throw new Error("Empty response from AI");
-
-    const result = extractJSON(textResponse);
-    if (!result) throw new Error("Failed to parse JSON from Gemini response");
-
-    return new Response(JSON.stringify({ data: result }), {
+    return new Response(JSON.stringify({ data: resultData }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       status: 200,
     })
 
   } catch (error: any) {
-    console.error("Error:", error);
+    console.error("Edge Function Error:", error);
     return new Response(JSON.stringify({ error: error.message }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       status: 500,

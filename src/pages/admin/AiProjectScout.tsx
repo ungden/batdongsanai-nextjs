@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { UploadCloud, Check, Loader2, Bot, Building2, MapPin, ArrowRight, Trash2, Save, Plus } from "lucide-react";
+import { UploadCloud, Check, Loader2, FileInput, Building2, MapPin, ArrowRight, Trash2, Save, Plus, AlertCircle } from "lucide-react";
 
 export default function AiProjectScout() {
   const [rawText, setRawText] = useState("");
@@ -19,9 +19,15 @@ export default function AiProjectScout() {
 
   const handleParse = async () => {
     if (!rawText.trim()) {
-      toast.error("Vui lòng nhập danh sách dự án");
+      toast.error("Vui lòng paste danh sách dự án vào ô trống");
       return;
     }
+    
+    const lineCount = rawText.split('\n').filter(line => line.trim().length > 0).length;
+    if (lineCount > 100) {
+      toast.warning(`Bạn đang paste ${lineCount} dòng. AI có thể mất một chút thời gian để xử lý.`);
+    }
+
     setProcessing(true);
     setParsedProjects([]);
     
@@ -29,7 +35,7 @@ export default function AiProjectScout() {
       const { data, error } = await supabase.functions.invoke('research-project', {
         body: { 
           raw_content: rawText, 
-          mode: 'batch_extract' 
+          mode: 'batch_extract' // Gọi chế độ extract thuần túy
         }
       });
 
@@ -38,12 +44,13 @@ export default function AiProjectScout() {
       if (data?.data?.projects) {
         const projects = data.data.projects.map((p: any) => ({
           ...p,
-          status: 'new' // UI status, not DB status yet
+          status: 'new',
+          importStatus: 'idle'
         }));
         setParsedProjects(projects);
-        toast.success(`AI đã tìm thấy ${projects.length} dự án!`);
+        toast.success(`Đã trích xuất thành công ${projects.length} dự án!`);
       } else {
-        toast.info("Không trích xuất được dự án nào. Vui lòng kiểm tra lại nội dung.");
+        toast.info("Không trích xuất được dự án nào. Vui lòng kiểm tra lại định dạng.");
       }
     } catch (error: any) {
       toast.error("Lỗi phân tích: " + error.message);
@@ -56,20 +63,19 @@ export default function AiProjectScout() {
     const project = parsedProjects[index];
     if (project.importStatus === 'success') return;
 
-    // Optimistic update
     updateProjectStatus(index, 'loading');
 
     try {
       const dbProject = {
         name: project.name,
-        developer: project.developer || "Đang cập nhật",
-        location: project.location || "Đang cập nhật",
-        city: "Hồ Chí Minh", // Default, could be refined by AI
+        developer: project.developer !== 'Đang cập nhật' ? project.developer : "Đang cập nhật",
+        location: project.location !== 'Đang cập nhật' ? project.location : "Đang cập nhật",
+        city: "Hồ Chí Minh", // Mặc định, admin có thể sửa sau
         district: "Đang cập nhật",
-        status: "upcoming", // Default to upcoming/new
+        status: "upcoming", 
         price_range: "Đang cập nhật",
         price_per_sqm: 0,
-        description: `Dự án ${project.name} ${project.developer ? `do ${project.developer} phát triển` : ''}.`,
+        description: project.raw_text || `Dự án ${project.name}`, // Lưu text gốc vào mô tả để tham chiếu
         completion_date: "Đang cập nhật",
         legal_score: 0,
       };
@@ -80,7 +86,6 @@ export default function AiProjectScout() {
       
       updateProjectStatus(index, 'success');
       setImportedCount(prev => prev + 1);
-      toast.success(`Đã thêm: ${project.name}`);
     } catch (error: any) {
       console.error(error);
       updateProjectStatus(index, 'error');
@@ -90,20 +95,18 @@ export default function AiProjectScout() {
 
   const handleImportAll = async () => {
     setIsImporting(true);
-    let success = 0;
     
-    // Process one by one to avoid overwhelming DB or hitting rate limits if we added logic later
-    // Also allows for visual progress updates
+    // Xử lý tuần tự để tránh quá tải DB và hiển thị progress
     for (let i = 0; i < parsedProjects.length; i++) {
       if (parsedProjects[i].importStatus !== 'success') {
         await handleImportSingle(i);
-        // Small delay to make UI updates visible and smooth
-        await new Promise(r => setTimeout(r, 100));
+        // Delay nhỏ để UI update mượt mà
+        await new Promise(r => setTimeout(r, 50));
       }
     }
     
     setIsImporting(false);
-    toast.success("Hoàn tất import danh sách!");
+    toast.success("Đã hoàn tất quá trình Import!");
   };
 
   const updateProjectStatus = (index: number, status: 'loading' | 'success' | 'error') => {
@@ -119,10 +122,10 @@ export default function AiProjectScout() {
       <div className="flex justify-between items-center">
         <div>
            <h1 className="text-2xl font-bold flex items-center gap-2">
-            <Bot className="w-6 h-6 text-primary" />
-            Batch Upload (AI Parser)
+            <FileInput className="w-6 h-6 text-primary" />
+            Batch Upload (Trích xuất từ văn bản)
           </h1>
-          <p className="text-muted-foreground">Paste danh sách văn bản thô &rarr; AI trích xuất &rarr; Import hàng loạt</p>
+          <p className="text-muted-foreground">Paste danh sách dự án &rarr; AI tách dữ liệu &rarr; Import hàng loạt</p>
         </div>
       </div>
 
@@ -132,21 +135,30 @@ export default function AiProjectScout() {
           <CardHeader>
             <CardTitle>1. Dữ liệu nguồn</CardTitle>
             <CardDescription>
-              Dán danh sách dự án của bạn vào đây (Excel copy, list văn bản, chat log...)
+              Dán danh sách của bạn vào đây. AI sẽ tự động nhận diện tên dự án, chủ đầu tư và vị trí từ từng dòng.
             </CardDescription>
           </CardHeader>
           <CardContent className="flex-1 flex flex-col gap-4 min-h-0">
             <Textarea 
-              placeholder={`Ví dụ:\n1. Vinhomes Grand Park - Quận 9 - Vingroup\n2. The Global City - Quận 2 - Masterise\n3. Eaton Park - Thủ Đức - Gamuda Land\n...`} 
+              placeholder={`Paste danh sách dự án của bạn vào đây (mỗi dự án một dòng). Ví dụ:
+1. Vinhomes Grand Park - Quận 9 - Vingroup
+2. The Global City - Quận 2 - Masterise Homes
+3. Eaton Park - Gamuda Land
+4. Sycamore Bình Dương - CapitalLand
+...`} 
               value={rawText}
               onChange={(e) => setRawText(e.target.value)}
-              className="flex-1 font-mono text-sm resize-none p-4"
+              className="flex-1 font-mono text-sm resize-none p-4 bg-muted/10 leading-relaxed"
             />
+            <div className="flex items-center justify-between text-xs text-muted-foreground px-1">
+               <span>{rawText.split('\n').filter(l => l.trim()).length} dòng được phát hiện</span>
+               <span>AI Parser Mode</span>
+            </div>
             <Button onClick={handleParse} disabled={processing || !rawText} size="lg" className="w-full">
               {processing ? (
-                <><Loader2 className="w-4 h-4 animate-spin mr-2" /> Đang phân tích AI...</>
+                <><Loader2 className="w-4 h-4 animate-spin mr-2" /> Đang trích xuất...</>
               ) : (
-                <><ArrowRight className="w-4 h-4 mr-2" /> Phân tích & Trích xuất</>
+                <><ArrowRight className="w-4 h-4 mr-2" /> Phân tích & Trích xuất danh sách</>
               )}
             </Button>
           </CardContent>
@@ -157,14 +169,14 @@ export default function AiProjectScout() {
           <CardHeader className="border-b bg-card">
             <div className="flex justify-between items-center">
               <div>
-                <CardTitle>2. Kết quả ({parsedProjects.length})</CardTitle>
-                <CardDescription>Review trước khi lưu vào Database</CardDescription>
+                <CardTitle>2. Kết quả trích xuất ({parsedProjects.length})</CardTitle>
+                <CardDescription>Kiểm tra danh sách trước khi lưu vào Database</CardDescription>
               </div>
               {parsedProjects.length > 0 && (
                 <Button 
                   onClick={handleImportAll} 
                   disabled={isImporting || parsedProjects.every(p => p.importStatus === 'success')}
-                  className="bg-green-600 hover:bg-green-700 text-white"
+                  className="bg-green-600 hover:bg-green-700 text-white shadow-md"
                 >
                   {isImporting ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Save className="w-4 h-4 mr-2" />}
                   Import Tất cả ({parsedProjects.length - importedCount})
@@ -178,7 +190,7 @@ export default function AiProjectScout() {
               {parsedProjects.length === 0 ? (
                 <div className="h-full flex flex-col items-center justify-center text-muted-foreground opacity-50">
                   <UploadCloud className="w-16 h-16 mb-4" />
-                  <p>Danh sách dự án sẽ hiện ở đây</p>
+                  <p className="text-center">Danh sách sau khi trích xuất sẽ hiện ở đây.<br/>Bạn có thể kiểm tra và xóa các mục sai.</p>
                 </div>
               ) : (
                 <div className="space-y-3">
@@ -193,18 +205,22 @@ export default function AiProjectScout() {
                       `}>
                         <div className="flex-1 min-w-0 mr-4">
                           <div className="flex items-center gap-2 mb-1">
-                            <h4 className="font-bold text-sm truncate">{p.name}</h4>
-                            <Badge variant="outline" className="text-[10px] h-5">{p.type}</Badge>
+                            <div className="font-bold text-sm truncate text-foreground">{p.name}</div>
+                            <Badge variant="outline" className="text-[10px] h-5 font-normal">{p.type || 'N/A'}</Badge>
                           </div>
                           <div className="flex items-center gap-4 text-xs text-muted-foreground">
-                            <span className="flex items-center gap-1"><Building2 className="w-3 h-3" /> {p.developer}</span>
-                            <span className="flex items-center gap-1 truncate"><MapPin className="w-3 h-3" /> {p.location}</span>
+                            <span className="flex items-center gap-1 truncate max-w-[150px]" title={p.developer}><Building2 className="w-3 h-3" /> {p.developer}</span>
+                            <span className="flex items-center gap-1 truncate max-w-[150px]" title={p.location}><MapPin className="w-3 h-3" /> {p.location}</span>
                           </div>
+                          {/* Debug raw text if needed */}
+                          {/* <div className="text-[10px] text-muted-foreground/50 truncate mt-1">{p.raw_text}</div> */}
                         </div>
                         
                         <div className="flex items-center gap-2">
                           {isImported ? (
-                             <Badge className="bg-green-600 hover:bg-green-600">Đã thêm</Badge>
+                             <Badge className="bg-green-600 hover:bg-green-600 gap-1 px-2">
+                               <Check className="w-3 h-3" /> Đã thêm
+                             </Badge>
                           ) : (
                             <>
                               <Button 
@@ -212,14 +228,15 @@ export default function AiProjectScout() {
                                 variant="ghost" 
                                 className="h-8 w-8 text-muted-foreground hover:text-destructive"
                                 onClick={() => removeProject(idx)}
-                                disabled={isLoading}
+                                disabled={isLoading || isImporting}
+                                title="Xóa khỏi danh sách"
                               >
                                 <Trash2 className="w-4 h-4" />
                               </Button>
                               <Button 
                                 size="sm" 
-                                variant="default"
-                                disabled={isLoading}
+                                variant="secondary"
+                                disabled={isLoading || isImporting}
                                 onClick={() => handleImportSingle(idx)}
                                 className="h-8"
                               >

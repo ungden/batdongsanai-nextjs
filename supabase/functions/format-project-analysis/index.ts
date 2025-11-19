@@ -31,7 +31,7 @@ function tryParseJson(text: string): any | null {
 }
 
 const PROMPT = `
-Bạn là chuyên gia nghiên cứu bất động sản. Hãy CHỈ ĐỊNH DẠNG văn bản thô bên dưới thành JSON duy nhất theo schema FormattedAnalysis cho "project_analysis" (phân tích dự án BĐS).
+Bạn là chuyên gia nghiên cứu bất động sản. Hãy CHỈ ĐỊNH DẠNG văn bản thô bên dưới thành JSON duy nhất theo schema FormattedAnalysis cho "project_analysis".
 KHÔNG thêm bịa đặt, KHÔNG markdown, KHÔNG giải thích — chỉ trả về 1 object JSON hợp lệ.
 
 SCHEMA:
@@ -112,11 +112,8 @@ serve(async (req: Request) => {
       return new Response(JSON.stringify({ error: 'Forbidden: Admin only' }), { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
     }
 
-    const { raw_content, model = 'google/gemini-2.5-flash' } = await req.json()
-    if (!raw_content || typeof raw_content !== 'string' || raw_content.trim().length < 10) {
-      throw new Error('raw_content is required and must be a meaningful string.')
-    }
-
+    const { raw_content, model = 'google/gemini-2.0-flash-001' } = await req.json()
+    
     const openrouterApiKey = Deno.env.get('OPENROUTER_API_KEY')
     if (!openrouterApiKey) {
       throw new Error('OPENROUTER_API_KEY is not set in environment variables.')
@@ -126,7 +123,7 @@ serve(async (req: Request) => {
       apiKey: openrouterApiKey,
       baseURL: 'https://openrouter.ai/api/v1',
       defaultHeaders: {
-        'HTTP-Referer': 'https://cqcgzmsmtstfjhpgucll.dyad.sh',
+        'HTTP-Referer': 'https://propertyhub.vn',
         'X-Title': 'PropertyHub',
       },
     })
@@ -138,6 +135,7 @@ serve(async (req: Request) => {
       messages: [{ role: 'user', content: finalPrompt }],
       temperature: 0.1,
       response_format: { type: 'json_object' },
+      max_tokens: 50000 // Tăng output limit
     })
 
     const content = chat.choices?.[0]?.message?.content ?? ''

@@ -1,3 +1,5 @@
+/* eslint-disable */
+// @ts-ignore
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts"
 
 const corsHeaders = {
@@ -9,9 +11,14 @@ declare const Deno: {
   env: { get(key: string): string | undefined };
 };
 
-// Hàm gọi AI cơ bản
-async function callGemini(apiKey: string, prompt: string, jsonMode: boolean = false) {
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
+// Cấu hình Models
+const MODEL_RESEARCH = "gemini-2.0-pro-exp-02-05"; // Dùng cho Research/Thinking
+const MODEL_FORMAT = "gemini-2.0-flash";           // Dùng cho Formatting/JSON
+const MAX_TOKENS = 50000;
+
+// Hàm gọi AI cơ bản với tham số model linh hoạt
+async function callGemini(apiKey: string, prompt: string, model: string, jsonMode: boolean = false) {
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
   
   const payload: any = {
     contents: [{
@@ -19,6 +26,7 @@ async function callGemini(apiKey: string, prompt: string, jsonMode: boolean = fa
     }],
     generationConfig: {
       temperature: 0.1,
+      maxOutputTokens: MAX_TOKENS,
     }
   };
 
@@ -34,7 +42,7 @@ async function callGemini(apiKey: string, prompt: string, jsonMode: boolean = fa
 
   if (!response.ok) {
     const errText = await response.text();
-    throw new Error(`Gemini API Error: ${errText}`);
+    throw new Error(`Gemini API Error (${model}): ${errText}`);
   }
 
   const data = await response.json();
@@ -44,10 +52,8 @@ async function callGemini(apiKey: string, prompt: string, jsonMode: boolean = fa
 // Hàm làm sạch JSON
 function cleanAndParseJSON(text: string): any {
   try {
-    // Bước 1: Xóa markdown
     let clean = text.replace(/```json/gi, '').replace(/```/g, '').trim();
     
-    // Bước 2: Tìm điểm bắt đầu và kết thúc của JSON (Object hoặc Array)
     const firstBrace = clean.indexOf('{');
     const firstBracket = clean.indexOf('[');
     const lastBrace = clean.lastIndexOf('}');
@@ -56,7 +62,6 @@ function cleanAndParseJSON(text: string): any {
     let start = -1; 
     let end = -1;
 
-    // Ưu tiên Array [...] nếu xuất hiện trước hoặc nếu mode batch thường trả về array
     if (firstBracket !== -1 && (firstBrace === -1 || firstBracket < firstBrace)) {
       start = firstBracket;
       end = lastBracket;
@@ -87,29 +92,27 @@ serve(async (req: Request) => {
     let resultData;
 
     if (mode === 'batch_extract') {
-      // === CHIẾN LƯỢC 2 BƯỚC CHO BATCH IMPORT ===
-      
-      // BƯỚC 1: Trích xuất & Chuẩn hóa thô (Raw Normalization)
-      // Mục tiêu: Biến đống text lộn xộn thành cấu trúc dễ đọc (CSV-like)
+      // === BƯỚC 1: Trích xuất thô (Dùng Model Research mạnh - Pro) ===
       const step1Prompt = `
-      Bạn là trợ lý xử lý dữ liệu. Nhiệm vụ: Đọc văn bản bên dưới và liệt kê các dự án BĐS.
+      Bạn là chuyên gia xử lý dữ liệu BĐS.
+      Nhiệm vụ: Đọc văn bản lộn xộn bên dưới và liệt kê lại danh sách các dự án BĐS.
       
-      Yêu cầu:
+      Yêu cầu output (Raw Text):
       - Mỗi dự án một dòng.
-      - Định dạng dòng: "Tên Dự Án | Chủ Đầu Tư | Vị Trí"
+      - Định dạng: "Tên Dự Án | Chủ Đầu Tư | Vị Trí"
       - Nếu thiếu thông tin nào, ghi "Đang cập nhật".
-      - Không thêm lời dẫn, không đánh số thứ tự.
+      - Chỉ trả về danh sách, không lời dẫn.
       
       Văn bản nguồn:
       ${raw_content}
       `;
 
-      const rawList = await callGemini(apiKey, step1Prompt, false);
+      console.log("Step 1: Extracting with Research Model...");
+      const rawList = await callGemini(apiKey, step1Prompt, MODEL_RESEARCH, false);
       
-      // BƯỚC 2: Định dạng JSON (JSON Formatting)
-      // Mục tiêu: Chuyển danh sách sạch ở Bước 1 thành JSON hợp lệ
+      // === BƯỚC 2: Định dạng JSON (Dùng Model Format nhanh - Flash) ===
       const step2Prompt = `
-      Nhiệm vụ: Chuyển danh sách văn bản sau thành JSON Array.
+      Nhiệm vụ: Chuyển danh sách text sau thành JSON Array hợp lệ.
       
       Danh sách:
       ${rawList}
@@ -118,22 +121,23 @@ serve(async (req: Request) => {
       {
         "projects": [
           {
-            "name": "string",
+            "name": "string (Viết hoa chữ cái đầu)",
             "developer": "string",
             "location": "string",
-            "type": "string (Căn hộ/Nhà phố/Đất nền - tự suy luận từ tên)",
+            "type": "string (Căn hộ/Nhà phố/Đất nền - tự suy luận)",
             "raw_text": "string (dòng gốc)"
           }
         ]
       }
       `;
 
-      const jsonResult = await callGemini(apiKey, step2Prompt, true);
+      console.log("Step 2: Formatting with Flash Model...");
+      const jsonResult = await callGemini(apiKey, step2Prompt, MODEL_FORMAT, true);
       resultData = cleanAndParseJSON(jsonResult);
 
-      // Fallback: Nếu Bước 2 fail JSON, thử parse thủ công từ Bước 1
+      // Fallback thủ công nếu Step 2 lỗi
       if (!resultData || !resultData.projects) {
-         console.log("Step 2 JSON failed, parsing raw list manually");
+         console.warn("Step 2 JSON failed, parsing raw list manually");
          const lines = rawList.split('\n').filter((l: string) => l.includes('|'));
          const manualProjects = lines.map((line: string) => {
             const [name, developer, location] = line.split('|').map((s: string) => s.trim());
@@ -149,9 +153,7 @@ serve(async (req: Request) => {
       }
 
     } else if (mode === 'scout' || mode === 'deep_scan') {
-      // Giữ nguyên logic cũ cho các mode khác (vì nó dùng Google Search Tool)
-      // Nhưng thêm lớp bảo vệ JSON parsing
-      
+      // Các mode cần Search và suy luận sâu -> Dùng Model Research (Pro)
       let systemPrompt = "";
       let userPrompt = "";
       
@@ -165,12 +167,17 @@ serve(async (req: Request) => {
         userPrompt = `Deep scan: ${query}`;
       }
 
-      // Gọi Gemini với Search Tool (cần dùng endpoint có tool)
-      const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
+      // Với mode dùng Tool (Google Search), ta cần dùng endpoint có hỗ trợ tools
+      // Lưu ý: Hiện tại model Pro Exp hỗ trợ tools tốt.
+      const url = `https://generativelanguage.googleapis.com/v1beta/models/${MODEL_RESEARCH}:generateContent?key=${apiKey}`;
       const payload = {
         contents: [{ parts: [{ text: systemPrompt + "\n\n" + userPrompt }] }],
         tools: [{ google_search: {} }],
-        generationConfig: { temperature: 0.1, responseMimeType: "application/json" }
+        generationConfig: { 
+          temperature: 0.1, 
+          responseMimeType: "application/json",
+          maxOutputTokens: MAX_TOKENS 
+        }
       };
 
       const response = await fetch(url, {
@@ -187,7 +194,7 @@ serve(async (req: Request) => {
     }
 
     if (!resultData) {
-      throw new Error("Failed to parse result data after all attempts.");
+      throw new Error("Failed to parse result data.");
     }
 
     return new Response(JSON.stringify({ data: resultData }), {

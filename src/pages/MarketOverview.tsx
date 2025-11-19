@@ -12,7 +12,7 @@ import BottomNavigation from "@/components/layout/BottomNavigation";
 import DesktopLayout from "@/components/layout/DesktopLayout";
 import SEOHead from "@/components/seo/SEOHead";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { projectsData } from "@/data/projectsData";
+import { useProjects } from "@/hooks/useProjects";
 import { getProjectPhase, getPriceTrendColor } from "@/utils/projectPhases";
 import { 
   Search, Download, Building2, MapPin, 
@@ -27,6 +27,7 @@ const MarketOverview = () => {
   const navigate = useNavigate();
   const isMobile = useIsMobile();
   const [searchParams] = useSearchParams();
+  const { projects, loading } = useProjects();
   
   // State
   const [searchQuery, setSearchQuery] = useState(searchParams.get('search') || "");
@@ -41,7 +42,7 @@ const MarketOverview = () => {
 
   // 1. Enrich Data
   const enrichedProjects = useMemo(() => {
-    return projectsData.map(p => {
+    return projects.map(p => {
       const { phase, label: phaseLabel, color: phaseColor } = getProjectPhase(p);
       
       // Calculate Price Trend
@@ -67,7 +68,7 @@ const MarketOverview = () => {
         updatedAt: p.priceHistory?.[p.priceHistory.length - 1]?.date || p.launchDate || "2023-01-01"
       };
     });
-  }, []);
+  }, [projects]);
 
   // 2. Filter & Sort
   const processedProjects = useMemo(() => {

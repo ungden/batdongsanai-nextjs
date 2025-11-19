@@ -8,7 +8,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import DesktopLayout from "@/components/layout/DesktopLayout";
 import SEOHead from "@/components/seo/SEOHead";
 import { Search, ArrowRight, Building2, Sparkles, Shield, Star, Award, BarChart3, TrendingUp } from "lucide-react";
-import { projectsData } from "@/data/projectsData";
+import { useProjects } from "@/hooks/useProjects";
 import CompactProjectCard from "@/components/home/CompactProjectCard";
 import { ANALYTICS_CONFIG } from "@/config/analytics";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -20,21 +20,23 @@ const Home = () => {
   const { trackEvent } = useAnalytics(ANALYTICS_CONFIG.GA_TRACKING_ID);
   const isMobile = useIsMobile();
   const [searchQuery, setSearchQuery] = useState("");
+  const { projects, loading } = useProjects();
 
   const featuredProjects = useMemo(() => {
-    return projectsData
+    return projects
       .filter(project => project.legalScore >= 8)
-      .slice(0, 6);
-  }, []);
+      .slice(0, 8);
+  }, [projects]);
 
   const stats = useMemo(() => {
-    const total = projectsData.length;
-    const goodLegal = projectsData.filter(p => p.legalScore >= 8).length;
-    const avgLegal = projectsData.reduce((sum, p) => sum + p.legalScore, 0) / total;
+    if (projects.length === 0) return { total: 0, goodLegal: 0, avgLegal: '0.0', safetyRate: 0 };
+    const total = projects.length;
+    const goodLegal = projects.filter(p => p.legalScore >= 8).length;
+    const avgLegal = projects.reduce((sum, p) => sum + p.legalScore, 0) / total;
     const safetyRate = Math.round((goodLegal / total) * 100);
     
     return { total, goodLegal, avgLegal: avgLegal.toFixed(1), safetyRate };
-  }, []);
+  }, [projects]);
 
   const handleSearch = () => {
     if (searchQuery.trim()) {

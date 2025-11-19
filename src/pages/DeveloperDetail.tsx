@@ -16,7 +16,7 @@ import { DeveloperAnalytics } from "@/components/developer/DeveloperAnalytics";
 import { RecentProjectsTable } from "@/components/developer/RecentProjectsTable";
 import { useAnalytics } from "@/hooks/useAnalytics";
 import { getDeveloperByName } from "@/data/developersData";
-import { projectsData } from "@/data/projectsData";
+import { useProjects } from "@/hooks/useProjects";
 import { calculateROI, getROICategory } from "@/utils/roiCalculations";
 import { Building2, MapPin, Phone, Mail, Globe, Calendar, TrendingUp, Award, BarChart3, ArrowLeft, Home, Users } from "lucide-react";
 
@@ -26,6 +26,7 @@ const DeveloperDetail = () => {
   const isMobile = useIsMobile();
   const { trackProjectView } = useAnalytics();
   const [sortBy, setSortBy] = useState("newest");
+  const { projects, loading: projectsLoading } = useProjects();
 
   // Find developer by converting developerId back to developer name
   const developer = useMemo(() => {
@@ -39,32 +40,40 @@ const DeveloperDetail = () => {
   // Filter projects by developer
   const developerProjects = useMemo(() => {
     if (!developer) return [];
-    return projectsData.filter(project => project.developer === developer.name);
-  }, [developer]);
+    return projects.filter(project => project.developer === developer.name);
+  }, [developer, projects]);
 
   // Sort projects
   const sortedProjects = useMemo(() => {
-    const projects = [...developerProjects];
+    const projectsToSort = [...developerProjects];
     switch (sortBy) {
       case "price-low":
-        return projects.sort((a, b) => a.pricePerSqm - b.pricePerSqm);
+        return projectsToSort.sort((a, b) => a.pricePerSqm - b.pricePerSqm);
       case "price-high":
-        return projects.sort((a, b) => b.pricePerSqm - a.pricePerSqm);
+        return projectsToSort.sort((a, b) => b.pricePerSqm - a.pricePerSqm);
       case "legal-score":
-        return projects.sort((a, b) => b.legalScore - a.legalScore);
+        return projectsToSort.sort((a, b) => b.legalScore - a.legalScore);
       case "newest":
       default:
-        return projects.sort((a, b) => new Date(b.launchDate || "").getTime() - new Date(a.launchDate || "").getTime());
+        return projectsToSort.sort((a, b) => new Date(b.launchDate || "").getTime() - new Date(a.launchDate || "").getTime());
     }
   }, [developerProjects, sortBy]);
 
   const handleProjectClick = (projectId: string) => {
-    const project = projectsData.find(p => p.id === projectId);
+    const project = projects.find(p => p.id === projectId);
     if (project) {
       trackProjectView(projectId, project.name);
     }
     navigate(`/projects/${projectId}`);
   };
+
+  if (projectsLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
 
   if (!developer) {
     return (

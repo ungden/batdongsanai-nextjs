@@ -1,6 +1,6 @@
 import { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import { Search, Map as MapIcon, List, SortAsc, MapPin, DollarSign } from "lucide-react";
+import { Search, Map as MapIcon, List, SortAsc, MapPin, DollarSign, Loader2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -12,7 +12,7 @@ import DesktopLayout from "@/components/layout/DesktopLayout";
 import ProjectCard from "@/components/project/ProjectCard";
 import GoogleMapViewer from "@/components/map/GoogleMapViewer";
 import { useAnalytics } from "@/hooks/useAnalytics";
-import { projectsData } from "@/data/projectsData";
+import { useProjects } from "@/hooks/useProjects";
 import { ANALYTICS_CONFIG } from "@/config/analytics";
 import { useIsMobile } from "@/hooks/use-mobile";
 
@@ -20,6 +20,7 @@ const Explore = () => {
   const navigate = useNavigate();
   const { trackSearch, trackProjectView } = useAnalytics(ANALYTICS_CONFIG.GA_TRACKING_ID);
   const isMobile = useIsMobile();
+  const { projects, loading } = useProjects();
   
   const [viewMode, setViewMode] = useState<"list" | "map">("list");
   const [filters, setFilters] = useState({
@@ -30,7 +31,7 @@ const Explore = () => {
   });
 
   const handleProjectClick = (id: string) => {
-    const project = projectsData.find(p => p.id === id);
+    const project = projects.find(p => p.id === id);
     if (project) {
       trackProjectView(id, project.name);
     }
@@ -38,7 +39,7 @@ const Explore = () => {
   };
 
   const filteredProjects = useMemo(() => {
-    let filtered = projectsData;
+    let filtered = [...projects];
 
     if (filters.search) {
       filtered = filtered.filter(project =>
@@ -79,7 +80,7 @@ const Explore = () => {
     }
 
     return filtered;
-  }, [filters]);
+  }, [filters, projects]);
 
   const content = (
     <div className="space-y-4 h-full flex flex-col">
@@ -163,7 +164,11 @@ const Explore = () => {
           </p>
         </div>
 
-        {viewMode === "map" ? (
+        {loading ? (
+          <div className="flex items-center justify-center h-full">
+            <Loader2 className="w-8 h-8 animate-spin text-primary" />
+          </div>
+        ) : viewMode === "map" ? (
           <div className="h-full w-full min-h-[500px] rounded-xl overflow-hidden border border-border">
             <GoogleMapViewer projects={filteredProjects} className="w-full h-full" />
           </div>

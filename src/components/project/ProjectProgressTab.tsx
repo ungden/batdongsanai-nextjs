@@ -111,8 +111,8 @@ const ProjectProgressTab = ({ project }: ProjectProgressTabProps) => {
 
   const getStatusIcon = (status: string) => {
     switch (status) {
-      case "completed": return <CheckCircle className="w-5 h-5 text-success" />;
-      case "in-progress": return <Clock className="w-5 h-5 text-warning" />;
+      case "completed": return <CheckCircle className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />;
+      case "in-progress": return <Clock className="w-5 h-5 text-amber-600 dark:text-amber-400" />;
       case "pending": return <AlertTriangle className="w-5 h-5 text-muted-foreground" />;
       default: return <Clock className="w-5 h-5 text-muted-foreground" />;
     }
@@ -139,28 +139,28 @@ const ProjectProgressTab = ({ project }: ProjectProgressTabProps) => {
           </CardContent>
         </Card>
 
-        <Card className="bg-accent/5 border-accent/20 hover-scale cursor-pointer">
+        <Card className="bg-purple-50 dark:bg-purple-950/20 border-purple-200 dark:border-purple-800 hover-scale cursor-pointer">
           <CardContent className="p-6 text-center">
-            <Home className="w-8 h-8 text-accent mx-auto mb-3" />
-            <div className="text-3xl font-bold text-accent mb-1">{project.soldUnits || 890}</div>
+            <Home className="w-8 h-8 text-purple-600 dark:text-purple-400 mx-auto mb-3" />
+            <div className="text-3xl font-bold text-purple-600 dark:text-purple-400 mb-1">{project.soldUnits || 890}</div>
             <div className="text-sm text-muted-foreground">Căn đã bán</div>
           </CardContent>
         </Card>
 
-        <Card className="bg-success/5 border-success/20 hover-scale cursor-pointer">
+        <Card className="bg-emerald-50 dark:bg-emerald-950/20 border-emerald-200 dark:border-emerald-800 hover-scale cursor-pointer">
           <CardContent className="p-6 text-center">
-            <CheckCircle className="w-8 h-8 text-success mx-auto mb-3" />
-            <div className="text-2xl font-bold text-success mb-1">
+            <CheckCircle className="w-8 h-8 text-emerald-600 dark:text-emerald-400 mx-auto mb-3" />
+            <div className="text-2xl font-bold text-emerald-600 dark:text-emerald-400 mb-1">
               {constructionMilestones.filter(m => m.status === 'completed').length}
             </div>
             <div className="text-sm text-muted-foreground">Hoàn thành</div>
           </CardContent>
         </Card>
 
-        <Card className="bg-warning/5 border-warning/20 hover-scale cursor-pointer">
+        <Card className="bg-amber-50 dark:bg-amber-950/20 border-amber-200 dark:border-amber-800 hover-scale cursor-pointer">
           <CardContent className="p-6 text-center">
-            <Clock className="w-8 h-8 text-warning mx-auto mb-3" />
-            <div className="text-2xl font-bold text-warning mb-1">
+            <Clock className="w-8 h-8 text-amber-600 dark:text-amber-400 mx-auto mb-3" />
+            <div className="text-2xl font-bold text-amber-600 dark:text-amber-400 mb-1">
               {constructionMilestones.filter(m => m.status === 'in-progress').length}
             </div>
             <div className="text-sm text-muted-foreground">Đang thực hiện</div>
@@ -169,15 +169,15 @@ const ProjectProgressTab = ({ project }: ProjectProgressTabProps) => {
       </div>
 
       {/* Visual Progress Bar */}
-      <Card className="bg-gradient-to-r from-primary/5 to-accent/5">
+      <Card className="bg-gradient-to-r from-primary/5 to-purple-500/5 border-border">
         <CardContent className="p-6">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="text-xl font-bold">Tiến độ thi công</h3>
+            <h3 className="text-xl font-bold text-foreground">Tiến độ thi công</h3>
             <Badge variant="secondary" className="bg-primary/10 text-primary text-lg px-3 py-1">
               {actualProgress}%
             </Badge>
           </div>
-          <Progress value={actualProgress} className="h-4 mb-3" />
+          <Progress value={actualProgress} className="h-4 mb-3 bg-muted" />
           <div className="flex justify-between text-sm text-muted-foreground">
             <span>Khởi công: 15/01/2023</span>
             <span>Hoàn thành: {project.completionDate}</span>
@@ -198,19 +198,19 @@ const ProjectProgressTab = ({ project }: ProjectProgressTabProps) => {
               <Card 
                 key={index} 
                 className={`hover-scale cursor-pointer transition-all duration-200 ${
-                  milestone.status === 'completed' ? 'bg-success/5 border-success/20' :
-                  milestone.status === 'in-progress' ? 'bg-warning/5 border-warning/20' :
-                  'bg-muted/5 border-muted'
+                  milestone.status === 'completed' ? 'bg-emerald-50/50 dark:bg-emerald-950/10 border-emerald-200 dark:border-emerald-900/50' :
+                  milestone.status === 'in-progress' ? 'bg-amber-50/50 dark:bg-amber-950/10 border-amber-200 dark:border-amber-900/50' :
+                  'bg-card border-border'
                 }`}
               >
                 <CardContent className="p-5">
                   <div className="flex items-start gap-4">
-                    <div className="flex-shrink-0 p-2 rounded-full bg-background">
+                    <div className="flex-shrink-0 p-2 rounded-full bg-background shadow-sm">
                       {getStatusIcon(milestone.status)}
                     </div>
                     <div className="flex-1">
                       <div className="flex items-start justify-between gap-2 mb-2">
-                        <h4 className="font-bold text-lg">{milestone.name}</h4>
+                        <h4 className="font-bold text-lg text-foreground">{milestone.name}</h4>
                         <Badge 
                           variant={milestone.status === "completed" ? "default" : 
                                   milestone.status === "in-progress" ? "secondary" : "outline"}
@@ -225,14 +225,14 @@ const ProjectProgressTab = ({ project }: ProjectProgressTabProps) => {
                       </p>
                       
                       <div className="grid grid-cols-2 gap-3 text-sm">
-                        <div className="flex items-center gap-2 p-2 bg-background/50 rounded">
+                        <div className="flex items-center gap-2 p-2 bg-background/60 rounded border border-border/50">
                           <Calendar className="w-4 h-4 text-primary" />
-                          <span>KH: {milestone.date}</span>
+                          <span className="text-foreground">KH: {milestone.date}</span>
                         </div>
                         {milestone.actualDate && (
-                          <div className="flex items-center gap-2 p-2 bg-success/10 rounded">
-                            <CheckCircle className="w-4 h-4 text-success" />
-                            <span>TT: {milestone.actualDate}</span>
+                          <div className="flex items-center gap-2 p-2 bg-emerald-100/50 dark:bg-emerald-900/30 rounded border border-emerald-200/50 dark:border-emerald-800/50">
+                            <CheckCircle className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+                            <span className="text-emerald-700 dark:text-emerald-300">TT: {milestone.actualDate}</span>
                           </div>
                         )}
                       </div>
@@ -250,18 +250,18 @@ const ProjectProgressTab = ({ project }: ProjectProgressTabProps) => {
               <Card 
                 key={index}
                 className={`hover-scale cursor-pointer transition-all duration-200 ${
-                  milestone.status === 'completed' ? 'bg-success/5 border-success/20' :
-                  'bg-warning/5 border-warning/20'
+                  milestone.status === 'completed' ? 'bg-emerald-50/50 dark:bg-emerald-950/10 border-emerald-200 dark:border-emerald-900/50' :
+                  'bg-amber-50/50 dark:bg-amber-950/10 border-amber-200 dark:border-amber-900/50'
                 }`}
               >
                 <CardContent className="p-5">
                   <div className="flex items-start gap-4">
-                    <div className="flex-shrink-0 p-2 rounded-full bg-background">
+                    <div className="flex-shrink-0 p-2 rounded-full bg-background shadow-sm">
                       {getStatusIcon(milestone.status)}
                     </div>
                     <div className="flex-1">
                       <div className="flex items-start justify-between gap-2 mb-2">
-                        <h4 className="font-bold text-lg">{milestone.name}</h4>
+                        <h4 className="font-bold text-lg text-foreground">{milestone.name}</h4>
                         <Badge 
                           variant={milestone.status === "completed" ? "default" : "outline"}
                           className="text-sm"
@@ -274,9 +274,9 @@ const ProjectProgressTab = ({ project }: ProjectProgressTabProps) => {
                         {milestone.description}
                       </p>
                       
-                      <div className="flex items-center gap-2 p-2 bg-background/50 rounded text-sm">
+                      <div className="flex items-center gap-2 p-2 bg-background/60 rounded text-sm border border-border/50">
                         <Calendar className="w-4 h-4 text-primary" />
-                        <span>{milestone.date}</span>
+                        <span className="text-foreground">{milestone.date}</span>
                       </div>
                     </div>
                   </div>
@@ -286,15 +286,15 @@ const ProjectProgressTab = ({ project }: ProjectProgressTabProps) => {
           </div>
 
           {/* Red Book Alert - Enhanced */}
-          <Card className="bg-gradient-to-r from-warning/10 to-orange/5 border-warning/30">
+          <Card className="bg-amber-50/50 dark:bg-amber-950/20 border-amber-200 dark:border-amber-900/50">
             <CardContent className="p-6">
               <div className="flex items-start gap-4">
-                <div className="p-3 rounded-full bg-warning/20">
-                  <FileText className="w-6 h-6 text-warning" />
+                <div className="p-3 rounded-full bg-amber-100 dark:bg-amber-900/40">
+                  <FileText className="w-6 h-6 text-amber-600 dark:text-amber-400" />
                 </div>
                 <div className="flex-1">
-                  <h4 className="font-bold text-lg text-warning mb-2">Thông tin sổ đỏ</h4>
-                  <p className="text-muted-foreground leading-relaxed">
+                  <h4 className="font-bold text-lg text-amber-900 dark:text-amber-300 mb-2">Thông tin sổ đỏ</h4>
+                  <p className="text-amber-800 dark:text-amber-400 leading-relaxed">
                     {project.completionDate === "Đã hoàn thành" 
                       ? "✅ Dự án đã hoàn thành và đã cấp sổ đỏ cho khách hàng."
                       : "⏳ Theo NĐ 101/2024, chủ đầu tư có 50 ngày để nộp hồ sơ cấp sổ từ khi bàn giao. Dự kiến ra sổ: Tháng 2/2026"

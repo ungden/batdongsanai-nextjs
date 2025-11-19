@@ -21,7 +21,7 @@ export const ProjectHero = ({ project }: ProjectHeroProps) => {
   const navigate = useNavigate();
 
   return (
-    <div className="bg-white border-b border-border">
+    <div className="bg-card border-b border-border shadow-sm transition-colors duration-300">
       <div className="container mx-auto px-4 py-6">
         {/* Breadcrumb / Back */}
         <div className="flex items-center justify-between mb-6">
@@ -29,7 +29,7 @@ export const ProjectHero = ({ project }: ProjectHeroProps) => {
             variant="ghost"
             size="sm"
             onClick={() => navigate('/projects')}
-            className="text-slate-500 hover:text-slate-900 -ml-2"
+            className="text-muted-foreground hover:text-foreground -ml-2 hover:bg-accent"
           >
             <ArrowLeft className="w-4 h-4 mr-2" />
             Quay lại danh sách
@@ -46,30 +46,31 @@ export const ProjectHero = ({ project }: ProjectHeroProps) => {
           <div className="lg:col-span-2 space-y-4">
             <div className="flex flex-wrap gap-2">
               {project.status === 'good' && (
-                <Badge className="bg-emerald-100 text-emerald-700 hover:bg-emerald-200 border-0">
+                <Badge className="bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400 hover:bg-emerald-200 border-0">
                   <Shield className="w-3 h-3 mr-1" /> Pháp lý an toàn
                 </Badge>
               )}
               {project.completionDate === "Đã hoàn thành" && (
-                <Badge variant="secondary">
+                <Badge variant="secondary" className="bg-secondary text-secondary-foreground">
                   <CheckCircle className="w-3 h-3 mr-1" /> Đã bàn giao
                 </Badge>
               )}
-              <Badge variant="outline">{project.district}</Badge>
+              <Badge variant="outline" className="border-border text-muted-foreground">{project.district}</Badge>
             </div>
 
-            <h1 className="text-3xl md:text-4xl font-bold text-slate-900 leading-tight">
+            <h1 className="text-3xl md:text-4xl font-bold text-foreground leading-tight tracking-tight">
               {project.name}
             </h1>
 
-            <div className="flex flex-wrap gap-y-2 gap-x-6 text-sm text-slate-600">
+            <div className="flex flex-wrap gap-y-2 gap-x-6 text-sm text-muted-foreground">
               <div className="flex items-center gap-2">
-                <MapPin className="w-4 h-4 text-slate-400" />
+                <MapPin className="w-4 h-4 opacity-70" />
                 {project.location}
               </div>
               <div className="flex items-center gap-2">
-                <Building2 className="w-4 h-4 text-slate-400" />
-                <span className="font-medium text-primary cursor-pointer hover:underline"
+                <Building2 className="w-4 h-4 opacity-70" />
+                <span 
+                  className="font-medium text-primary cursor-pointer hover:underline"
                   onClick={() => navigate(`/developers/${project.developer.toLowerCase().replace(/\s+/g, '-')}`)}
                 >
                   {project.developer}
@@ -80,23 +81,23 @@ export const ProjectHero = ({ project }: ProjectHeroProps) => {
 
           {/* Quick Actions / Price Box */}
           <div className="lg:col-span-1">
-            <div className="bg-slate-50 rounded-xl p-5 border border-slate-200">
+            <div className="bg-muted/30 dark:bg-muted/10 rounded-xl p-5 border border-border/50 shadow-sm">
               <div className="mb-4">
-                <p className="text-sm text-slate-500 mb-1">Giá tham khảo</p>
+                <p className="text-sm text-muted-foreground mb-1 font-medium">Giá tham khảo</p>
                 <div className="flex items-baseline gap-2">
-                  <span className="text-3xl font-bold text-primary">{project.priceRange}</span>
+                  <span className="text-3xl font-bold text-primary tracking-tight">{project.priceRange}</span>
                 </div>
-                <p className="text-sm text-slate-500 mt-1">
+                <p className="text-sm text-muted-foreground mt-1">
                   ~{formatCurrency(project.pricePerSqm)} / m²
                 </p>
               </div>
 
-              <div className="grid grid-cols-2 gap-2 mb-4">
+              <div className="grid grid-cols-2 gap-2 mb-3">
                 <AppointmentBookingDialog
                   projectId={project.id}
                   projectName={project.name}
                   triggerButton={
-                    <Button className="w-full bg-primary hover:bg-primary/90">
+                    <Button className="w-full font-semibold shadow-sm">
                       <Calendar className="w-4 h-4 mr-2" />
                       Đặt lịch xem
                     </Button>
@@ -114,7 +115,7 @@ export const ProjectHero = ({ project }: ProjectHeroProps) => {
                 projectName={project.name}
                 currentPrice={project.pricePerSqm}
                 triggerButton={
-                  <Button variant="outline" className="w-full bg-white">
+                  <Button variant="outline" className="w-full border-border bg-background hover:bg-accent text-foreground">
                     <Briefcase className="w-4 h-4 mr-2" />
                     Thêm vào Portfolio
                   </Button>

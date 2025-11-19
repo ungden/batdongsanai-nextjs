@@ -6,6 +6,7 @@ import { usePermissions } from '@/hooks/usePermissions';
 import { AdminSidebar } from '@/components/admin/AdminSidebar';
 import { Shield } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 
 const AdminLayout = () => {
   const { isAdmin, loading } = usePermissions();
@@ -44,14 +45,20 @@ const AdminLayout = () => {
   }
 
   return (
-    <div className="flex h-screen bg-muted/40">
-      <AdminSidebar />
-      <main className="flex-1 overflow-y-auto">
-        <div className="p-4 sm:p-6 lg:p-8">
-          <Outlet />
-        </div>
-      </main>
-    </div>
+    <SidebarProvider>
+      <div className="flex min-h-screen w-full bg-muted/40">
+        <AdminSidebar />
+        <main className="flex-1 overflow-y-auto w-full">
+          <div className="p-4 sm:p-6 lg:p-8">
+            <div className="mb-4 flex items-center gap-2 md:hidden">
+               <SidebarTrigger />
+               <span className="font-semibold">Menu</span>
+            </div>
+            <Outlet />
+          </div>
+        </main>
+      </div>
+    </SidebarProvider>
   );
 };
 

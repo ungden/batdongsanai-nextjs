@@ -11,12 +11,12 @@ declare const Deno: {
   env: { get(key: string): string | undefined };
 };
 
-// Cấu hình Models
+// Models Configuration
 const MODEL_RESEARCH = "gemini-2.5-pro-preview-03-25"; 
 const MODEL_FORMAT = "gemini-2.0-flash";   
 const MAX_TOKENS = 50000;
 
-// Hàm gọi AI cơ bản đã nâng cấp để hỗ trợ Tool
+// Helper function to call Gemini API
 async function callGemini(apiKey: string, prompt: string, model: string, jsonMode: boolean = false, useSearch: boolean = false) {
   const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
   
@@ -47,7 +47,7 @@ async function callGemini(apiKey: string, prompt: string, model: string, jsonMod
   if (!response.ok) {
     const errText = await response.text();
     if (response.status === 429) {
-      throw new Error(`Google API Quota Exceeded (429). Model ${model} đang quá tải.`);
+      throw new Error(`Google API Quota Exceeded (429). Model ${model} is overloaded.`);
     }
     throw new Error(`Gemini API Error (${model}): ${errText}`);
   }
@@ -56,7 +56,7 @@ async function callGemini(apiKey: string, prompt: string, model: string, jsonMod
   return data.candidates?.[0]?.content?.parts?.[0]?.text || "";
 }
 
-// Hàm làm sạch JSON
+// Helper to clean JSON
 function cleanAndParseJSON(text: string): any {
   try {
     let clean = text.replace(/```json/gi, '').replace(/```/g, '').trim();
@@ -100,16 +100,16 @@ serve(async (req: Request) => {
     // === 1. BATCH EXTRACT ===
     if (mode === 'batch_extract') {
       const step1Prompt = `
-      Nhiệm vụ: Đọc văn bản bên dưới và liệt kê danh sách các dự án BĐS.
-      Định dạng dòng: "Tên Dự Án | Chủ Đầu Tư | Vị Trí"
-      Văn bản nguồn:
+      Task: Read the text below and list real estate projects.
+      Format per line: "Project Name | Developer | Location"
+      Source Text:
       ${raw_content}
       `;
-      // Step 1: Trích xuất thô (Không search, không JSON)
+      // Step 1: Raw extraction (No search, No JSON mode)
       const rawList = await callGemini(apiKey, step1Prompt, MODEL_RESEARCH, false, false);
       
       const step2Prompt = `
-      Chuyển danh sách sau thành JSON Array:
+      Convert this list to JSON Array:
       ${rawList}
       Output Format: { "projects": [{ "name", "developer", "location", "type", "raw_text" }] }
       `;
@@ -118,33 +118,33 @@ serve(async (req: Request) => {
       resultData = cleanAndParseJSON(jsonResult);
     } 
     
-    // === 2. SCOUT & DEEP SCAN (Sử dụng Google Search) ===
+    // === 2. SCOUT & DEEP SCAN (Using Google Search) ===
     else if (mode === 'scout' || mode === 'deep_scan') {
       
-      // BƯỚC 1: RESEARCH (Dùng Search Tool, trả về Text tự nhiên)
+      // STEP 1: RESEARCH (Use Search Tool, returns natural text)
       let researchPrompt = "";
       if (mode === 'scout') {
-        researchPrompt = `Bạn là chuyên gia dữ liệu BĐS. Hãy tìm kiếm thông tin mới nhất về: "${query}".
-        Liệt kê các dự án BĐS liên quan tìm thấy. Với mỗi dự án, cung cấp: Tên, Chủ đầu tư, Vị trí cụ thể, Trạng thái hiện tại.
-        Trả về báo cáo dạng văn bản chi tiết.`;
+        researchPrompt = `You are a Real Estate Data Expert. Search for latest info about: "${query}".
+        List relevant real estate projects found. For each, provide: Name, Developer, Specific Location, Current Status.
+        Return a detailed text report.`;
       } else {
-        researchPrompt = `Bạn là chuyên gia Thẩm định giá. Hãy tìm kiếm chi tiết (Deep Scan) về dự án: "${query}".
-        Thu thập: Tổng quan, Thông số (số căn, tầng), Giá bán (mở bán, hiện tại, phí QL), Tiện ích, Tình trạng pháp lý.
-        Trả về báo cáo dạng văn bản chi tiết.`;
+        researchPrompt = `You are a Valuation Expert. Deep scan for project: "${query}".
+        Collect: Overview, Specs (units, floors), Pricing (launch, current, management fee), Amenities, Legal Status.
+        Return a detailed text report.`;
       }
 
       const searchResultText = await callGemini(apiKey, researchPrompt, MODEL_RESEARCH, false, true);
 
-      // BƯỚC 2: FORMATTING (Dùng Flash, JSON Mode, Input là kết quả bước 1)
+      // STEP 2: FORMATTING (Use Flash, JSON Mode, Input is result from Step 1)
       let formatPrompt = "";
       if (mode === 'scout') {
-        formatPrompt = `Từ báo cáo sau, trích xuất thành JSON:
+        formatPrompt = `Extract data from this report into JSON:
         ${searchResultText}
         
         Output Schema:
         { "projects": [{ "name", "developer", "location", "status", "type", "confidence" }], "summary": "string" }`;
       } else {
-        formatPrompt = `Từ báo cáo sau, trích xuất thành JSON:
+        formatPrompt = `Extract data from this report into JSON:
         ${searchResultText}
         
         Output Schema:
@@ -156,7 +156,6 @@ serve(async (req: Request) => {
     }
 
     if (!resultData) {
-      // Fallback nếu JSON parse lỗi
       throw new Error("Failed to parse result data.");
     }
 

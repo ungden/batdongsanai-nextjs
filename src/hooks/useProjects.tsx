@@ -9,55 +9,75 @@ export const useProjects = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  const mergeProjectWithDb = (base: Project, db: any): Project => {
+    if (!db) return base;
+
+    return {
+      ...base,
+      location: db.location || base.location,
+      city: db.city || base.city,
+      district: db.district || base.district,
+      developer: db.developer || base.developer,
+      image: db.image || base.image,
+      legalScore: db.legal_score ?? base.legalScore,
+      status: (db.status as 'good' | 'warning' | 'danger') || base.status,
+      priceRange: db.price_range || base.priceRange,
+      pricePerSqm: db.price_per_sqm ?? base.pricePerSqm,
+      completionDate: db.completion_date || base.completionDate,
+      description: db.description || base.description,
+      amenities: db.amenities || base.amenities,
+      totalUnits: db.total_units ?? base.totalUnits,
+      soldUnits: db.sold_units ?? base.soldUnits,
+      floors: db.floors ?? base.floors,
+      apartmentTypes: db.apartment_types || base.apartmentTypes,
+      launchPrice: db.launch_price ?? base.launchPrice,
+      launchDate: db.launch_date || base.launchDate,
+      currentPrice: db.current_price ?? base.currentPrice,
+      // Các trường nâng cao khác (averageRentalPrice, rentalYield, badges, priceHistory...)
+      // hiện chưa có trong DB, nên giữ nguyên từ base.
+    };
+  };
+
   const fetchProjects = async () => {
     try {
       setLoading(true);
-      // Fetch projects from Supabase
+      setError(null);
+
+      // Luôn bắt đầu từ 300 dự án tĩnh
+      let baseProjects = [...staticProjects];
+
+      // Thử lấy dữ liệu từ Supabase để "bồi đắp"
       const { data, error } = await supabase
         .from('projects')
-        .select('*')
-        .order('created_at', { ascending: false });
+        .select('*');
 
-      if (error) throw error;
+      if (error) {
+        throw error;
+      }
 
       if (data && data.length > 0) {
-        // Map DB structure to Project type if necessary
-        // Assuming the DB structure matches closely or we map it here
-        const mappedProjects: Project[] = data.map((p: any) => ({
-          id: p.id,
-          name: p.name,
-          location: p.location,
-          city: p.city,
-          district: p.district,
-          developer: p.developer,
-          image: p.image || 'https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?w=400&h=300&fit=crop',
-          legalScore: p.legal_score || 0,
-          status: (p.status as "good" | "warning" | "danger") || 'warning',
-          priceRange: p.price_range || 'Liên hệ',
-          pricePerSqm: p.price_per_sqm || 0,
-          completionDate: p.completion_date || 'Đang cập nhật',
-          warnings: [], // You might want to fetch warnings from a related table
-          description: p.description,
-          amenities: p.amenities || [],
-          totalUnits: p.total_units,
-          soldUnits: p.sold_units,
-          floors: p.floors,
-          apartmentTypes: p.apartment_types || [],
-          launchPrice: p.launch_price,
-          launchDate: p.launch_date,
-          currentPrice: p.current_price,
-          // Add other fields as needed
-        }));
-        setProjects(mappedProjects);
+        const dbMap = new Map<string, any>();
+        data.forEach((p: any) => {
+          if (p.id) {
+            dbMap.set(p.id, p);
+          }
+        });
+
+        const mergedProjects = baseProjects.map((p) => {
+          const db = dbMap.get(p.id);
+          return mergeProjectWithDb(p, db);
+        });
+
+        setProjects(mergedProjects);
       } else {
-        // Fallback to static data if DB is empty (for demo purposes)
-        console.log('Using static data fallback');
-        setProjects(staticProjects);
+        // Không có bản ghi trong DB -> dùng nguyên bộ 300 dự án tĩnh
+        setProjects(baseProjects);
       }
     } catch (err: any) {
       console.error('Error fetching projects:', err);
       setError(err.message);
-      // Fallback on error
+      toast.error('Không tải được danh sách dự án, đang hiển thị dữ liệu mẫu.');
+      // Vẫn luôn fallback về 300 dự án tĩnh
       setProjects(staticProjects);
     } finally {
       setLoading(false);
@@ -77,52 +97,89 @@ export const useProjectDetail = (id: string | undefined) => {
 
   useEffect(() => {
     const fetchProject = async () => {
-      if (!id) return;
+      if (!id) {
+        setLoading(false);
+        return;
+      }
+
       setLoading(true);
-      
+
+      // Luôn tìm trước trong danh sách 300 dự án tĩnh
+      const baseProject = staticProjects.find((p) => p.id === id) || null;
+
       try {
-        // Try fetching from DB first
+        // Thử lấy thêm thông tin từ DB
         const { data, error } = await supabase
           .from('projects')
           .select('*')
           .eq('id', id)
-          .single();
+          .maybeSingle();
 
-        if (!error && data) {
-           const mappedProject: Project = {
-            id: data.id,
-            name: data.name,
-            location: data.location,
-            city: data.city,
-            district: data.district,
-            developer: data.developer,
-            image: data.image || 'https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?w=400&h=300&fit=crop',
-            legalScore: data.legal_score || 0,
-            status: (data.status as "good" | "warning" | "danger") || 'warning',
-            priceRange: data.price_range || 'Liên hệ',
-            pricePerSqm: data.price_per_sqm || 0,
-            completionDate: data.completion_date || 'Đang cập nhật',
-            warnings: [], 
-            description: data.description,
-            amenities: data.amenities || [],
-            totalUnits: data.total_units,
-            soldUnits: data.sold_units,
-            floors: data.floors,
-            apartmentTypes: data.apartment_types || [],
-            launchPrice: data.launch_price,
-            launchDate: data.launch_date,
-            currentPrice: data.current_price,
-          };
-          setProject(mappedProject);
+        if (error) {
+          // Nếu DB lỗi (vd: không tìm thấy), vẫn dùng dữ liệu tĩnh nếu có
+          console.warn('Supabase project fetch error (sử dụng dữ liệu tĩnh nếu có):', error.message);
+          setProject(baseProject);
+        } else if (data) {
+          // Nếu DB có bản ghi, merge với dữ liệu tĩnh (nếu có), hoặc map thẳng từ DB
+          if (baseProject) {
+            const merged = {
+              ...baseProject,
+              location: data.location || baseProject.location,
+              city: data.city || baseProject.city,
+              district: data.district || baseProject.district,
+              developer: data.developer || baseProject.developer,
+              image: data.image || baseProject.image,
+              legalScore: data.legal_score ?? baseProject.legalScore,
+              status: (data.status as 'good' | 'warning' | 'danger') || baseProject.status,
+              priceRange: data.price_range || baseProject.priceRange,
+              pricePerSqm: data.price_per_sqm ?? baseProject.pricePerSqm,
+              completionDate: data.completion_date || baseProject.completionDate,
+              description: data.description || baseProject.description,
+              amenities: data.amenities || baseProject.amenities,
+              totalUnits: data.total_units ?? baseProject.totalUnits,
+              soldUnits: data.sold_units ?? baseProject.soldUnits,
+              floors: data.floors ?? baseProject.floors,
+              apartmentTypes: data.apartment_types || baseProject.apartmentTypes,
+              launchPrice: data.launch_price ?? baseProject.launchPrice,
+              launchDate: data.launch_date || baseProject.launchDate,
+              currentPrice: data.current_price ?? baseProject.currentPrice,
+            } as Project;
+            setProject(merged);
+          } else {
+            // Trường hợp hiếm: có trong DB nhưng không có trong danh sách 300 tĩnh
+            const mappedProject: Project = {
+              id: data.id,
+              name: data.name,
+              location: data.location,
+              city: data.city,
+              district: data.district,
+              developer: data.developer,
+              image: data.image || '/placeholder.svg',
+              legalScore: data.legal_score || 0,
+              status: (data.status as 'good' | 'warning' | 'danger') || 'warning',
+              priceRange: data.price_range || 'Đang cập nhật',
+              pricePerSqm: data.price_per_sqm || 0,
+              completionDate: data.completion_date || 'Đang cập nhật',
+              warnings: [],
+              description: data.description,
+              amenities: data.amenities || [],
+              totalUnits: data.total_units,
+              soldUnits: data.sold_units,
+              floors: data.floors,
+              apartmentTypes: data.apartment_types || [],
+              launchPrice: data.launch_price,
+              launchDate: data.launch_date,
+              currentPrice: data.current_price,
+            };
+            setProject(mappedProject);
+          }
         } else {
-          // Fallback to static data
-          const staticProject = staticProjects.find(p => p.id === id);
-          setProject(staticProject || null);
+          // Không có bản ghi trong DB -> dùng dữ liệu tĩnh (nếu có)
+          setProject(baseProject);
         }
       } catch (err) {
-        console.error(err);
-        const staticProject = staticProjects.find(p => p.id === id);
-        setProject(staticProject || null);
+        console.error('Unexpected error fetching project detail:', err);
+        setProject(baseProject);
       } finally {
         setLoading(false);
       }

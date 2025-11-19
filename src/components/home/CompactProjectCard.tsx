@@ -29,12 +29,12 @@ const CompactProjectCard = ({ project, onClick }: CompactProjectCardProps) => {
 
   return (
     <Card 
-      className="group overflow-hidden border-border/60 bg-card hover:border-primary/50 hover:shadow-md transition-all duration-300 cursor-pointer rounded-xl"
+      className="group overflow-hidden border border-border bg-card hover:border-primary/50 hover:shadow-md transition-all duration-300 cursor-pointer rounded-xl"
       onClick={() => onClick(project.id)}
     >
-      <CardContent className="p-0">
-        {/* Image Section */}
-        <div className="relative h-[180px] w-full overflow-hidden bg-muted">
+      <div className="flex">
+        {/* Image Section - Left Side (Mobile optimized) */}
+        <div className="relative w-32 h-auto min-h-[100px] md:w-40 bg-muted overflow-hidden shrink-0">
           <img 
             src={project.image} 
             alt={project.name}
@@ -42,76 +42,55 @@ const CompactProjectCard = ({ project, onClick }: CompactProjectCardProps) => {
             loading="lazy"
           />
           
-          {/* Gradient overlay */}
-          <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent opacity-60" />
-          
-          {/* Badges */}
-          <div className="absolute top-3 left-3 flex flex-col gap-2">
-            {soldPercentage && (
-              <Badge className="bg-emerald-600 text-white border-0 shadow-sm hover:bg-emerald-700">
-                <TrendingUp className="w-3 h-3 mr-1" />
-                {soldPercentage}% đã bán
-              </Badge>
-            )}
-            {isUpcoming && (
-              <Badge className="bg-blue-600 text-white border-0 shadow-sm hover:bg-blue-700">
-                Sắp mở bán
-              </Badge>
-            )}
-          </div>
-
-          {/* Favorite Button */}
-          <div className="absolute top-3 right-3 z-30" onClick={(e) => e.stopPropagation()}>
-             <FavoriteButton 
-                projectId={project.id} 
-                projectName={project.name} 
-                className="bg-white/20 hover:bg-white/40 text-white border-white/20 backdrop-blur-md h-8 w-8"
-             />
-          </div>
-          
-          {/* Price on Image */}
-          <div className="absolute bottom-3 left-3 right-3">
-            <div className="text-white font-bold text-lg drop-shadow-md tracking-tight">
-              {project.priceRange}
-            </div>
+          {/* Status Badge Overlay */}
+          <div className="absolute top-2 left-2">
+             {soldPercentage ? (
+                <Badge className="bg-emerald-600/90 text-white border-0 text-[10px] h-5 px-1.5 backdrop-blur-sm shadow-sm">
+                   {soldPercentage}% bán
+                </Badge>
+             ) : isUpcoming ? (
+                <Badge className="bg-blue-600/90 text-white border-0 text-[10px] h-5 px-1.5 backdrop-blur-sm shadow-sm">
+                   Sắp mở
+                </Badge>
+             ) : null}
           </div>
         </div>
 
-        {/* Content */}
-        <div className="p-4 space-y-3">
-          {/* Title */}
-          <h3 className="text-base font-bold text-card-foreground line-clamp-2 leading-snug group-hover:text-primary transition-colors">
-            {project.name}
-          </h3>
+        {/* Content Section - Right Side */}
+        <div className="flex-1 p-3 flex flex-col justify-between min-w-0">
+          <div className="space-y-1">
+            <div className="flex justify-between items-start gap-2">
+              <h3 className="text-sm font-bold text-foreground line-clamp-2 leading-snug group-hover:text-primary transition-colors">
+                {project.name}
+              </h3>
+              <div onClick={(e) => e.stopPropagation()}>
+                <FavoriteButton projectId={project.id} projectName={project.name} className="h-6 w-6 -mr-1 -mt-1" />
+              </div>
+            </div>
 
-          {/* Developer */}
-          <div className="text-sm font-medium text-muted-foreground truncate">
-            {project.developer}
+            <div className="flex items-center gap-1.5 text-muted-foreground text-xs">
+              <MapPin className="w-3 h-3 shrink-0" />
+              <span className="truncate">{project.district}, {project.city === "TP. Hồ Chí Minh" ? "TP.HCM" : project.city}</span>
+            </div>
           </div>
 
-          {/* Location */}
-          <div className="flex items-center gap-1.5 text-muted-foreground text-xs">
-            <MapPin className="w-3.5 h-3.5 shrink-0" />
-            <span className="truncate">{project.location}</span>
-          </div>
-
-          {/* Footer Info */}
-          <div className="flex items-center justify-between pt-3 border-t border-border/50">
-            <div className="flex items-center gap-1.5">
-              <Badge variant={getStatusVariant(project.status)} className="text-[10px] px-2 h-5 font-semibold">
-                PL: {project.legalScore}/10
-              </Badge>
-            </div>
-            
-            <div className="flex items-center gap-1.5 text-xs text-muted-foreground font-medium">
-              <Calendar className="w-3.5 h-3.5" />
-              <span>
-                {project.completionDate.length > 10 ? project.completionDate.substring(0, 7) + '...' : project.completionDate}
-              </span>
-            </div>
+          <div className="mt-2 space-y-1.5">
+             <div className="flex items-baseline gap-1">
+                <span className="text-sm font-bold text-primary">{project.priceRange}</span>
+             </div>
+             
+             <div className="flex items-center justify-between border-t border-border/50 pt-1.5">
+                <div className="flex items-center gap-1 text-[10px] text-muted-foreground font-medium">
+                   <Calendar className="w-3 h-3" />
+                   <span>{project.completionDate.length > 10 ? project.completionDate.substring(0, 7) : project.completionDate}</span>
+                </div>
+                <Badge variant={getStatusVariant(project.status)} className="text-[10px] h-4 px-1.5 border-0">
+                  PL: {project.legalScore}/10
+                </Badge>
+             </div>
           </div>
         </div>
-      </CardContent>
+      </div>
     </Card>
   );
 };

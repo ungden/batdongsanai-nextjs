@@ -106,7 +106,7 @@ const DataManagement = () => {
 
     setLoading(true);
     try {
-      const { error } = await supabase.from('market_catalysts').insert({
+      const { error } = await supabase.from('market_catalysts' as any).insert({
         ...catalystForm,
         affected_areas: catalystForm.affected_areas.split(',').map(a => a.trim()),
         estimated_price_impact_percent: parseFloat(catalystForm.estimated_price_impact_percent),
@@ -140,7 +140,7 @@ const DataManagement = () => {
     setLoading(true);
 
     try {
-      const { error } = await supabase.from('project_pricing_history').insert({
+      const { error } = await supabase.from('project_pricing_history' as any).insert({
         ...pricingForm,
         price_per_sqm: parseFloat(pricingForm.price_per_sqm),
         confidence_score: parseFloat(pricingForm.confidence_score)
@@ -170,7 +170,7 @@ const DataManagement = () => {
     setLoading(true);
 
     try {
-      const { error } = await supabase.from('rental_market_data').insert({
+      const { error } = await supabase.from('rental_market_data' as any).insert({
         ...rentalForm,
         rental_price_min: rentalForm.rental_price_min ? parseFloat(rentalForm.rental_price_min) : null,
         rental_price_max: rentalForm.rental_price_max ? parseFloat(rentalForm.rental_price_max) : null,
@@ -206,7 +206,7 @@ const DataManagement = () => {
     setLoading(true);
 
     try {
-      const { error } = await supabase.from('payment_policies').insert({
+      const { error } = await supabase.from('payment_policies' as any).insert({
         ...policyForm,
         down_payment_percent: policyForm.down_payment_percent ? parseFloat(policyForm.down_payment_percent) : null,
         installment_periods: policyForm.installment_periods ? parseInt(policyForm.installment_periods) : null,
@@ -241,7 +241,7 @@ const DataManagement = () => {
     setLoading(true);
 
     try {
-      const { error } = await supabase.from('infrastructure_developments').insert({
+      const { error } = await supabase.from('infrastructure_developments' as any).insert({
         ...infraForm,
         budget_vnd: infraForm.budget_vnd ? parseFloat(infraForm.budget_vnd) : null,
         estimated_property_impact_percent: infraForm.estimated_property_impact_percent ? parseFloat(infraForm.estimated_property_impact_percent) : null

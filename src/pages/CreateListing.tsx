@@ -230,7 +230,7 @@ export default function CreateListing() {
       for (let i = 0; i < formData.images.length; i++) {
         const file = formData.images[i];
         const fileExt = file.name.split('.').pop();
-        const fileName = `${listing.id}_${i}.${fileExt}`;
+        const fileName = `${(listing as any).id}_${i}.${fileExt}`;
         const filePath = `listings/${fileName}`;
 
         const { error: uploadError } = await supabase.storage
@@ -252,7 +252,7 @@ export default function CreateListing() {
       // Insert listing images
       if (imageUrls.length > 0) {
         const imageRecords = imageUrls.map((url, index) => ({
-          listing_id: listing.id,
+          listing_id: (listing as any).id,
           image_url: url,
           is_primary: index === 0,
           display_order: index,

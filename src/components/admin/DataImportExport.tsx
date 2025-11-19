@@ -40,7 +40,7 @@ export const DataImportExport = () => {
       setExporting(true);
 
       const { data, error } = await supabase
-        .from(selectedTable)
+        .from(selectedTable as any)
         .select('*')
         .order('created_at', { ascending: false });
 
@@ -91,7 +91,7 @@ export const DataImportExport = () => {
       setExporting(true);
 
       const { data, error } = await supabase
-        .from(selectedTable)
+        .from(selectedTable as any)
         .select('*')
         .order('created_at', { ascending: false });
 
@@ -161,7 +161,7 @@ export const DataImportExport = () => {
 
           // Insert data in batches
           const { error } = await supabase
-            .from(selectedTable)
+            .from(selectedTable as any)
             .insert(records);
 
           if (error) throw error;
@@ -220,7 +220,7 @@ export const DataImportExport = () => {
 
         // Insert data
         const { error } = await supabase
-          .from(selectedTable)
+          .from(selectedTable as any)
           .insert(records);
 
         if (error) throw error;

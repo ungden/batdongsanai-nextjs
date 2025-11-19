@@ -82,7 +82,7 @@ export const useProjectReviews = (projectId: string) => {
 
           return {
             ...review,
-            images: (images as ReviewImage[]) || [],
+            images: ((images as any) as ReviewImage[]) || [],
           };
         })
       );

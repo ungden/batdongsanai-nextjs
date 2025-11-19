@@ -129,7 +129,7 @@ export const useMarketplaceListings = (filters: ListingFilters = {}) => {
 
           return {
             ...listing,
-            images: (images as ListingImage[]) || [],
+            images: ((images as any) as ListingImage[]) || [],
           };
         })
       );
@@ -175,7 +175,7 @@ export const useMarketplaceListings = (filters: ListingFilters = {}) => {
         const { error } = await supabase
           .from('listing_favorites' as any)
           .delete()
-          .eq('id', existing.id);
+          .eq('id', (existing as any).id);
 
         if (error) throw error;
         toast.success('Đã bỏ lưu');
@@ -238,8 +238,8 @@ export const useListing = (listingId: string) => {
         .order('display_order', { ascending: true });
 
       setListing({
-        ...(data as PropertyListing),
-        images: (images as ListingImage[]) || [],
+        ...((data as any) as PropertyListing),
+        images: ((images as any) as ListingImage[]) || [],
       });
 
       // Increment view count

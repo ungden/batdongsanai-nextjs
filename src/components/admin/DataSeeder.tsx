@@ -104,7 +104,7 @@ export const DataSeeder = () => {
                source: 'system_migration'
              }));
              
-             const { error: histError } = await supabase.from('project_pricing_history').insert(historyRecords);
+             const { error: histError } = await supabase.from('project_pricing_history' as any).insert(historyRecords);
              if (histError) logs.push(`   ⚠️ Lỗi thêm lịch sử giá: ${histError.message}`);
              else logs.push(`   + Đã thêm ${historyRecords.length} bản ghi giá`);
           }

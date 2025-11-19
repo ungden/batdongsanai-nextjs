@@ -41,8 +41,9 @@ export const useNotifications = () => {
 
       if (error) throw error;
 
-      setNotifications((data as Notification[]) || []);
-      setUnreadCount((data as Notification[])?.filter(n => !n.read).length || 0);
+      const typedData = (data as any) as Notification[];
+      setNotifications(typedData || []);
+      setUnreadCount(typedData?.filter(n => !n.read).length || 0);
     } catch (error) {
       console.error('Error fetching notifications:', error);
     } finally {
@@ -159,9 +160,10 @@ export const useNotifications = () => {
 
       if (error) throw error;
 
-      setNotifications(prev => [data as Notification, ...prev]);
+      const newNotification = (data as any) as Notification;
+      setNotifications(prev => [newNotification, ...prev]);
       setUnreadCount(prev => prev + 1);
-      return data;
+      return newNotification;
     } catch (error) {
       console.error('Error creating notification:', error);
       throw error;

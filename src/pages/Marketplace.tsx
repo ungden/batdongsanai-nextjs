@@ -108,14 +108,14 @@ export default function Marketplace() {
                 <div className="space-y-2">
                   <Label>Quận/Huyện</Label>
                   <Select
-                    value={filters.district || ''}
-                    onValueChange={(value) => handleFilterChange('district', value || undefined)}
+                    value={filters.district || 'all'}
+                    onValueChange={(value) => handleFilterChange('district', value === 'all' ? undefined : value)}
                   >
                     <SelectTrigger>
                       <SelectValue placeholder="Chọn quận" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">Tất cả</SelectItem>
+                      <SelectItem value="all">Tất cả</SelectItem>
                       {districts.map(district => (
                         <SelectItem key={district} value={district}>
                           {district}
@@ -150,14 +150,14 @@ export default function Marketplace() {
                 <div className="space-y-2">
                   <Label>Số phòng ngủ</Label>
                   <Select
-                    value={filters.bedrooms?.toString() || ''}
-                    onValueChange={(value) => handleFilterChange('bedrooms', value ? Number(value) : undefined)}
+                    value={filters.bedrooms?.toString() || 'all'}
+                    onValueChange={(value) => handleFilterChange('bedrooms', value === 'all' ? undefined : Number(value))}
                   >
                     <SelectTrigger>
                       <SelectValue placeholder="Chọn số phòng" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">Tất cả</SelectItem>
+                      <SelectItem value="all">Tất cả</SelectItem>
                       <SelectItem value="1">1 phòng</SelectItem>
                       <SelectItem value="2">2 phòng</SelectItem>
                       <SelectItem value="3">3 phòng</SelectItem>
@@ -189,14 +189,14 @@ export default function Marketplace() {
                 <div className="space-y-2">
                   <Label>Nội thất</Label>
                   <Select
-                    value={filters.furnitureStatus || ''}
-                    onValueChange={(value) => handleFilterChange('furnitureStatus', value || undefined)}
+                    value={filters.furnitureStatus || 'all'}
+                    onValueChange={(value) => handleFilterChange('furnitureStatus', value === 'all' ? undefined : value)}
                   >
                     <SelectTrigger>
                       <SelectValue placeholder="Chọn tình trạng" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">Tất cả</SelectItem>
+                      <SelectItem value="all">Tất cả</SelectItem>
                       <SelectItem value="full">Đầy đủ</SelectItem>
                       <SelectItem value="partial">Cơ bản</SelectItem>
                       <SelectItem value="none">Không nội thất</SelectItem>

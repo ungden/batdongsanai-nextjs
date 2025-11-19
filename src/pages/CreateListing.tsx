@@ -551,13 +551,14 @@ export default function CreateListing() {
                   <div>
                     <Label htmlFor="furnitureStatus">Tình trạng nội thất</Label>
                     <Select
-                      value={formData.furnitureStatus}
-                      onValueChange={(value) => handleInputChange('furnitureStatus', value)}
+                      value={formData.furnitureStatus || 'unspecified'}
+                      onValueChange={(value) => handleInputChange('furnitureStatus', value === 'unspecified' ? undefined : value)}
                     >
                       <SelectTrigger>
                         <SelectValue placeholder="Chọn tình trạng" />
                       </SelectTrigger>
                       <SelectContent>
+                        <SelectItem value="unspecified">Chưa xác định</SelectItem>
                         <SelectItem value="full">Đầy đủ</SelectItem>
                         <SelectItem value="partial">Cơ bản</SelectItem>
                         <SelectItem value="none">Không nội thất</SelectItem>

@@ -205,14 +205,14 @@ export function InquiryDialog({ projectId, projectName, trigger }: InquiryDialog
               <div>
                 <Label htmlFor="preferred_bedrooms">Số phòng ngủ mong muốn</Label>
                 <Select
-                  value={formData.preferred_bedrooms?.toString() || ''}
-                  onValueChange={(value) => handleInputChange('preferred_bedrooms', value ? Number(value) : undefined)}
+                  value={formData.preferred_bedrooms?.toString() || 'any'}
+                  onValueChange={(value) => handleInputChange('preferred_bedrooms', value === 'any' ? undefined : Number(value))}
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Chọn số phòng" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">Không xác định</SelectItem>
+                    <SelectItem value="any">Không xác định</SelectItem>
                     <SelectItem value="1">1 phòng</SelectItem>
                     <SelectItem value="2">2 phòng</SelectItem>
                     <SelectItem value="3">3 phòng</SelectItem>
@@ -224,14 +224,14 @@ export function InquiryDialog({ projectId, projectName, trigger }: InquiryDialog
               <div>
                 <Label htmlFor="move_in_timeline">Thời gian dự kiến chuyển vào</Label>
                 <Select
-                  value={formData.move_in_timeline}
-                  onValueChange={(value) => handleInputChange('move_in_timeline', value)}
+                  value={formData.move_in_timeline || 'any'}
+                  onValueChange={(value) => handleInputChange('move_in_timeline', value === 'any' ? undefined : value)}
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Chọn thời gian" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">Chưa xác định</SelectItem>
+                    <SelectItem value="any">Chưa xác định</SelectItem>
                     <SelectItem value="immediate">Ngay lập tức</SelectItem>
                     <SelectItem value="1-3_months">1-3 tháng</SelectItem>
                     <SelectItem value="3-6_months">3-6 tháng</SelectItem>
@@ -272,14 +272,14 @@ export function InquiryDialog({ projectId, projectName, trigger }: InquiryDialog
               <div>
                 <Label htmlFor="how_did_you_hear">Bạn biết đến dự án qua?</Label>
                 <Select
-                  value={formData.how_did_you_hear}
-                  onValueChange={(value) => handleInputChange('how_did_you_hear', value)}
+                  value={formData.how_did_you_hear || 'other'}
+                  onValueChange={(value) => handleInputChange('how_did_you_hear', value === 'other' ? undefined : value)}
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Chọn nguồn" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">Khác</SelectItem>
+                    <SelectItem value="other">Khác</SelectItem>
                     <SelectItem value="google">Google Search</SelectItem>
                     <SelectItem value="facebook">Facebook</SelectItem>
                     <SelectItem value="friend">Bạn bè giới thiệu</SelectItem>

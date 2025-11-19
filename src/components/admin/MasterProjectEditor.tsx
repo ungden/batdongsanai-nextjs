@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Save, Loader2, ScanSearch, Sparkles, Terminal } from "lucide-react";
+import { Save, Loader2, ScanSearch, Sparkles, Terminal, AlertTriangle } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import { ScrollArea } from "@/components/ui/scroll-area";
 
@@ -21,28 +21,20 @@ interface MasterEditorProps {
 
 // Helper an toàn để parse số, tránh NaN
 const safeParseInt = (val: any): number | null => {
-  if (val === null || val === undefined) return null;
+  if (val === null || val === undefined || val === '') return null;
   if (typeof val === 'number') return isNaN(val) ? null : val;
   
-  // Xử lý string: "5.000", "5,000"
-  // Nếu AI trả về "50000000" dạng string
-  let str = String(val);
-  // Xóa dấu chấm/phẩy phân cách ngàn nếu có (tùy format)
-  // Ở đây ta giả sử AI đã trả về raw number string hoặc số
-  str = str.replace(/[,.]/g, ''); 
+  const str = String(val).replace(/[,.]/g, ''); 
   const num = parseInt(str.replace(/\D/g, ''));
   return isNaN(num) ? null : num;
 };
 
-// Helper to map flat JSON keys to our DB structure
 const mapAiDataToFields = (aiData: any, section: string, currentData: any) => {
   const newData = { ...currentData };
   
   const find = (keys: string[]) => {
     for (const k of keys) {
-      // Check root level
       if (aiData[k] !== undefined && aiData[k] !== null) return aiData[k];
-      // Check nested sections
       if (aiData.overview?.[k]) return aiData.overview[k];
       if (aiData.specs?.[k]) return aiData.specs[k];
       if (aiData.pricing?.[k]) return aiData.pricing[k];
@@ -67,16 +59,12 @@ const mapAiDataToFields = (aiData: any, section: string, currentData: any) => {
   if (section === 'specs') {
     const units = find(['total_units', 'totalUnits', 'so_can_ho']);
     if (units) newData.total_units = safeParseInt(units);
-    
     const floors = find(['total_floors', 'floors', 'so_tang']);
     if (floors) newData.floors = safeParseInt(floors);
-
     const blocks = find(['blocks', 'so_block']);
     if (blocks) newData.blocks = safeParseInt(blocks);
-    
     const types = find(['apartment_types']);
     if (types && Array.isArray(types)) newData.apartment_types = types;
-    
     const handover = find(['handover_standard']);
     if (handover) newData.handover_standard = handover;
   }
@@ -84,10 +72,8 @@ const mapAiDataToFields = (aiData: any, section: string, currentData: any) => {
   if (section === 'financial') {
     const price = find(['price_per_sqm', 'current_price']);
     if (price) newData.price_per_sqm = safeParseInt(price);
-    
     const launch = find(['launch_price']);
     if (launch) newData.launch_price = safeParseInt(launch);
-    
     const range = find(['price_range']);
     if (range) newData.price_range = range;
   }
@@ -95,10 +81,8 @@ const mapAiDataToFields = (aiData: any, section: string, currentData: any) => {
   if (section === 'legal') {
     const status = find(['legal_status']);
     if (status) newData.legal_status = status;
-    
     const date = find(['completion_date']);
     if (date) newData.completion_date = date;
-
     if (newData.legal_status?.toLowerCase().includes('sổ') || newData.legal_status?.toLowerCase().includes('hđmb')) {
        if (!newData.legal_score) newData.legal_score = 8;
     }
@@ -148,20 +132,59 @@ export default function MasterProjectEditor({ projectId, onSave }: MasterEditorP
 
   const handleSave = async (silent = false) => {
     if (!silent) setSaving(true);
-    try {
-      // SANITIZE DATA BEFORE SAVING
-      // Remove read-only fields or fields that shouldn't be updated manually if necessary
-      const { id, created_at, updated_at, ...updatePayload } = data;
+    let cleanPayload: any = {}; // Define outside try block for error logging
 
-      const { error } = await supabase.from('projects').update(updatePayload).eq('id', projectId);
+    try {
+      // 1. CLEAN DATA (Sanitize)
+      // Loại bỏ các trường không tồn tại hoặc read-only
+      const { id, created_at, updated_at, ...rest } = data;
+      
+      cleanPayload = {
+        ...rest,
+        // Ép kiểu số chắc chắn để tránh lỗi DB
+        price_per_sqm: safeParseInt(rest.price_per_sqm),
+        launch_price: safeParseInt(rest.launch_price),
+        total_units: safeParseInt(rest.total_units),
+        sold_units: safeParseInt(rest.sold_units),
+        floors: safeParseInt(rest.floors),
+        blocks: safeParseInt(rest.blocks),
+        legal_score: safeParseInt(rest.legal_score),
+        // Đảm bảo amenities là array string
+        amenities: Array.isArray(rest.amenities) ? rest.amenities : [],
+        apartment_types: Array.isArray(rest.apartment_types) ? rest.apartment_types : [],
+      };
+
+      // 2. SEND UPDATE
+      const { error } = await supabase.from('projects').update(cleanPayload).eq('id', projectId);
       
       if (error) throw error;
       
       if (!silent) toast.success("Đã lưu dữ liệu thành công");
       if (onSave) onSave();
+      
+      // Log success
+      if (!silent) {
+         setLogs(prev => [...prev, `✅ SAVE SUCCESS: ${new Date().toLocaleTimeString()}`]);
+      }
+
     } catch (error: any) {
-      console.error("Save Error:", error);
-      if (!silent) toast.error("Lỗi lưu: " + error.message);
+      console.error("Critical Save Error:", error);
+      
+      const errMsg = error.message || "Unknown error";
+      const errDetails = error.details || error.hint || "";
+      
+      if (!silent) {
+         toast.error(`Lỗi lưu: ${errMsg}`);
+         
+         // Tự động bật Debug Console để user thấy lỗi
+         setShowDebug(true);
+         setLogs(prev => [
+           ...prev, 
+           `❌ SAVE ERROR: ${errMsg}`,
+           `DETAILS: ${errDetails}`,
+           `PAYLOAD (Dữ liệu gửi đi): ${JSON.stringify(cleanPayload, null, 2)}`
+         ]);
+      }
     } finally {
       if (!silent) setSaving(false);
     }
@@ -185,7 +208,7 @@ export default function MasterProjectEditor({ projectId, onSave }: MasterEditorP
       setLastRawOutput(rawText);
 
       if (rawText.startsWith("RAW_DATA_NOT_FOUND")) {
-        throw new Error("AI không tìm thấy thông tin");
+        throw new Error(`AI không tìm thấy thông tin cho ${section}`);
       }
 
       const { data: structData, error: structError } = await supabase.functions.invoke('structure-data', {
@@ -198,9 +221,8 @@ export default function MasterProjectEditor({ projectId, onSave }: MasterEditorP
       const newData = mapAiDataToFields(structData.data, section, data);
       setData(newData);
       
-      // Silent Save Step-by-Step
-      const { id, created_at, updated_at, ...updatePayload } = newData;
-      await supabase.from('projects').update(updatePayload).eq('id', projectId);
+      // Auto save after scan - use silent mode but catch errors
+      await handleSave(true);
 
       if (!isAuto) {
         setAuditStatus('idle');
@@ -305,6 +327,7 @@ export default function MasterProjectEditor({ projectId, onSave }: MasterEditorP
         </Button>
       </div>
 
+      {/* Debug Console */}
       {showDebug && (
         <Card className="bg-slate-950 text-green-400 border-slate-800 shadow-inner font-mono text-xs">
             <CardContent className="p-4 space-y-4">

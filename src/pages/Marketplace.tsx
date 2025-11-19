@@ -68,7 +68,7 @@ export default function Marketplace() {
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
            {/* Mobile header handled by DesktopLayout title */}
-          {!isMobile && <h1 className="text-3xl font-bold">Chợ Bất Động Sản</h1>}
+          {!isMobile && <h1 className="text-3xl font-bold text-foreground">Chợ Bất Động Sản</h1>}
           <p className="text-muted-foreground mt-1">
             {totalCount} tin đăng đang có sẵn
           </p>
@@ -79,7 +79,7 @@ export default function Marketplace() {
             onValueChange={(value) => handleFilterChange('listingType', value)}
             className="w-auto"
           >
-            <TabsList>
+            <TabsList className="bg-muted text-muted-foreground">
               <TabsTrigger value="all">Tất cả</TabsTrigger>
               <TabsTrigger value="sale">Mua bán</TabsTrigger>
               <TabsTrigger value="rent">Cho thuê</TabsTrigger>
@@ -98,22 +98,22 @@ export default function Marketplace() {
           "lg:w-72 shrink-0 space-y-4 transition-all",
           !showFilters && "hidden lg:block"
         )}>
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between pb-3 px-4 pt-4">
-              <CardTitle className="text-base">Bộ lọc</CardTitle>
-              <Button variant="ghost" size="sm" onClick={resetFilters} className="h-8 text-xs">
+          <Card className="bg-card border-border">
+            <CardHeader className="flex flex-row items-center justify-between pb-3 px-4 pt-4 border-b border-border/50">
+              <CardTitle className="text-base text-foreground">Bộ lọc</CardTitle>
+              <Button variant="ghost" size="sm" onClick={resetFilters} className="h-8 text-xs text-muted-foreground hover:text-foreground">
                 Xóa lọc
               </Button>
             </CardHeader>
-            <CardContent className="space-y-4 px-4 pb-4">
+            <CardContent className="space-y-4 px-4 pt-4 pb-4">
               {/* District Filter */}
               <div className="space-y-2">
-                <Label>Quận/Huyện</Label>
+                <Label className="text-foreground">Quận/Huyện</Label>
                 <Select
                   value={filters.district || 'all'}
                   onValueChange={(value) => handleFilterChange('district', value === 'all' ? undefined : value)}
                 >
-                  <SelectTrigger>
+                  <SelectTrigger className="bg-background border-input">
                     <SelectValue placeholder="Chọn quận" />
                   </SelectTrigger>
                   <SelectContent>
@@ -129,19 +129,21 @@ export default function Marketplace() {
 
               {/* Price Range */}
               <div className="space-y-2">
-                <Label>
+                <Label className="text-foreground">
                   Giá {filters.listingType === 'rent' ? '(triệu/tháng)' : '(tỷ)'}
                 </Label>
                 <div className="grid grid-cols-2 gap-2">
                   <Input
                     type="number"
                     placeholder="Từ"
+                    className="bg-background border-input"
                     value={filters.minPrice || ''}
                     onChange={(e) => handleFilterChange('minPrice', e.target.value ? Number(e.target.value) : undefined)}
                   />
                   <Input
                     type="number"
                     placeholder="Đến"
+                    className="bg-background border-input"
                     value={filters.maxPrice || ''}
                     onChange={(e) => handleFilterChange('maxPrice', e.target.value ? Number(e.target.value) : undefined)}
                   />
@@ -150,12 +152,12 @@ export default function Marketplace() {
 
               {/* Bedrooms */}
               <div className="space-y-2">
-                <Label>Số phòng ngủ</Label>
+                <Label className="text-foreground">Số phòng ngủ</Label>
                 <Select
                   value={filters.bedrooms?.toString() || 'all'}
                   onValueChange={(value) => handleFilterChange('bedrooms', value === 'all' ? undefined : Number(value))}
                 >
-                  <SelectTrigger>
+                  <SelectTrigger className="bg-background border-input">
                     <SelectValue placeholder="Chọn số phòng" />
                   </SelectTrigger>
                   <SelectContent>
@@ -170,17 +172,19 @@ export default function Marketplace() {
 
               {/* Area Range */}
               <div className="space-y-2">
-                <Label>Diện tích (m²)</Label>
+                <Label className="text-foreground">Diện tích (m²)</Label>
                 <div className="grid grid-cols-2 gap-2">
                   <Input
                     type="number"
                     placeholder="Từ"
+                    className="bg-background border-input"
                     value={filters.minArea || ''}
                     onChange={(e) => handleFilterChange('minArea', e.target.value ? Number(e.target.value) : undefined)}
                   />
                   <Input
                     type="number"
                     placeholder="Đến"
+                    className="bg-background border-input"
                     value={filters.maxArea || ''}
                     onChange={(e) => handleFilterChange('maxArea', e.target.value ? Number(e.target.value) : undefined)}
                   />
@@ -189,12 +193,12 @@ export default function Marketplace() {
 
               {/* Furniture Status */}
               <div className="space-y-2">
-                <Label>Nội thất</Label>
+                <Label className="text-foreground">Nội thất</Label>
                 <Select
                   value={filters.furnitureStatus || 'all'}
                   onValueChange={(value) => handleFilterChange('furnitureStatus', value === 'all' ? undefined : value)}
                 >
-                  <SelectTrigger>
+                  <SelectTrigger className="bg-background border-input">
                     <SelectValue placeholder="Chọn tình trạng" />
                   </SelectTrigger>
                   <SelectContent>
@@ -215,7 +219,7 @@ export default function Marketplace() {
           <div className="flex items-center justify-between mb-4">
             <Button
               variant="outline"
-              className="lg:hidden"
+              className="lg:hidden border-border text-foreground"
               onClick={() => setShowFilters(!showFilters)}
             >
               {showFilters ? <ChevronUp className="mr-2 h-4 w-4" /> : <ChevronDown className="mr-2 h-4 w-4" />}
@@ -223,9 +227,9 @@ export default function Marketplace() {
             </Button>
 
             <div className="flex items-center gap-2 ml-auto">
-              <Label className="hidden sm:inline-block text-sm font-medium">Sắp xếp:</Label>
+              <Label className="hidden sm:inline-block text-sm font-medium text-foreground">Sắp xếp:</Label>
               <Select value={sortBy} onValueChange={(value: any) => setSortBy(value)}>
-                <SelectTrigger className="w-[160px] h-9">
+                <SelectTrigger className="w-[160px] h-9 bg-background border-input">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -242,7 +246,7 @@ export default function Marketplace() {
           {loading ? (
             <div className="grid md:grid-cols-2 xl:grid-cols-3 gap-4">
               {[1, 2, 3, 4, 5, 6].map(i => (
-                <Card key={i}>
+                <Card key={i} className="bg-card border-border">
                   <Skeleton className="h-48 w-full" />
                   <CardContent className="p-4 space-y-2">
                     <Skeleton className="h-4 w-3/4" />
@@ -253,10 +257,10 @@ export default function Marketplace() {
               ))}
             </div>
           ) : sortedListings.length === 0 ? (
-            <Card>
+            <Card className="bg-card border-border">
               <CardContent className="py-12 text-center">
                 <p className="text-muted-foreground">Không tìm thấy tin đăng nào</p>
-                <Button variant="link" onClick={resetFilters} className="mt-2">
+                <Button variant="link" onClick={resetFilters} className="mt-2 text-primary">
                   Xóa bộ lọc
                 </Button>
               </CardContent>
@@ -314,9 +318,9 @@ function ListingCard({ listing, onToggleFavorite }: ListingCardProps) {
     : `${formatCurrency(price)}/tháng`;
 
   return (
-    <Card className="group hover:shadow-lg transition-shadow overflow-hidden">
+    <Card className="group hover:shadow-lg transition-shadow overflow-hidden bg-card border-border">
       <Link to={`/marketplace/listing/${listing.id}`}>
-        <div className="relative aspect-video overflow-hidden">
+        <div className="relative aspect-video overflow-hidden bg-muted">
           <img
             src={primaryImage}
             alt={listing.title}
@@ -325,16 +329,16 @@ function ListingCard({ listing, onToggleFavorite }: ListingCardProps) {
 
           {/* Badges */}
           <div className="absolute top-2 left-2 flex gap-2">
-            <Badge variant={listing.listing_type === 'sale' ? 'default' : 'secondary'}>
+            <Badge variant={listing.listing_type === 'sale' ? 'default' : 'secondary'} className="shadow-sm">
               {listing.listing_type === 'sale' ? 'Bán' : 'Thuê'}
             </Badge>
             {listing.is_featured && (
-              <Badge className="bg-yellow-500">
+              <Badge className="bg-yellow-500 text-white border-0 shadow-sm">
                 <Star className="w-3 h-3 mr-1" /> Nổi bật
               </Badge>
             )}
             {listing.is_verified && (
-              <Badge variant="outline" className="bg-green-50 border-green-500 text-green-700">
+              <Badge variant="outline" className="bg-green-50/90 border-green-500 text-green-700 shadow-sm backdrop-blur-sm">
                 ✓ Đã xác minh
               </Badge>
             )}
@@ -344,7 +348,7 @@ function ListingCard({ listing, onToggleFavorite }: ListingCardProps) {
           <Button
             size="icon"
             variant="ghost"
-            className="absolute top-2 right-2 bg-white/80 hover:bg-white"
+            className="absolute top-2 right-2 bg-black/20 hover:bg-black/40 text-white backdrop-blur-sm rounded-full h-8 w-8 p-0"
             onClick={(e) => {
               e.preventDefault();
               onToggleFavorite();
@@ -369,7 +373,7 @@ function ListingCard({ listing, onToggleFavorite }: ListingCardProps) {
             </div>
 
             {/* Title */}
-            <h4 className="font-semibold line-clamp-2 group-hover:text-primary transition-colors min-h-[48px]">
+            <h4 className="font-semibold line-clamp-2 text-foreground group-hover:text-primary transition-colors min-h-[48px]">
               {listing.title}
             </h4>
 
@@ -380,23 +384,23 @@ function ListingCard({ listing, onToggleFavorite }: ListingCardProps) {
             </div>
 
             {/* Specs */}
-            <div className="flex items-center gap-4 text-sm mt-2">
+            <div className="flex items-center gap-4 text-sm text-foreground/80 mt-2">
               <div className="flex items-center">
-                <Bed className="w-4 h-4 mr-1" />
+                <Bed className="w-4 h-4 mr-1 text-muted-foreground" />
                 {listing.bedrooms} PN
               </div>
               <div className="flex items-center">
-                <Bath className="w-4 h-4 mr-1" />
+                <Bath className="w-4 h-4 mr-1 text-muted-foreground" />
                 {listing.bathrooms} WC
               </div>
               <div className="flex items-center">
-                <Maximize className="w-4 h-4 mr-1" />
+                <Maximize className="w-4 h-4 mr-1 text-muted-foreground" />
                 {listing.area_sqm}m²
               </div>
             </div>
 
             {/* View count */}
-            <div className="flex items-center justify-between text-xs text-muted-foreground pt-3 border-t mt-3">
+            <div className="flex items-center justify-between text-xs text-muted-foreground pt-3 border-t border-border/50 mt-3">
               <div className="flex items-center">
                 <Eye className="w-3 h-3 mr-1" />
                 {listing.view_count} lượt xem

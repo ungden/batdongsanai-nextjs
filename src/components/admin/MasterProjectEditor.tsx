@@ -64,19 +64,25 @@ export default function MasterProjectEditor({ projectId, onSave }: MasterEditorP
   const handleDeepScan = async () => {
     setScanning(true);
     try {
-      // Gọi AI để quét thông tin dựa trên tên dự án
-      const { data: aiRes, error } = await supabase.functions.invoke('research-project', {
+      // STEP 1: Research (Text Report)
+      const { data: resData, error: resError } = await supabase.functions.invoke('research-project', {
         body: { query: data.name, mode: 'deep_scan' }
       });
 
-      if (error) throw error;
+      if (resError) throw resError;
+      const reportText = resData.data;
+
+      // STEP 2: Structure (JSON)
+      const { data: structData, error: structError } = await supabase.functions.invoke('structure-data', {
+        body: { content: reportText, type: 'project_detail' }
+      });
+
+      if (structError) throw structError;
+      const aiData = structData.data;
       
-      const aiData = aiRes.data;
-      
-      // Merge AI data vào form hiện tại (chỉ điền vào các ô trống)
+      // Merge AI data into form
       const newData = { ...data };
       
-      // Mapping logic (AI response -> DB schema)
       if (aiData.overview?.description && !newData.description) newData.description = aiData.overview.description;
       if (aiData.specs?.total_units && !newData.total_units) newData.total_units = aiData.specs.total_units;
       if (aiData.specs?.total_floors && !newData.floors) newData.floors = aiData.specs.total_floors;
@@ -181,7 +187,7 @@ export default function MasterProjectEditor({ projectId, onSave }: MasterEditorP
                 </div>
                 <div className="space-y-2">
                   <Label>Số block</Label>
-                  <Input placeholder="VD: 5" /> {/* Cần thêm cột db nếu muốn lưu */}
+                  <Input placeholder="VD: 5" /> 
                 </div>
               </div>
 
@@ -201,7 +207,7 @@ export default function MasterProjectEditor({ projectId, onSave }: MasterEditorP
               </div>
 
               <div className="space-y-2">
-                <Label>Loại hình sản phẩm (Phân cách bằng dấu phẩy)</Label>
+                <Label>Loại hình sản phẩm</Label>
                 <Input 
                     value={data.apartment_types?.join(', ') || ''} 
                     onChange={(e) => handleChange('apartment_types', e.target.value.split(',').map((s:string) => s.trim()))}
@@ -231,17 +237,6 @@ export default function MasterProjectEditor({ projectId, onSave }: MasterEditorP
                  <Label>Khoảng giá hiển thị (Text)</Label>
                  <Input value={data.price_range || ''} onChange={(e) => handleChange('price_range', e.target.value)} placeholder="2.5 - 5 tỷ" />
               </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                 <div className="space-y-2">
-                  <Label>Phí quản lý (VNĐ/m2)</Label>
-                  <Input type="number" placeholder="18000" />
-                </div>
-                <div className="space-y-2">
-                   <Label>Giá thuê trung bình (Text)</Label>
-                   <Input placeholder="15-25 triệu/tháng" />
-                </div>
-              </div>
             </CardContent>
           </Card>
         </TabsContent>
@@ -267,30 +262,6 @@ export default function MasterProjectEditor({ projectId, onSave }: MasterEditorP
                     </Select>
                   </div>
                </div>
-
-               <div className="space-y-3 border p-4 rounded-lg bg-muted/20">
-                  <h4 className="font-medium">Checklist hồ sơ pháp lý (Tích chọn nếu có)</h4>
-                  <div className="grid grid-cols-2 gap-3">
-                    <div className="flex items-center space-x-2">
-                      <Checkbox id="l1" /> <label htmlFor="l1">Quyết định chủ trương đầu tư</label>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <Checkbox id="l2" /> <label htmlFor="l2">Quy hoạch 1/500</label>
-                    </div>
-                     <div className="flex items-center space-x-2">
-                      <Checkbox id="l3" /> <label htmlFor="l3">Giấy phép xây dựng</label>
-                    </div>
-                     <div className="flex items-center space-x-2">
-                      <Checkbox id="l4" /> <label htmlFor="l4">Văn bản đủ điều kiện bán</label>
-                    </div>
-                     <div className="flex items-center space-x-2">
-                      <Checkbox id="l5" /> <label htmlFor="l5">Bảo lãnh ngân hàng</label>
-                    </div>
-                     <div className="flex items-center space-x-2">
-                      <Checkbox id="l6" /> <label htmlFor="l6">Sổ đỏ/Sổ hồng</label>
-                    </div>
-                  </div>
-               </div>
             </CardContent>
            </Card>
         </TabsContent>
@@ -300,7 +271,7 @@ export default function MasterProjectEditor({ projectId, onSave }: MasterEditorP
             <Card>
                 <CardContent className="p-6">
                     <div className="space-y-2">
-                        <Label>Danh sách tiện ích (Phân cách bằng dấu phẩy)</Label>
+                        <Label>Danh sách tiện ích</Label>
                         <Textarea 
                             value={data.amenities?.join(', ') || ''}
                             onChange={(e) => handleChange('amenities', e.target.value.split(',').map((s:string) => s.trim()).filter(Boolean))}
@@ -308,24 +279,6 @@ export default function MasterProjectEditor({ projectId, onSave }: MasterEditorP
                             placeholder="Hồ bơi, Gym, Công viên, BBQ,..."
                         />
                     </div>
-                     <div className="mt-4">
-                        <Label>Gợi ý từ AI (Click để thêm):</Label>
-                        <div className="flex flex-wrap gap-2 mt-2">
-                            {['Hồ bơi vô cực', 'Sân Golf', 'Bến du thuyền', 'Trường học quốc tế', 'Bệnh viện', 'Trung tâm thương mại'].map(tag => (
-                                <Badge 
-                                    key={tag} 
-                                    variant="secondary" 
-                                    className="cursor-pointer hover:bg-primary hover:text-white"
-                                    onClick={() => {
-                                        const current = data.amenities || [];
-                                        if(!current.includes(tag)) handleChange('amenities', [...current, tag]);
-                                    }}
-                                >
-                                    + {tag}
-                                </Badge>
-                            ))}
-                        </div>
-                     </div>
                 </CardContent>
             </Card>
         </TabsContent>

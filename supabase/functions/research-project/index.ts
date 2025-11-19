@@ -11,23 +11,36 @@ declare const Deno: {
   env: { get(key: string): string | undefined };
 };
 
-// Helper để parse JSON từ phản hồi text của Gemini
+// Hàm xử lý JSON mạnh mẽ hơn: Lọc sạch markdown và tìm cặp ngoặc hợp lệ
 function extractJSON(text: string): any {
   try {
-    // Cố gắng tìm block JSON ```json ... ```
-    const match = text.match(/```json\s*([\s\S]*?)\s*```/);
-    if (match && match[1]) {
-      return JSON.parse(match[1]);
+    // 1. Loại bỏ markdown code blocks (```json, ```)
+    let cleanText = text.replace(/```json/gi, '').replace(/```/g, '').trim();
+
+    // 2. Tìm vị trí bắt đầu của JSON object ({) hoặc array ([)
+    const firstOpenBrace = cleanText.indexOf('{');
+    const firstOpenBracket = cleanText.indexOf('[');
+    
+    let startIdx = -1;
+    let endIdx = -1;
+
+    // Xác định xem là Object hay Array dựa vào cái nào xuất hiện trước
+    if (firstOpenBrace !== -1 && (firstOpenBracket === -1 || firstOpenBrace < firstOpenBracket)) {
+       startIdx = firstOpenBrace;
+       endIdx = cleanText.lastIndexOf('}');
+    } else if (firstOpenBracket !== -1) {
+       startIdx = firstOpenBracket;
+       endIdx = cleanText.lastIndexOf(']');
     }
-    // Hoặc tìm cặp ngoặc { } đầu cuối
-    const firstOpen = text.indexOf('{');
-    const lastClose = text.lastIndexOf('}');
-    if (firstOpen !== -1 && lastClose !== -1) {
-      return JSON.parse(text.substring(firstOpen, lastClose + 1));
+
+    // 3. Cắt chuỗi JSON hợp lệ
+    if (startIdx !== -1 && endIdx !== -1) {
+      cleanText = cleanText.substring(startIdx, endIdx + 1);
     }
-    return JSON.parse(text);
+
+    return JSON.parse(cleanText);
   } catch (e) {
-    console.error("Failed to parse JSON:", text);
+    console.error("Failed to parse JSON. Raw text:", text);
     return null;
   }
 }
@@ -46,55 +59,60 @@ serve(async (req: Request) => {
     let useSearchTool = true;
 
     if (mode === 'batch_extract') {
-      // CHẾ ĐỘ BATCH: Trích xuất thuần túy, KHÔNG SEARCH
+      // CHẾ ĐỘ BATCH: Trích xuất thuần túy từ văn bản, KHÔNG SEARCH
       useSearchTool = false;
       
-      systemPrompt = `Bạn là một công cụ trích xuất dữ liệu (Data Parser) chính xác tuyệt đối.
-      
+      systemPrompt = `Bạn là một API chuyển đổi dữ liệu (Data Parser).
       NHIỆM VỤ:
-      - Đọc danh sách văn bản thô người dùng cung cấp (có thể là copy từ Excel, Word, hoặc danh sách gạch đầu dòng).
-      - Tách từng dòng/mục thành một đối tượng dự án riêng biệt.
-      - Nếu người dùng cung cấp 300 dòng, hãy trả về đủ 300 items (hoặc tối đa khả năng của token).
-      - KHÔNG tự bịa thêm thông tin. Chỉ lấy thông tin có trong văn bản. Nếu thiếu, để "Đang cập nhật".
-      - Tự động nhận diện cấu trúc: "Tên dự án - Vị trí - CĐT" hoặc các biến thể tương tự.
+      1. Đọc danh sách văn bản thô đầu vào.
+      2. Trích xuất thông tin từng dự án thành JSON Array.
+      3. KHÔNG thêm bớt thông tin không có trong văn bản. Nếu thiếu, để "Đang cập nhật".
+      4. TRẢ VỀ CHỈ MỘT JSON DUY NHẤT. KHÔNG MARKDOWN, KHÔNG GIẢI THÍCH.
       
-      OUTPUT JSON SCHEMA:
+      OUTPUT FORMAT:
       {
         "projects": [
           {
-            "name": "Trích xuất tên dự án chính xác",
-            "developer": "Tên CĐT (nếu có trong text) hoặc 'Đang cập nhật'",
-            "location": "Vị trí (nếu có trong text) hoặc 'Đang cập nhật'",
-            "type": "Căn hộ/Nhà phố/Đất nền (đoán dựa trên tên, nếu không rõ để 'Khác')",
-            "raw_text": "Giữ nguyên dòng text gốc để đối chiếu"
+            "name": "Tên dự án (Viết hoa chữ cái đầu)",
+            "developer": "Tên CĐT hoặc 'Đang cập nhật'",
+            "location": "Vị trí/Quận huyện hoặc 'Đang cập nhật'",
+            "type": "Căn hộ/Nhà phố/Đất nền",
+            "raw_text": "Dòng văn bản gốc"
           }
         ]
       }`
       
-      userPrompt = `DANH SÁCH ĐẦU VÀO:\n${raw_content || query}`
+      userPrompt = `DỮ LIỆU ĐẦU VÀO:\n${raw_content || query}`
     } 
     else if (mode === 'scout') {
-      // ... (Giữ nguyên logic scout cũ)
-      systemPrompt = `Bạn là chuyên gia BĐS Việt Nam. Hãy dùng Google Search để tìm dữ liệu MỚI NHẤT.
-      Output JSON (KHÔNG markdown, chỉ JSON):
+      // CHẾ ĐỘ SCOUT: Tìm kiếm thông tin mới
+      systemPrompt = `Bạn là chuyên gia dữ liệu BĐS. Sử dụng Google Search để tìm thông tin mới nhất.
+      Output JSON format (NO MARKDOWN):
       {
         "projects": [
           {
             "name": "Tên đầy đủ",
             "developer": "Chủ đầu tư",
             "location": "Vị trí cụ thể",
-            "status": "Trạng thái hiện tại",
+            "status": "Trạng thái (Sắp mở bán/Đang bán/Đã bàn giao)",
             "type": "Loại hình",
-            "confidence": "High"
+            "confidence": "High/Medium/Low"
           }
         ],
-        "summary": "Tóm tắt ngắn kết quả tìm kiếm"
+        "summary": "Tóm tắt ngắn kết quả"
       }`
-      userPrompt = `Tìm kiếm dự án: ${query}`
+      userPrompt = `Tìm kiếm thông tin dự án: ${query}`
     } else {
-      // ... (Giữ nguyên logic deep scan cũ)
-      systemPrompt = `Bạn là chuyên gia Thẩm định giá và Nghiên cứu thị trường BĐS...`
-      userPrompt = `Deep Scan (Thẩm định chi tiết) dự án: ${query}`
+      // CHẾ ĐỘ DEEP SCAN: Phân tích sâu 1 dự án
+      systemPrompt = `Bạn là chuyên gia Thẩm định giá BĐS. Tìm kiếm và tổng hợp thông tin chi tiết.
+      Output JSON format (NO MARKDOWN):
+      {
+        "overview": { "description": "..." },
+        "specs": { "total_units": 0, "total_floors": 0 },
+        "pricing": { "price_per_sqm": 0, "currency": "VND" },
+        "amenities": ["..."]
+      }`
+      userPrompt = `Deep Scan dự án: ${query}`
     }
 
     const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
@@ -105,7 +123,8 @@ serve(async (req: Request) => {
       }],
       generationConfig: {
         temperature: 0.1,
-        responseMimeType: "application/json"
+        // Bắt buộc trả về JSON mode để giảm lỗi parsing
+        responseMimeType: "application/json" 
       }
     };
 

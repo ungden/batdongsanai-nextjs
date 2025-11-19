@@ -41,10 +41,10 @@ const ProjectGridCard = ({ project, onClick }: ProjectGridCardProps) => {
   return (
     <Card
       onClick={() => onClick(project.id)}
-      className="overflow-hidden cursor-pointer group border-0 shadow-lg hover:shadow-2xl transition-all duration-300"
+      className="overflow-hidden cursor-pointer group border border-border/60 bg-card shadow-sm hover:shadow-md hover:border-primary/50 transition-all duration-300"
     >
       {/* Image with gradient overlays */}
-      <div className="relative h-[220px] overflow-hidden">
+      <div className="relative h-[220px] overflow-hidden bg-muted">
         <img
           src={project.image}
           alt={project.name}
@@ -53,59 +53,45 @@ const ProjectGridCard = ({ project, onClick }: ProjectGridCardProps) => {
         />
         
         {/* Multi-layer gradient */}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent" />
-        <div className="absolute inset-0 bg-gradient-to-br from-primary/30 via-transparent to-accent/30 opacity-50" />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-80" />
         
-        {/* Decorative corner */}
-        <div className="absolute top-0 left-0 w-32 h-32 bg-gradient-to-br from-primary/20 to-transparent rounded-br-full" />
-
-        {/* Status/Sold badge with glow effect */}
+        {/* Status/Sold badge */}
         <div className="absolute top-4 left-4 flex items-center gap-2">
           {typeof soldPercentage === "number" ? (
-            <div className="relative">
-              <div className="absolute inset-0 bg-success/50 blur-lg rounded-lg" />
-              <span className="relative bg-gradient-to-r from-success to-success/90 text-white text-xs font-bold px-3 py-1.5 rounded-lg shadow-xl border border-success/30 flex items-center gap-1">
-                <TrendingUp className="w-3.5 h-3.5" />
-                {soldPercentage}% đã bán
-              </span>
-            </div>
+            <Badge className="bg-emerald-500/90 text-white border-0 backdrop-blur-sm shadow-sm">
+              <TrendingUp className="w-3.5 h-3.5 mr-1" />
+              {soldPercentage}% đã bán
+            </Badge>
           ) : null}
         </div>
 
         {/* Favorite with backdrop */}
-        <div className="absolute top-4 right-4 z-10 backdrop-blur-sm bg-white/20 rounded-full p-1" onClick={(e) => e.stopPropagation()}>
+        <div className="absolute top-4 right-4 z-10 bg-black/20 backdrop-blur-md rounded-full p-1 hover:bg-black/40 transition-colors" onClick={(e) => e.stopPropagation()}>
           <FavoriteButton projectId={project.id} projectName={project.name} />
         </div>
       </div>
 
-      {/* Content with gradient background */}
-      <div className="relative p-6 bg-gradient-to-br from-card via-card to-muted/20">
-        {/* Decorative top accent */}
-        <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-primary via-accent to-primary" />
-        
+      {/* Content */}
+      <div className="p-6 space-y-4">
         {/* Title & meta */}
-        <div className="mb-3">
-          <h3 className="text-lg font-semibold leading-snug text-foreground group-hover:text-primary transition-colors mb-2">
+        <div>
+          <h3 className="text-lg font-bold leading-snug text-foreground group-hover:text-primary transition-colors mb-2 line-clamp-1">
             {project.name}
           </h3>
           
-          <div className="space-y-2">
+          <div className="space-y-1.5">
             <div className="flex items-center text-sm text-muted-foreground">
-              <div className="p-1 bg-primary/10 rounded-lg mr-2">
-                <MapPin className="w-4 h-4 text-primary" />
-              </div>
-              <span className="line-clamp-1 font-medium">{project.location}</span>
+              <MapPin className="w-4 h-4 mr-2 text-primary/70" />
+              <span className="line-clamp-1">{project.location}</span>
             </div>
             
             <div className="flex items-center text-sm text-muted-foreground">
-              <div className="p-1 bg-accent/10 rounded-lg mr-2">
-                <User className="w-4 h-4 text-accent" />
-              </div>
-              <span className="line-clamp-1 font-medium">{project.developer}</span>
+              <User className="w-4 h-4 mr-2 text-accent/70" />
+              <span className="line-clamp-1">{project.developer}</span>
             </div>
           </div>
 
-          {/* Badges with icons */}
+          {/* Badges */}
           {badges.length > 0 && (
             <div className="mt-3 flex flex-wrap gap-1.5">
               {badges.map((b) => (
@@ -127,11 +113,11 @@ const ProjectGridCard = ({ project, onClick }: ProjectGridCardProps) => {
           )}
         </div>
 
-        {/* Pricing with gradient card */}
-        <div className="mt-4 rounded-xl border-2 border-primary/20 bg-gradient-to-br from-primary/10 via-accent/5 to-primary/10 p-4 shadow-inner">
+        {/* Pricing Card */}
+        <div className="rounded-xl border border-border bg-secondary/30 p-4">
           <div className="flex items-center justify-between gap-4">
             <div>
-              <div className="text-2xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent mb-1">
+              <div className="text-xl font-bold text-primary mb-0.5">
                 {project.priceRange}
               </div>
               <div className="text-xs text-muted-foreground font-medium">
@@ -139,17 +125,17 @@ const ProjectGridCard = ({ project, onClick }: ProjectGridCardProps) => {
               </div>
             </div>
             {priceTrend && (
-              <div className={`flex items-center text-sm font-medium px-3 py-1.5 rounded-lg ${
+              <div className={`flex items-center text-xs font-medium px-2.5 py-1 rounded-lg border ${
                 priceTrend === "up" 
-                  ? "text-success bg-success/10 border border-success/20" 
+                  ? "text-emerald-600 bg-emerald-50 border-emerald-100 dark:bg-emerald-950/30 dark:border-emerald-900" 
                   : priceTrend === "down" 
-                  ? "text-destructive bg-destructive/10 border border-destructive/20" 
-                  : "text-muted-foreground bg-muted/30"
+                  ? "text-red-600 bg-red-50 border-red-100 dark:bg-red-950/30 dark:border-red-900" 
+                  : "text-muted-foreground bg-muted border-border"
               }`}>
                 {priceTrend === "up" ? (
-                  <TrendingUp className="w-5 h-5 mr-1" />
+                  <TrendingUp className="w-3.5 h-3.5 mr-1" />
                 ) : priceTrend === "down" ? (
-                  <TrendingDown className="w-5 h-5 mr-1" />
+                  <TrendingDown className="w-3.5 h-3.5 mr-1" />
                 ) : null}
                 {priceTrend === "up" ? "Tăng giá" : priceTrend === "down" ? "Giảm nhẹ" : "Ổn định"}
               </div>
@@ -157,25 +143,23 @@ const ProjectGridCard = ({ project, onClick }: ProjectGridCardProps) => {
           </div>
         </div>
 
-        {/* Progress with gradient */}
-        <div className="mt-5 p-3 rounded-lg bg-muted/30">
-          <div className="flex items-center justify-between text-sm mb-2">
+        {/* Progress */}
+        <div className="space-y-2">
+          <div className="flex items-center justify-between text-xs">
             <span className="text-muted-foreground font-medium">Tiến độ xây dựng</span>
-            <span className="font-semibold text-primary">{Math.round(completionProgress)}%</span>
+            <span className="font-semibold text-foreground">{Math.round(completionProgress)}%</span>
           </div>
-          <Progress value={completionProgress} className="h-2.5" />
+          <Progress value={completionProgress} className="h-1.5" />
         </div>
 
-        {/* Footer with gradient background */}
-        <div className="mt-5 flex items-center justify-between pt-4 border-t border-border/50 px-2 py-2 rounded-lg bg-gradient-to-r from-muted/20 to-muted/30">
-          <Badge variant="outline" className="font-semibold text-primary border-primary/30 shadow-sm">
-            <Award className="w-4 h-4 mr-1 text-primary" /> {project.legalScore}/10
+        {/* Footer */}
+        <div className="flex items-center justify-between pt-3 border-t border-border/50">
+          <Badge variant="outline" className="font-medium text-foreground border-border">
+            <Award className="w-3.5 h-3.5 mr-1 text-primary" /> {project.legalScore}/10
           </Badge>
-          <div className="flex items-center text-sm text-muted-foreground">
-            <div className="p-0.5 bg-primary/10 rounded mr-1">
-              <Calendar className="w-4 h-4 text-primary" />
-            </div>
-            <span className="font-medium">{project.completionDate}</span>
+          <div className="flex items-center text-xs text-muted-foreground">
+            <Calendar className="w-3.5 h-3.5 mr-1.5" />
+            <span>{project.completionDate}</span>
           </div>
         </div>
       </div>

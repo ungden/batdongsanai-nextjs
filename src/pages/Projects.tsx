@@ -5,7 +5,7 @@ import ProjectGridCard from "@/components/project/ProjectGridCard";
 import BannerAd from "@/components/ads/BannerAd";
 import { useNavigate } from "react-router-dom";
 import { useAnalytics } from "@/hooks/useAnalytics";
-import { useProjects } from "@/hooks/useProjects"; // Changed import
+import { useProjects } from "@/hooks/useProjects";
 import { ANALYTICS_CONFIG, isAdsEnabled } from "@/config/analytics";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Input } from "@/components/ui/input";
@@ -19,7 +19,7 @@ const Projects = () => {
   const navigate = useNavigate();
   const { trackProjectView } = useAnalytics(ANALYTICS_CONFIG.GA_TRACKING_ID);
   const isMobile = useIsMobile();
-  const { projects, loading } = useProjects(); // Use the hook
+  const { projects, loading } = useProjects();
   
   const [filters, setFilters] = useState({
     search: "",
@@ -37,7 +37,7 @@ const Projects = () => {
   };
 
   const filteredProjects = useMemo(() => {
-    let filtered = [...projects]; // Create a copy
+    let filtered = [...projects];
 
     if (filters.search) {
       filtered = filtered.filter(project =>
@@ -77,7 +77,6 @@ const Projects = () => {
         filtered.sort((a, b) => a.name.localeCompare(b.name));
         break;
       default:
-        // Handle potential missing dates safely
         filtered.sort((a, b) => {
             const dateA = a.completionDate ? new Date(a.completionDate).getTime() : 0;
             const dateB = b.completionDate ? new Date(b.completionDate).getTime() : 0;
@@ -102,28 +101,28 @@ const Projects = () => {
 
   if (isMobile) {
     return (
-      <div className="min-h-screen bg-gradient-blue-main pb-20">
-        <div className="bg-card border-b p-4">
-          <h1 className="text-2xl font-bold text-foreground">Danh sách dự án</h1>
-          <p className="text-sm text-muted-foreground mt-1">
-            <span className="font-medium text-foreground bg-muted px-2 py-0.5 rounded">{projects.length}</span> dự án đang mở bán
-          </p>
-        </div>
+      <div className="min-h-screen bg-background pb-20">
+        <div className="bg-card border-b border-border p-4 sticky top-0 z-20">
+          <div className="flex items-center justify-between mb-3">
+            <h1 className="text-xl font-bold text-foreground">Danh sách dự án</h1>
+            <Badge variant="secondary" className="text-xs">
+              {filteredProjects.length} kết quả
+            </Badge>
+          </div>
 
-        <div className="bg-card border-b p-3 sticky top-0 z-10">
-          <div className="relative mb-2.5">
+          <div className="relative mb-3">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
             <Input
               placeholder="Tìm dự án, địa điểm..."
               value={filters.search}
               onChange={(e) => setFilters(prev => ({ ...prev, search: e.target.value }))}
-              className="pl-10 h-10 rounded-xl"
+              className="pl-10 h-10 rounded-xl bg-background border-border"
             />
           </div>
           
-          <div className="flex gap-2 overflow-x-auto scrollbar-hide">
+          <div className="flex gap-2 overflow-x-auto scrollbar-hide pb-1">
             <Select value={filters.location} onValueChange={(value) => setFilters(prev => ({ ...prev, location: value }))}>
-              <SelectTrigger className="w-auto min-w-[110px] h-8 rounded-full bg-background/80 text-xs">
+              <SelectTrigger className="w-auto min-w-[110px] h-8 rounded-full bg-secondary text-xs border-0">
                 <SelectValue placeholder="Khu vực" />
               </SelectTrigger>
               <SelectContent>
@@ -136,7 +135,7 @@ const Projects = () => {
             </Select>
             
             <Select value={filters.priceRange} onValueChange={(value) => setFilters(prev => ({ ...prev, priceRange: value }))}>
-              <SelectTrigger className="w-auto min-w-[110px] h-8 rounded-full bg-background/80 text-xs">
+              <SelectTrigger className="w-auto min-w-[110px] h-8 rounded-full bg-secondary text-xs border-0">
                 <SelectValue placeholder="Mức giá" />
               </SelectTrigger>
               <SelectContent>
@@ -148,7 +147,7 @@ const Projects = () => {
             </Select>
             
             <Select value={filters.sortBy} onValueChange={(value) => setFilters(prev => ({ ...prev, sortBy: value }))}>
-              <SelectTrigger className="w-auto min-w-[110px] h-8 rounded-full bg-background/80 text-xs">
+              <SelectTrigger className="w-auto min-w-[110px] h-8 rounded-full bg-secondary text-xs border-0">
                 <SelectValue placeholder="Sắp xếp" />
               </SelectTrigger>
               <SelectContent>
@@ -169,33 +168,22 @@ const Projects = () => {
           />
         )}
 
-        <div className="px-3 pt-3">
-          <div className="flex items-center justify-between mb-4">
-            <div className="text-sm text-muted-foreground">
-              <span className="font-semibold text-foreground">{filteredProjects.length}</span> dự án tìm thấy
-            </div>
-            <Badge variant="outline" className="text-xs">
-              {goodLegalProjects} pháp lý tốt
-            </Badge>
-          </div>
-          
-          <div className="flex flex-col items-center space-y-3">
-            {filteredProjects.map((project, index) => (
-              <div key={project.id} className="w-full flex justify-center">
-                <EnhancedProjectCard
-                  project={project}
-                  onClick={handleProjectClick}
+        <div className="p-4 space-y-4">
+          {filteredProjects.map((project, index) => (
+            <div key={project.id}>
+              <EnhancedProjectCard
+                project={project}
+                onClick={handleProjectClick}
+              />
+              {isAdsEnabled() && (index + 1) % 3 === 0 && (
+                <BannerAd
+                  adClient={ANALYTICS_CONFIG.ADSENSE_CLIENT_ID}
+                  adSlot={ANALYTICS_CONFIG.AD_SLOTS.CONTENT_BANNER}
+                  className="my-3 w-full"
                 />
-                {isAdsEnabled() && (index + 1) % 3 === 0 && (
-                  <BannerAd
-                    adClient={ANALYTICS_CONFIG.ADSENSE_CLIENT_ID}
-                    adSlot={ANALYTICS_CONFIG.AD_SLOTS.CONTENT_BANNER}
-                    className="my-3 w-full"
-                  />
-                )}
-              </div>
-            ))}
-          </div>
+              )}
+            </div>
+          ))}
         </div>
 
         <BottomNavigation />
@@ -209,72 +197,72 @@ const Projects = () => {
       title="Danh sách dự án"
       subtitle={`${filteredProjects.length} dự án đang mở bán`}
     >
-      <div className="section-spacing">
-        <Card className="shadow-blue border-primary/20 card-spacing">
-          <div className="form-spacing">
-            <div className="relative">
+      <div className="space-y-6">
+        {/* Filter Bar */}
+        <Card className="border border-border shadow-sm bg-card">
+          <div className="p-4 flex flex-wrap gap-4 items-center">
+            <div className="relative flex-1 min-w-[300px]">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
               <Input
                 placeholder="Tìm kiếm theo tên dự án, địa điểm, chủ đầu tư..."
                 value={filters.search}
                 onChange={(e) => setFilters(prev => ({ ...prev, search: e.target.value }))}
-                className="pl-9 h-9 text-sm"
+                className="pl-9 h-10 text-sm bg-background"
               />
             </div>
             
-            <div className="flex flex-wrap gap-2 items-center">
-              <div className="flex items-center gap-1.5">
-                <MapPin className="w-3.5 h-3.5 text-muted-foreground" />
-                <Select value={filters.location} onValueChange={(value) => setFilters(prev => ({ ...prev, location: value }))}>
-                  <SelectTrigger className="w-[150px] h-8 rounded-full text-xs">
-                    <SelectValue placeholder="Khu vực" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">Tất cả khu vực</SelectItem>
-                    <SelectItem value="ho chi minh">TP. Hồ Chí Minh</SelectItem>
-                    <SelectItem value="ha noi">Hà Nội</SelectItem>
-                    <SelectItem value="da nang">Đà Nẵng</SelectItem>
-                    <SelectItem value="binh duong">Bình Dương</SelectItem>
-                    <SelectItem value="dong nai">Đồng Nai</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
+            <div className="flex items-center gap-2">
+              <MapPin className="w-4 h-4 text-muted-foreground" />
+              <Select value={filters.location} onValueChange={(value) => setFilters(prev => ({ ...prev, location: value }))}>
+                <SelectTrigger className="w-[160px] h-10">
+                  <SelectValue placeholder="Khu vực" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Tất cả khu vực</SelectItem>
+                  <SelectItem value="ho chi minh">TP. Hồ Chí Minh</SelectItem>
+                  <SelectItem value="ha noi">Hà Nội</SelectItem>
+                  <SelectItem value="da nang">Đà Nẵng</SelectItem>
+                  <SelectItem value="binh duong">Bình Dương</SelectItem>
+                  <SelectItem value="dong nai">Đồng Nai</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
 
-              <div className="flex items-center gap-1.5">
-                <DollarSign className="w-3.5 h-3.5 text-muted-foreground" />
-                <Select value={filters.priceRange} onValueChange={(value) => setFilters(prev => ({ ...prev, priceRange: value }))}>
-                  <SelectTrigger className="w-[150px] h-8 rounded-full text-xs">
-                    <SelectValue placeholder="Mức giá" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">Tất cả mức giá</SelectItem>
-                    <SelectItem value="under-50">Dưới 50 triệu/m²</SelectItem>
-                    <SelectItem value="50-100">50-100 triệu/m²</SelectItem>
-                    <SelectItem value="over-100">Trên 100 triệu/m²</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
+            <div className="flex items-center gap-2">
+              <DollarSign className="w-4 h-4 text-muted-foreground" />
+              <Select value={filters.priceRange} onValueChange={(value) => setFilters(prev => ({ ...prev, priceRange: value }))}>
+                <SelectTrigger className="w-[180px] h-10">
+                  <SelectValue placeholder="Mức giá" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Tất cả mức giá</SelectItem>
+                  <SelectItem value="under-50">Dưới 50 triệu/m²</SelectItem>
+                  <SelectItem value="50-100">50-100 triệu/m²</SelectItem>
+                  <SelectItem value="over-100">Trên 100 triệu/m²</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
 
-              <div className="flex items-center gap-1.5">
-                <SortAsc className="w-3.5 h-3.5 text-muted-foreground" />
-                <Select value={filters.sortBy} onValueChange={(value) => setFilters(prev => ({ ...prev, sortBy: value }))}>
-                  <SelectTrigger className="w-[130px] h-8 rounded-full text-xs">
-                    <SelectValue placeholder="Sắp xếp" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="newest">Mới nhất</SelectItem>
-                    <SelectItem value="name">Tên A-Z</SelectItem>
-                    <SelectItem value="price-low">Giá thấp - cao</SelectItem>
-                    <SelectItem value="price-high">Giá cao - thấp</SelectItem>
-                    <SelectItem value="legal-score">Điểm pháp lý</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
+            <div className="flex items-center gap-2">
+              <SortAsc className="w-4 h-4 text-muted-foreground" />
+              <Select value={filters.sortBy} onValueChange={(value) => setFilters(prev => ({ ...prev, sortBy: value }))}>
+                <SelectTrigger className="w-[160px] h-10">
+                  <SelectValue placeholder="Sắp xếp" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="newest">Mới nhất</SelectItem>
+                  <SelectItem value="name">Tên A-Z</SelectItem>
+                  <SelectItem value="price-low">Giá thấp - cao</SelectItem>
+                  <SelectItem value="price-high">Giá cao - thấp</SelectItem>
+                  <SelectItem value="legal-score">Điểm pháp lý</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
           </div>
         </Card>
 
-        <section className="grid gap-3 grid-cols-1 xl:grid-cols-2 2xl:grid-cols-3">
+        {/* Projects Grid */}
+        <div className="grid gap-6 grid-cols-1 xl:grid-cols-2 2xl:grid-cols-3">
           {filteredProjects.map((project) => (
             <ProjectGridCard
               key={project.id}
@@ -282,11 +270,15 @@ const Projects = () => {
               onClick={handleProjectClick}
             />
           ))}
-        </section>
+        </div>
 
         {filteredProjects.length === 0 && (
-          <div className="text-center py-8">
-            <p className="text-muted-foreground text-sm">Không tìm thấy dự án nào phù hợp.</p>
+          <div className="text-center py-16">
+            <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-muted mb-4">
+              <Search className="w-8 h-8 text-muted-foreground" />
+            </div>
+            <h3 className="text-lg font-semibold text-foreground">Không tìm thấy dự án</h3>
+            <p className="text-muted-foreground text-sm mt-1">Thử điều chỉnh bộ lọc hoặc từ khóa tìm kiếm.</p>
           </div>
         )}
       </div>

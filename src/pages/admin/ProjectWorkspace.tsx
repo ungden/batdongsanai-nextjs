@@ -2,13 +2,13 @@
 
 import { useEffect, useState } from "react";
 import { useParams, useNavigate, useSearchParams } from "react-router-dom";
-import { projectsData } from "@/data/projectsData";
+// REMOVED: import { projectsData } from "@/data/projectsData"; 
+import { useProjectDetail } from "@/hooks/useProjects"; // ADDED: Fetch real data
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { ArrowLeft, Database, Map, PenTool, CheckCircle2, ChevronRight, Save, Eye } from "lucide-react";
+import { ArrowLeft, Database, Map, PenTool, CheckCircle2, ChevronRight, Eye } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import { Progress } from "@/components/ui/progress";
 import { toast } from "sonner";
 
 // Import Embedded Tools
@@ -36,11 +36,26 @@ export default function ProjectWorkspace() {
 
   const [activeTab, setActiveTab] = useState(initialStep);
 
-  const project = projectsData.find(p => p.id === id);
+  // SỬA ĐỔI: Dùng hook để lấy dữ liệu thật từ Supabase
+  const { project, loading, refetch } = useProjectDetail(id);
 
-  if (!project) return <div>Dự án không tồn tại</div>;
+  if (loading) {
+    return (
+      <div className="h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
 
-  // Tính toán tiến độ hoàn thành (Mock logic)
+  if (!project) return (
+    <div className="h-screen flex flex-col items-center justify-center space-y-4">
+      <h2 className="text-2xl font-bold">Dự án không tồn tại</h2>
+      <p className="text-muted-foreground">Có thể dự án đã bị xóa hoặc ID không đúng.</p>
+      <Button onClick={() => navigate("/admin/pipeline")}>Quay về Pipeline</Button>
+    </div>
+  );
+
+  // Tính toán tiến độ hoàn thành (Logic hiển thị)
   const progress = (() => {
     let score = 0;
     if (project.pricePerSqm) score += 25;
@@ -51,6 +66,7 @@ export default function ProjectWorkspace() {
   })();
 
   const handleNextStep = () => {
+    refetch(); // Refresh data before moving
     const currentIndex = STEPS.findIndex(s => s.id === activeTab);
     if (currentIndex < STEPS.length - 1) {
       setActiveTab(STEPS[currentIndex + 1].id);

@@ -2,18 +2,19 @@
 
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { projectsData } from "@/data/projectsData";
+import { useProjects } from "@/hooks/useProjects"; // Updated import
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { Search, ArrowRight, CheckCircle2, Circle, Sparkles, Database } from "lucide-react";
+import { Search, ArrowRight, CheckCircle2, Circle, Sparkles, Database, Loader2 } from "lucide-react";
 
 export default function ProjectEnrichment() {
   const navigate = useNavigate();
   const [search, setSearch] = useState("");
+  const { projects, loading } = useProjects(); // Use Hook
 
-  const filteredProjects = projectsData.filter(p => 
+  const filteredProjects = projects.filter(p => 
     p.name.toLowerCase().includes(search.toLowerCase()) ||
     p.developer.toLowerCase().includes(search.toLowerCase())
   );
@@ -21,15 +22,19 @@ export default function ProjectEnrichment() {
   // Giả lập trạng thái dữ liệu (Trong thực tế sẽ query từ DB đếm số record liên quan)
   const getDataStatus = (project: any) => {
     // Mock logic
-    const hasAnalysis = project.legalScore > 0; // Giả sử
-    const hasCatalyst = Math.random() > 0.5;
-    const hasContent = Math.random() > 0.5;
+    const hasAnalysis = project.legalScore > 0; 
+    const hasCatalyst = project.pricePerSqm > 0;
+    const hasContent = (project.amenities?.length || 0) > 0;
     
     const progress = [hasAnalysis, hasCatalyst, hasContent].filter(Boolean).length;
     const total = 3;
     
     return { hasAnalysis, hasCatalyst, hasContent, progress, total };
   };
+
+  if (loading) {
+    return <div className="flex justify-center p-10"><Loader2 className="animate-spin h-8 w-8 text-primary"/></div>;
+  }
 
   return (
     <div className="space-y-6">

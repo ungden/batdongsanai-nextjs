@@ -10,7 +10,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
-import { Progress } from '@/components/ui/progress';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
@@ -211,14 +210,14 @@ const Profile = () => {
 
   if (!user) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-indigo-50 flex items-center justify-center p-4">
-        <Card className="w-full max-w-md rounded-2xl shadow-2xl border-0 bg-white">
+      <div className="min-h-screen bg-background flex items-center justify-center p-4">
+        <Card className="w-full max-w-md rounded-2xl shadow-lg border-border bg-card">
           <CardContent className="p-8 text-center">
-            <div className="w-20 h-20 bg-gradient-to-br from-slate-100 to-slate-200 rounded-full flex items-center justify-center mx-auto mb-4">
-              <User className="w-10 h-10 text-slate-400" />
+            <div className="w-20 h-20 bg-muted rounded-full flex items-center justify-center mx-auto mb-4">
+              <User className="w-10 h-10 text-muted-foreground" />
             </div>
-            <h2 className="text-2xl font-bold mb-2 text-slate-900">Yêu cầu đăng nhập</h2>
-            <p className="text-slate-600 mb-6">
+            <h2 className="text-2xl font-bold mb-2 text-foreground">Yêu cầu đăng nhập</h2>
+            <p className="text-muted-foreground mb-6">
               Vui lòng đăng nhập để xem và quản lý hồ sơ
             </p>
             <Button onClick={() => navigate('/auth')} className="rounded-xl h-12 px-8 shadow-lg">
@@ -232,7 +231,7 @@ const Profile = () => {
 
   if (loading || permissionsLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-indigo-50 flex items-center justify-center">
+      <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
       </div>
     );
@@ -241,15 +240,14 @@ const Profile = () => {
   const content = (
     <div className="space-y-6">
       {/* Profile Header with Avatar */}
-      <Card className="rounded-2xl shadow-xl border-0 bg-gradient-to-br from-white via-blue-50/30 to-purple-50/30 overflow-hidden">
-        <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-primary/10 to-accent/10 rounded-full blur-3xl" />
+      <Card className="rounded-2xl shadow-md border-border bg-gradient-to-br from-card to-muted/30 overflow-hidden">
         <CardContent className="relative p-8">
           <div className="flex flex-col md:flex-row items-center gap-6">
             {/* Avatar Section */}
             <div className="relative group">
-              <Avatar className="w-32 h-32 border-4 border-white shadow-2xl">
+              <Avatar className="w-32 h-32 border-4 border-background shadow-xl">
                 <AvatarImage src={profile?.avatar_url || undefined} alt={profile?.full_name} />
-                <AvatarFallback className="text-3xl font-bold bg-gradient-to-br from-primary to-accent text-white">
+                <AvatarFallback className="text-3xl font-bold bg-primary text-primary-foreground">
                   {profile?.full_name?.substring(0, 2).toUpperCase() || 'U'}
                 </AvatarFallback>
               </Avatar>
@@ -279,20 +277,20 @@ const Profile = () => {
             {/* User Info */}
             <div className="flex-1 text-center md:text-left">
               <div className="flex items-center justify-center md:justify-start gap-3 mb-2">
-                <h1 className="text-3xl font-bold text-slate-900">
+                <h1 className="text-3xl font-bold text-foreground">
                   {profile?.full_name || 'Người dùng'}
                 </h1>
                 {subscription && (
                   <VIPBadge type={subscription.subscription_type} />
                 )}
               </div>
-              <p className="text-slate-600 mb-4">{profile?.email}</p>
+              <p className="text-muted-foreground mb-4">{profile?.email}</p>
               
               {/* VIP Status */}
               {isVIP && daysRemaining !== null && (
-                <div className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-amber-50 to-orange-50 rounded-full border border-amber-200/50">
-                  <Sparkles className="w-4 h-4 text-amber-600" />
-                  <span className="text-sm font-semibold text-amber-700">
+                <div className="inline-flex items-center gap-2 px-4 py-2 bg-amber-50 dark:bg-amber-950/30 rounded-full border border-amber-200 dark:border-amber-900">
+                  <Sparkles className="w-4 h-4 text-amber-600 dark:text-amber-400" />
+                  <span className="text-sm font-semibold text-amber-700 dark:text-amber-300">
                     Còn {daysRemaining} ngày VIP
                   </span>
                 </div>
@@ -303,7 +301,7 @@ const Profile = () => {
             <div className="flex gap-3">
               <Button 
                 variant="outline" 
-                className="rounded-xl border-2 hover:bg-red-50 hover:border-red-200 hover:text-red-600 transition-all h-11"
+                className="rounded-xl border-border hover:bg-destructive/10 hover:border-destructive hover:text-destructive transition-all h-11"
                 onClick={handleSignOut}
               >
                 <LogOut className="w-4 h-4 mr-2" />
@@ -316,24 +314,24 @@ const Profile = () => {
 
       {/* Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="grid w-full grid-cols-2 md:grid-cols-5 p-1 bg-white/80 backdrop-blur-sm rounded-2xl border-2 border-slate-200/50 shadow-sm h-auto">
-          <TabsTrigger value="info" className="data-[state=active]:bg-primary data-[state=active]:text-white rounded-xl font-semibold py-3">
+        <TabsList className="grid w-full grid-cols-2 md:grid-cols-5 p-1 bg-muted/50 rounded-2xl border border-border h-auto">
+          <TabsTrigger value="info" className="data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow-sm rounded-xl font-semibold py-3">
             <User className="w-4 h-4 mr-2" />
             Thông tin
           </TabsTrigger>
-          <TabsTrigger value="subscription" className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-amber-500 data-[state=active]:to-orange-500 data-[state=active]:text-white rounded-xl font-semibold py-3">
+          <TabsTrigger value="subscription" className="data-[state=active]:bg-background data-[state=active]:text-amber-600 rounded-xl font-semibold py-3">
             <Crown className="w-4 h-4 mr-2" />
             Gói VIP
           </TabsTrigger>
-          <TabsTrigger value="favorites" className="data-[state=active]:bg-primary data-[state=active]:text-white rounded-xl font-semibold py-3">
+          <TabsTrigger value="favorites" className="data-[state=active]:bg-background data-[state=active]:text-primary rounded-xl font-semibold py-3">
             <Heart className="w-4 h-4 mr-2" />
             Yêu thích
           </TabsTrigger>
-          <TabsTrigger value="history" className="data-[state=active]:bg-primary data-[state=active]:text-white rounded-xl font-semibold py-3">
+          <TabsTrigger value="history" className="data-[state=active]:bg-background data-[state=active]:text-primary rounded-xl font-semibold py-3">
             <Eye className="w-4 h-4 mr-2" />
             Lịch sử
           </TabsTrigger>
-          <TabsTrigger value="settings" className="data-[state=active]:bg-primary data-[state=active]:text-white rounded-xl font-semibold py-3">
+          <TabsTrigger value="settings" className="data-[state=active]:bg-background data-[state=active]:text-primary rounded-xl font-semibold py-3">
             <Settings className="w-4 h-4 mr-2" />
             Cài đặt
           </TabsTrigger>
@@ -341,16 +339,16 @@ const Profile = () => {
 
         {/* Tab: Thông tin cá nhân */}
         <TabsContent value="info" className="space-y-6 mt-6">
-          <Card className="rounded-2xl shadow-lg border-0 bg-white">
-            <CardHeader className="bg-gradient-to-r from-slate-50 to-blue-50/30 rounded-t-2xl border-b border-slate-200/50">
-              <CardTitle className="text-xl font-bold text-slate-900">Thông tin cá nhân</CardTitle>
-              <CardDescription className="text-slate-600">
+          <Card className="rounded-2xl shadow-sm border border-border bg-card">
+            <CardHeader className="border-b border-border bg-muted/20 rounded-t-2xl">
+              <CardTitle className="text-xl font-bold text-foreground">Thông tin cá nhân</CardTitle>
+              <CardDescription className="text-muted-foreground">
                 Cập nhật thông tin để chúng tôi hỗ trợ bạn tốt hơn
               </CardDescription>
             </CardHeader>
             <CardContent className="p-6 space-y-6">
               <div className="space-y-2">
-                <Label htmlFor="fullName" className="text-sm font-semibold text-slate-700 flex items-center gap-2">
+                <Label htmlFor="fullName" className="text-sm font-semibold text-foreground flex items-center gap-2">
                   <User className="w-4 h-4 text-primary" />
                   Họ và tên
                 </Label>
@@ -358,13 +356,13 @@ const Profile = () => {
                   id="fullName"
                   value={profile?.full_name || ''}
                   onChange={(e) => setProfile(prev => prev ? { ...prev, full_name: e.target.value } : null)}
-                  className="h-12 rounded-xl border-2 focus:border-primary"
+                  className="h-12 rounded-xl border-input focus:border-primary"
                   placeholder="Nguyễn Văn A"
                 />
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="email" className="text-sm font-semibold text-slate-700 flex items-center gap-2">
+                <Label htmlFor="email" className="text-sm font-semibold text-foreground flex items-center gap-2">
                   <Mail className="w-4 h-4 text-primary" />
                   Email
                 </Label>
@@ -373,13 +371,13 @@ const Profile = () => {
                   type="email"
                   value={profile?.email || ''}
                   onChange={(e) => setProfile(prev => prev ? { ...prev, email: e.target.value } : null)}
-                  className="h-12 rounded-xl border-2 focus:border-primary"
+                  className="h-12 rounded-xl border-input focus:border-primary"
                   placeholder="email@example.com"
                 />
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="phone" className="text-sm font-semibold text-slate-700 flex items-center gap-2">
+                <Label htmlFor="phone" className="text-sm font-semibold text-foreground flex items-center gap-2">
                   <Phone className="w-4 h-4 text-primary" />
                   Số điện thoại
                 </Label>
@@ -387,13 +385,13 @@ const Profile = () => {
                   id="phone"
                   value={profile?.phone || ''}
                   onChange={(e) => setProfile(prev => prev ? { ...prev, phone: e.target.value } : null)}
-                  className="h-12 rounded-xl border-2 focus:border-primary"
+                  className="h-12 rounded-xl border-input focus:border-primary"
                   placeholder="0xxx xxx xxx"
                 />
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="occupation" className="text-sm font-semibold text-slate-700 flex items-center gap-2">
+                <Label htmlFor="occupation" className="text-sm font-semibold text-foreground flex items-center gap-2">
                   <Briefcase className="w-4 h-4 text-primary" />
                   Nghề nghiệp
                 </Label>
@@ -401,13 +399,13 @@ const Profile = () => {
                   id="occupation"
                   value={profile?.occupation || ''}
                   onChange={(e) => setProfile(prev => prev ? { ...prev, occupation: e.target.value } : null)}
-                  className="h-12 rounded-xl border-2 focus:border-primary"
+                  className="h-12 rounded-xl border-input focus:border-primary"
                   placeholder="Kỹ sư IT, Bác sĩ..."
                 />
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="budgetRange" className="text-sm font-semibold text-slate-700 flex items-center gap-2">
+                <Label htmlFor="budgetRange" className="text-sm font-semibold text-foreground flex items-center gap-2">
                   <DollarSign className="w-4 h-4 text-primary" />
                   Ngân sách dự kiến
                 </Label>
@@ -415,7 +413,7 @@ const Profile = () => {
                   value={profile?.budget_range || ''} 
                   onValueChange={(value) => setProfile(prev => prev ? { ...prev, budget_range: value } : null)}
                 >
-                  <SelectTrigger className="h-12 rounded-xl border-2">
+                  <SelectTrigger className="h-12 rounded-xl border-input">
                     <SelectValue placeholder="Chọn mức ngân sách" />
                   </SelectTrigger>
                   <SelectContent className="rounded-xl">
@@ -431,7 +429,7 @@ const Profile = () => {
               <Button 
                 onClick={handleSave} 
                 disabled={saving} 
-                className="w-full h-14 text-base font-bold rounded-xl shadow-lg hover:shadow-xl transition-all"
+                className="w-full h-14 text-base font-bold rounded-xl shadow-sm transition-all"
               >
                 <Save className="w-5 h-5 mr-2" />
                 {saving ? 'Đang lưu...' : 'Lưu thông tin'}
@@ -444,7 +442,7 @@ const Profile = () => {
         <TabsContent value="subscription" className="space-y-6 mt-6">
           {/* Current Subscription Status */}
           {subscription && (
-            <Card className="rounded-2xl shadow-xl border-0 bg-gradient-to-br from-amber-50 via-orange-50/50 to-yellow-50">
+            <Card className="rounded-2xl shadow-sm border-amber-200 dark:border-amber-900 bg-gradient-to-br from-amber-50 via-orange-50/30 to-card dark:from-amber-950/30 dark:to-card">
               <CardContent className="p-6">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-4">
@@ -457,14 +455,14 @@ const Profile = () => {
                     </div>
                     <div>
                       <div className="flex items-center gap-2 mb-1">
-                        <h3 className="text-xl font-bold text-slate-900">
+                        <h3 className="text-xl font-bold text-foreground">
                           Gói {subscription.subscription_type === 'pro' ? 'Professional' : 'Premium'}
                         </h3>
                         <VIPBadge type={subscription.subscription_type} />
                       </div>
                       {daysRemaining !== null && (
-                        <p className="text-sm text-slate-600">
-                          Còn <span className="font-bold text-amber-700">{daysRemaining} ngày</span> sử dụng
+                        <p className="text-sm text-muted-foreground">
+                          Còn <span className="font-bold text-amber-600 dark:text-amber-400">{daysRemaining} ngày</span> sử dụng
                         </p>
                       )}
                     </div>
@@ -472,7 +470,7 @@ const Profile = () => {
                   {subscription.subscription_type === 'premium' && (
                     <Button 
                       onClick={() => navigate('/profile?tab=subscription')}
-                      className="bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-xl h-11 px-6 shadow-lg"
+                      className="bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-xl h-11 px-6 shadow-lg hover:opacity-90"
                     >
                       <Crown className="w-4 h-4 mr-2" />
                       Nâng cấp Pro
@@ -486,32 +484,32 @@ const Profile = () => {
           {/* VIP Plans */}
           <div className="space-y-4">
             <div>
-              <h2 className="text-2xl font-bold text-slate-900 mb-2">Chọn gói phù hợp với bạn</h2>
-              <p className="text-slate-600">Nâng cấp để truy cập đầy đủ tính năng phân tích chuyên sâu</p>
+              <h2 className="text-2xl font-bold text-foreground mb-2">Chọn gói phù hợp với bạn</h2>
+              <p className="text-muted-foreground">Nâng cấp để truy cập đầy đủ tính năng phân tích chuyên sâu</p>
             </div>
             <SubscriptionPlans />
           </div>
 
           {/* VIP Features */}
           <div className="space-y-4">
-            <h2 className="text-2xl font-bold text-slate-900">Tính năng VIP</h2>
+            <h2 className="text-2xl font-bold text-foreground">Tính năng VIP</h2>
             <VIPFeatureList />
           </div>
         </TabsContent>
 
         {/* Tab: Yêu thích */}
         <TabsContent value="favorites" className="mt-6">
-          <Card className="rounded-2xl shadow-lg border-0 bg-white">
-            <CardHeader className="bg-gradient-to-r from-slate-50 to-blue-50/30 rounded-t-2xl border-b border-slate-200/50">
-              <CardTitle className="flex items-center gap-2">
+          <Card className="rounded-2xl shadow-sm border border-border bg-card">
+            <CardHeader className="border-b border-border bg-muted/20 rounded-t-2xl">
+              <CardTitle className="flex items-center gap-2 text-foreground">
                 <Heart className="w-5 h-5 text-red-500" />
                 Dự án yêu thích
               </CardTitle>
             </CardHeader>
             <CardContent className="p-6">
               <div className="text-center py-12">
-                <Heart className="w-16 h-16 mx-auto text-slate-300 mb-4" />
-                <p className="text-slate-600 mb-4">Xem danh sách dự án yêu thích của bạn</p>
+                <Heart className="w-16 h-16 mx-auto text-muted-foreground/50 mb-4" />
+                <p className="text-muted-foreground mb-4">Xem danh sách dự án yêu thích của bạn</p>
                 <Button onClick={() => navigate('/favorites')} className="rounded-xl h-11">
                   Xem dự án yêu thích
                 </Button>
@@ -522,32 +520,32 @@ const Profile = () => {
 
         {/* Tab: Lịch sử */}
         <TabsContent value="history" className="space-y-6 mt-6">
-          <Card className="rounded-2xl shadow-lg border-0 bg-white">
-            <CardHeader className="bg-gradient-to-r from-slate-50 to-blue-50/30 rounded-t-2xl border-b border-slate-200/50">
-              <CardTitle className="flex items-center gap-2">
+          <Card className="rounded-2xl shadow-sm border border-border bg-card">
+            <CardHeader className="border-b border-border bg-muted/20 rounded-t-2xl">
+              <CardTitle className="flex items-center gap-2 text-foreground">
                 <Eye className="w-5 h-5 text-primary" />
                 Dự án đã xem
               </CardTitle>
             </CardHeader>
             <CardContent className="p-6">
               <div className="text-center py-12">
-                <Eye className="w-16 h-16 mx-auto text-slate-300 mb-4" />
-                <p className="text-slate-600">Lịch sử xem dự án của bạn sẽ hiển thị ở đây</p>
+                <Eye className="w-16 h-16 mx-auto text-muted-foreground/50 mb-4" />
+                <p className="text-muted-foreground">Lịch sử xem dự án của bạn sẽ hiển thị ở đây</p>
               </div>
             </CardContent>
           </Card>
 
-          <Card className="rounded-2xl shadow-lg border-0 bg-white">
-            <CardHeader className="bg-gradient-to-r from-slate-50 to-blue-50/30 rounded-t-2xl border-b border-slate-200/50">
-              <CardTitle className="flex items-center gap-2">
+          <Card className="rounded-2xl shadow-sm border border-border bg-card">
+            <CardHeader className="border-b border-border bg-muted/20 rounded-t-2xl">
+              <CardTitle className="flex items-center gap-2 text-foreground">
                 <MessageSquare className="w-5 h-5 text-primary" />
                 Yêu cầu tư vấn
               </CardTitle>
             </CardHeader>
             <CardContent className="p-6">
               <div className="text-center py-12">
-                <MessageSquare className="w-16 h-16 mx-auto text-slate-300 mb-4" />
-                <p className="text-slate-600">Lịch sử yêu cầu tư vấn của bạn sẽ hiển thị ở đây</p>
+                <MessageSquare className="w-16 h-16 mx-auto text-muted-foreground/50 mb-4" />
+                <p className="text-muted-foreground">Lịch sử yêu cầu tư vấn của bạn sẽ hiển thị ở đây</p>
               </div>
             </CardContent>
           </Card>
@@ -555,37 +553,37 @@ const Profile = () => {
 
         {/* Tab: Cài đặt */}
         <TabsContent value="settings" className="mt-6">
-          <Card className="rounded-2xl shadow-lg border-0 bg-white">
-            <CardHeader className="bg-gradient-to-r from-slate-50 to-blue-50/30 rounded-t-2xl border-b border-slate-200/50">
-              <CardTitle className="flex items-center gap-2">
+          <Card className="rounded-2xl shadow-sm border border-border bg-card">
+            <CardHeader className="border-b border-border bg-muted/20 rounded-t-2xl">
+              <CardTitle className="flex items-center gap-2 text-foreground">
                 <Settings className="w-5 h-5 text-primary" />
                 Cài đặt tài khoản
               </CardTitle>
             </CardHeader>
             <CardContent className="p-6 space-y-6">
               <div className="space-y-4">
-                <h3 className="font-semibold text-slate-900">Thông báo</h3>
+                <h3 className="font-semibold text-foreground">Thông báo</h3>
                 <div className="space-y-3">
-                  <div className="flex items-center justify-between p-4 bg-gradient-to-br from-slate-50 to-slate-100/50 rounded-xl">
+                  <div className="flex items-center justify-between p-4 bg-muted/30 border border-border rounded-xl">
                     <div>
-                      <div className="font-medium text-slate-900">Email thông báo</div>
-                      <div className="text-sm text-slate-600">Nhận thông báo về dự án mới</div>
+                      <div className="font-medium text-foreground">Email thông báo</div>
+                      <div className="text-sm text-muted-foreground">Nhận thông báo về dự án mới</div>
                     </div>
-                    <input type="checkbox" className="w-5 h-5 rounded" defaultChecked />
+                    <input type="checkbox" className="w-5 h-5 rounded border-input bg-background" defaultChecked />
                   </div>
-                  <div className="flex items-center justify-between p-4 bg-gradient-to-br from-slate-50 to-slate-100/50 rounded-xl">
+                  <div className="flex items-center justify-between p-4 bg-muted/30 border border-border rounded-xl">
                     <div>
-                      <div className="font-medium text-slate-900">Cảnh báo giá</div>
-                      <div className="text-sm text-slate-600">Thông báo khi giá thay đổi</div>
+                      <div className="font-medium text-foreground">Cảnh báo giá</div>
+                      <div className="text-sm text-muted-foreground">Thông báo khi giá thay đổi</div>
                     </div>
-                    <input type="checkbox" className="w-5 h-5 rounded" />
+                    <input type="checkbox" className="w-5 h-5 rounded border-input bg-background" />
                   </div>
                 </div>
               </div>
 
               <div className="space-y-4">
-                <h3 className="font-semibold text-slate-900">Bảo mật</h3>
-                <Button variant="outline" className="w-full h-12 rounded-xl border-2 justify-start">
+                <h3 className="font-semibold text-foreground">Bảo mật</h3>
+                <Button variant="outline" className="w-full h-12 rounded-xl border border-border justify-start">
                   <Shield className="w-4 h-4 mr-2" />
                   Đổi mật khẩu
                 </Button>
@@ -599,7 +597,7 @@ const Profile = () => {
 
   if (isMobile) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-indigo-50 pb-20">
+      <div className="min-h-screen bg-background pb-20">
         <div className="p-4">
           {content}
         </div>

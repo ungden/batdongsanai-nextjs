@@ -34,8 +34,8 @@ const Compare = () => {
         <div className="container mx-auto px-4 py-8">
           <div className="flex flex-col items-center justify-center min-h-[60vh] space-y-6">
             <div className="text-center space-y-4">
-              <Building2 className="h-20 w-20 mx-auto text-muted-foreground" />
-              <h1 className="text-3xl font-bold">Chưa có dự án để so sánh</h1>
+              <Building2 className="h-20 w-20 mx-auto text-muted-foreground/30" />
+              <h1 className="text-3xl font-bold text-foreground">Chưa có dự án để so sánh</h1>
               <p className="text-muted-foreground max-w-md">
                 Thêm tối đa 4 dự án để so sánh chi tiết về giá, vị trí, tiện ích và nhiều hơn nữa
               </p>
@@ -119,11 +119,11 @@ const Compare = () => {
         description="So sánh chi tiết các dự án bất động sản về giá, vị trí, tiện ích"
       />
 
-      <div className="container mx-auto px-4 py-8">
+      <div className="container mx-auto px-4 py-8 space-y-8">
         {/* Header */}
-        <div className="flex items-center justify-between mb-8">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div>
-            <h1 className="text-3xl font-bold mb-2">
+            <h1 className="text-3xl font-bold mb-2 text-foreground">
               So sánh dự án
             </h1>
             <p className="text-muted-foreground">
@@ -142,155 +142,138 @@ const Compare = () => {
           </div>
         </div>
 
-        <ScrollArea className="w-full">
+        <ScrollArea className="w-full border border-border rounded-xl bg-card shadow-sm">
           <div className="min-w-max">
             {/* Project Cards Row */}
-            <div className="grid gap-4 mb-8" style={{ gridTemplateColumns: `repeat(${compareList.length}, 300px)` }}>
+            <div className="grid gap-0 divide-x divide-border bg-muted/30" style={{ gridTemplateColumns: `240px repeat(${compareList.length}, 300px)` }}>
+              
+              {/* Empty Corner Cell */}
+              <div className="p-4 flex items-end pb-6">
+                <span className="font-semibold text-muted-foreground">Dự án</span>
+              </div>
+
               {compareList.map((project) => (
-                <Card key={project.id} className="relative">
+                <div key={project.id} className="relative p-4 pb-6 flex flex-col gap-4 bg-card">
                   <Button
                     variant="ghost"
                     size="icon"
-                    className="absolute top-2 right-2 z-10"
+                    className="absolute top-2 right-2 z-10 hover:bg-destructive/10 hover:text-destructive"
                     onClick={() => removeFromCompare(project.id)}
                   >
                     <X className="h-4 w-4" />
                   </Button>
 
-                  {project.imageUrl && (
-                    <div className="h-48 overflow-hidden rounded-t-lg">
+                  {project.imageUrl ? (
+                    <div className="h-40 overflow-hidden rounded-lg border border-border">
                       <img
                         src={project.imageUrl}
                         alt={project.name}
                         className="w-full h-full object-cover"
                       />
                     </div>
+                  ) : (
+                     <div className="h-40 bg-muted rounded-lg border border-border flex items-center justify-center">
+                       <Building2 className="h-12 w-12 text-muted-foreground/30" />
+                     </div>
                   )}
 
-                  <CardHeader>
-                    <CardTitle className="text-lg line-clamp-2">
+                  <div className="space-y-2">
+                    <h3 className="text-lg font-bold line-clamp-2 leading-tight h-12 text-foreground">
                       {project.name}
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
+                    </h3>
                     <Button
                       variant="outline"
+                      size="sm"
                       className="w-full"
                       onClick={() => navigate(`/projects/${project.id}`)}
                     >
                       Xem chi tiết
                     </Button>
-                  </CardContent>
-                </Card>
+                  </div>
+                </div>
               ))}
             </div>
 
-            {/* Comparison Table */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <TrendingUp className="h-5 w-5" />
-                  So sánh chi tiết
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="p-0">
-                <div className="divide-y">
-                  {comparisonFields.map((field) => {
-                    const Icon = field.icon;
+            {/* Comparison Rows */}
+            <div className="divide-y divide-border border-t border-border">
+              {comparisonFields.map((field) => {
+                const Icon = field.icon;
 
-                    return (
-                      <div key={field.key} className="grid" style={{ gridTemplateColumns: `200px repeat(${compareList.length}, 300px)` }}>
-                        {/* Field Label */}
-                        <div className="p-4 bg-muted/50 font-semibold flex items-center gap-2">
-                          <Icon className="h-4 w-4 text-muted-foreground" />
-                          {field.label}
-                        </div>
+                return (
+                  <div key={field.key} className="grid divide-x divide-border hover:bg-muted/20 transition-colors" style={{ gridTemplateColumns: `240px repeat(${compareList.length}, 300px)` }}>
+                    {/* Field Label */}
+                    <div className="p-4 font-medium text-muted-foreground flex items-center gap-2 bg-muted/5">
+                      <Icon className="h-4 w-4" />
+                      {field.label}
+                    </div>
 
-                        {/* Values */}
-                        {compareList.map((project) => {
-                          const value = project[field.key];
-                          const isWinner = field.highlight && field.key === 'pricePerSqm' && value === priceWinner && value > 0;
+                    {/* Values */}
+                    {compareList.map((project) => {
+                      const value = project[field.key];
+                      const isWinner = field.highlight && field.key === 'pricePerSqm' && value === priceWinner && value > 0;
 
-                          return (
-                            <div
-                              key={project.id}
-                              className={`p-4 ${isWinner ? 'bg-green-50 dark:bg-green-950/20 font-semibold' : ''}`}
-                            >
-                              {field.renderBadge && value ? (
-                                <Badge variant={value === 'Sổ đỏ' ? 'default' : 'secondary'}>
-                                  {field.format(value)}
-                                </Badge>
-                              ) : (
-                                <span className="flex items-center gap-2">
-                                  {field.format(value)}
-                                  {isWinner && <Star className="h-4 w-4 text-green-600 fill-current" />}
-                                </span>
-                              )}
-                            </div>
-                          );
-                        })}
-                      </div>
-                    );
-                  })}
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Investment Comparison */}
-            <Card className="mt-6">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <DollarSign className="h-5 w-5" />
-                  So sánh đầu tư
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="grid gap-4" style={{ gridTemplateColumns: `repeat(${compareList.length}, 1fr)` }}>
-                  {compareList.map((project) => {
-                    const totalPrice = project.pricePerSqm * (project.area || 70); // Assume 70m² if no area
-                    const monthlyRent = totalPrice * 0.004; // Assume 4% annual yield / 12
-                    const annualYield = 4.8; // Default yield
-
-                    return (
-                      <div key={project.id} className="space-y-3 p-4 bg-muted/50 rounded-lg">
-                        <h4 className="font-semibold text-sm line-clamp-1">{project.name}</h4>
-
-                        <div className="space-y-2 text-sm">
-                          <div className="flex justify-between">
-                            <span className="text-muted-foreground">Tổng giá trị</span>
-                            <span className="font-semibold">{formatCurrency(totalPrice)}</span>
-                          </div>
-                          <div className="flex justify-between">
-                            <span className="text-muted-foreground">Thu nhập thuê/tháng</span>
-                            <span className="font-semibold text-green-600">
-                              {formatCurrency(monthlyRent)}
+                      return (
+                        <div
+                          key={project.id}
+                          className={`p-4 flex items-center ${isWinner ? 'bg-green-50/50 dark:bg-green-950/10' : ''}`}
+                        >
+                          {field.renderBadge && value ? (
+                            <Badge variant={value === 'Sổ đỏ' ? 'default' : 'secondary'}>
+                              {field.format(value)}
+                            </Badge>
+                          ) : (
+                            <span className={`text-sm flex items-center gap-2 ${isWinner ? 'font-bold text-green-600 dark:text-green-400' : 'text-foreground'}`}>
+                              {field.format(value)}
+                              {isWinner && <Star className="h-4 w-4 fill-current" />}
                             </span>
-                          </div>
-                          <div className="flex justify-between">
-                            <span className="text-muted-foreground">Lợi nhuận năm</span>
-                            <span className="font-semibold">{annualYield}%</span>
-                          </div>
+                          )}
                         </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              </CardContent>
-            </Card>
+                      );
+                    })}
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* Investment Comparison Row */}
+            <div className="grid divide-x divide-border border-t border-border" style={{ gridTemplateColumns: `240px repeat(${compareList.length}, 300px)` }}>
+               <div className="p-4 font-medium text-muted-foreground flex items-center gap-2 bg-muted/5">
+                 <DollarSign className="h-4 w-4" />
+                 Phân tích đầu tư
+               </div>
+
+               {compareList.map((project) => {
+                 const totalPrice = project.pricePerSqm * (project.area || 70);
+                 const monthlyRent = totalPrice * 0.004; 
+
+                 return (
+                   <div key={project.id} className="p-4 bg-card">
+                     <div className="p-3 bg-muted/30 rounded-lg space-y-2 border border-border">
+                       <div className="flex justify-between text-xs">
+                         <span className="text-muted-foreground">Tổng giá</span>
+                         <span className="font-medium text-foreground">{formatCurrency(totalPrice)}</span>
+                       </div>
+                       <div className="flex justify-between text-xs">
+                         <span className="text-muted-foreground">Thuê/tháng</span>
+                         <span className="font-bold text-green-600">{formatCurrency(monthlyRent)}</span>
+                       </div>
+                     </div>
+                   </div>
+                 );
+               })}
+            </div>
           </div>
           <ScrollBar orientation="horizontal" />
         </ScrollArea>
 
         {/* Add more hint */}
         {compareList.length < 4 && (
-          <Card className="mt-6 bg-blue-50 dark:bg-blue-950/20 border-blue-200 dark:border-blue-900">
-            <CardContent className="p-4 flex items-center gap-3">
-              <Info className="h-5 w-5 text-blue-600" />
-              <p className="text-sm">
-                Bạn có thể thêm tối đa {4 - compareList.length} dự án nữa để so sánh
-              </p>
-            </CardContent>
-          </Card>
+          <div className="p-4 bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-900 rounded-lg flex items-center gap-3 max-w-2xl mx-auto">
+            <Info className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+            <p className="text-sm text-blue-800 dark:text-blue-300">
+              Mẹo: Bạn có thể thêm <strong>{4 - compareList.length}</strong> dự án nữa để so sánh toàn diện hơn.
+            </p>
+          </div>
         )}
       </div>
     </>

@@ -164,10 +164,10 @@ const MarketOverview = () => {
           keywords="thị trường bất động sản, dự án, giá nhà, đầu tư, listing"
         />
         <div className="min-h-screen bg-background pb-20">
-          <div className="sticky top-0 z-40 bg-background/95 backdrop-blur-lg border-b">
+          <div className="sticky top-0 z-40 bg-background/95 backdrop-blur-lg border-b border-border/50">
             <div className="p-3 space-y-3">
               <div className="flex items-center justify-between">
-                <h1 className="text-xl font-bold">Thị trường</h1>
+                <h1 className="text-xl font-bold text-foreground">Thị trường</h1>
                 <Badge variant="outline" className="font-semibold text-xs">
                   {filteredProjects.length}
                 </Badge>
@@ -179,7 +179,7 @@ const MarketOverview = () => {
                   placeholder="Tìm dự án..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-10 h-10 rounded-full text-sm"
+                  className="pl-10 h-10 rounded-full text-sm bg-secondary/50 border-transparent focus:bg-background focus:border-primary transition-all"
                 />
               </div>
 
@@ -249,17 +249,17 @@ const MarketOverview = () => {
         keywords="thị trường bất động sản, dự án, giá nhà, đầu tư, listing"
       />
       <DesktopLayout title="Tổng quan thị trường" subtitle={`${filteredProjects.length} dự án`}>
-        <div className="section-spacing">
+        <div className="space-y-6">
           {/* Search and Tabs */}
-          <Card className="border-2 card-spacing">
-            <div className="form-spacing">
-              <div className="relative">
+          <Card className="border border-border/60 shadow-sm bg-card">
+            <div className="p-4 space-y-4">
+              <div className="relative max-w-lg">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
                 <Input
                   placeholder="Tìm kiếm dự án, chủ đầu tư, khu vực..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-9 h-10 text-sm rounded-lg"
+                  className="pl-9 h-10 text-sm bg-background border-input"
                 />
               </div>
 
@@ -270,7 +270,7 @@ const MarketOverview = () => {
               />
 
               {activeTab !== "stats" && (
-                <>
+                <div className="pt-2 border-t border-border/50">
                   <QuickFilters
                     filters={quickFilters}
                     selectedFilters={selectedQuickFilters}
@@ -282,7 +282,7 @@ const MarketOverview = () => {
                     onRemoveTag={handleRemoveFilterTag}
                     onClearAll={handleClearAllFilters}
                   />
-                </>
+                </div>
               )}
             </div>
           </Card>
@@ -291,15 +291,15 @@ const MarketOverview = () => {
           {activeTab === "stats" ? (
             <MarketStatsCard projects={projectsData} />
           ) : (
-            <Card className="border-2">
+            <Card className="border border-border/60 bg-card shadow-sm overflow-hidden">
               <CardContent className="p-0">
                 <div className="overflow-x-auto">
                   <Table>
                     <TableHeader>
-                      <TableRow className="bg-muted/30 hover:bg-muted/30 border-b-2">
-                        <TableHead className="font-bold text-sm py-3 pl-6">Dự án</TableHead>
-                        <TableHead className="font-bold text-sm py-3">Vị trí</TableHead>
-                        <TableHead className="text-right font-bold text-sm py-3">
+                      <TableRow className="bg-muted/50 hover:bg-muted/50 border-b border-border">
+                        <TableHead className="font-bold text-sm py-3 pl-6 text-foreground">Dự án</TableHead>
+                        <TableHead className="font-bold text-sm py-3 text-foreground">Vị trí</TableHead>
+                        <TableHead className="text-right font-bold text-sm py-3 text-foreground">
                           <Button
                             variant="ghost"
                             size="sm"
@@ -307,7 +307,7 @@ const MarketOverview = () => {
                               setSortBy("pricePerSqm");
                               setSortOrder(sortOrder === "desc" ? "asc" : "desc");
                             }}
-                            className="h-auto p-0 hover:bg-transparent"
+                            className="h-auto p-0 hover:bg-transparent font-bold"
                           >
                             Giá/m²
                             {sortBy === "pricePerSqm" && (
@@ -315,10 +315,10 @@ const MarketOverview = () => {
                             )}
                           </Button>
                         </TableHead>
-                        <TableHead className="text-right font-bold text-sm py-3">Tổng giá</TableHead>
-                        <TableHead className="text-right font-bold text-sm py-3">Biến động</TableHead>
-                        <TableHead className="text-center font-bold text-sm py-3">Đã bán</TableHead>
-                        <TableHead className="text-center font-bold text-sm py-3">
+                        <TableHead className="text-right font-bold text-sm py-3 text-foreground">Tổng giá</TableHead>
+                        <TableHead className="text-right font-bold text-sm py-3 text-foreground">Biến động</TableHead>
+                        <TableHead className="text-center font-bold text-sm py-3 text-foreground">Đã bán</TableHead>
+                        <TableHead className="text-center font-bold text-sm py-3 text-foreground">
                           <Button
                             variant="ghost"
                             size="sm"
@@ -326,7 +326,7 @@ const MarketOverview = () => {
                               setSortBy("legalScore");
                               setSortOrder(sortOrder === "desc" ? "asc" : "desc");
                             }}
-                            className="h-auto p-0 hover:bg-transparent"
+                            className="h-auto p-0 hover:bg-transparent font-bold"
                           >
                             Đánh giá
                             {sortBy === "legalScore" && (
@@ -334,7 +334,7 @@ const MarketOverview = () => {
                             )}
                           </Button>
                         </TableHead>
-                        <TableHead className="text-center font-bold text-sm py-3 pr-6">Bàn giao</TableHead>
+                        <TableHead className="text-center font-bold text-sm py-3 pr-6 text-foreground">Bàn giao</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -345,19 +345,19 @@ const MarketOverview = () => {
                         return (
                           <TableRow 
                             key={project.id}
-                            className="cursor-pointer hover:bg-muted/20 transition-colors group"
+                            className="cursor-pointer hover:bg-muted/30 transition-colors group border-b border-border/40 last:border-0"
                             onClick={() => navigate(`/projects/${project.id}`)}
                           >
                             <TableCell className="py-3 pl-6">
                               <div className="flex items-center gap-3">
-                                <Avatar className="w-11 h-11 border-2">
+                                <Avatar className="w-11 h-11 border border-border">
                                   <AvatarImage src={project.image} alt={project.name} />
                                   <AvatarFallback className="text-sm font-bold bg-primary/10 text-primary">
                                     {project.name.slice(0, 2).toUpperCase()}
                                   </AvatarFallback>
                                 </Avatar>
                                 <div className="flex-1 min-w-0">
-                                  <div className="font-bold text-sm leading-tight group-hover:text-primary transition-colors">
+                                  <div className="font-bold text-sm leading-tight text-foreground group-hover:text-primary transition-colors">
                                     {project.name}
                                   </div>
                                   <div className="text-xs text-muted-foreground mt-1">
@@ -369,9 +369,9 @@ const MarketOverview = () => {
                             
                             <TableCell className="py-3">
                               <div className="flex items-center gap-2">
-                                <MapPin className="w-4 h-4 text-primary/70 flex-shrink-0" />
+                                <MapPin className="w-4 h-4 text-muted-foreground flex-shrink-0" />
                                 <div>
-                                  <div className="font-semibold text-sm">{project.district}</div>
+                                  <div className="font-medium text-sm text-foreground">{project.district}</div>
                                   <div className="text-xs text-muted-foreground">{project.city}</div>
                                 </div>
                               </div>
@@ -385,7 +385,7 @@ const MarketOverview = () => {
                             </TableCell>
 
                             <TableCell className="text-right py-3">
-                              <div className="font-semibold text-sm">
+                              <div className="font-medium text-sm text-foreground">
                                 {project.priceRange}
                               </div>
                             </TableCell>
@@ -404,8 +404,8 @@ const MarketOverview = () => {
                             <TableCell className="text-center py-3">
                               {soldPct > 0 ? (
                                 <div className="space-y-1">
-                                  <div className="font-bold text-sm">{soldPct}%</div>
-                                  <Progress value={soldPct} className="h-2 w-20 mx-auto" />
+                                  <div className="font-bold text-sm text-foreground">{soldPct}%</div>
+                                  <Progress value={soldPct} className="h-1.5 w-16 mx-auto" />
                                 </div>
                               ) : (
                                 <span className="text-muted-foreground text-sm">—</span>
@@ -413,13 +413,13 @@ const MarketOverview = () => {
                             </TableCell>
                             
                             <TableCell className="text-center py-3">
-                              <StatusBadge variant={getStatusVariant(project.status)} className="font-semibold text-sm px-3 py-1">
+                              <StatusBadge variant={getStatusVariant(project.status)} className="font-semibold text-xs px-2 py-0.5">
                                 {project.legalScore}/10
                               </StatusBadge>
                             </TableCell>
                             
                             <TableCell className="text-center pr-6 py-3">
-                              <div className="text-sm font-medium">{project.completionDate}</div>
+                              <div className="text-sm font-medium text-foreground">{project.completionDate}</div>
                             </TableCell>
                           </TableRow>
                         );
@@ -429,9 +429,9 @@ const MarketOverview = () => {
                 </div>
 
                 {filteredProjects.length === 0 && (
-                  <div className="p-10 text-center">
-                    <Building2 className="w-14 h-14 mx-auto text-muted-foreground mb-3 opacity-30" />
-                    <h3 className="text-lg font-bold mb-2">Không tìm thấy dự án</h3>
+                  <div className="p-12 text-center">
+                    <Building2 className="w-16 h-16 mx-auto text-muted-foreground mb-4 opacity-20" />
+                    <h3 className="text-lg font-bold mb-2 text-foreground">Không tìm thấy dự án</h3>
                     <p className="text-muted-foreground text-sm mb-4">Thử điều chỉnh bộ lọc hoặc từ khóa tìm kiếm</p>
                     <Button variant="outline" onClick={handleClearAllFilters} className="rounded-full h-10 text-sm">
                       Xóa tất cả bộ lọc
@@ -440,12 +440,12 @@ const MarketOverview = () => {
                 )}
 
                 {filteredProjects.length > 0 && (
-                  <div className="px-6 py-3 border-t bg-muted/10 flex items-center justify-between">
+                  <div className="px-6 py-3 border-t border-border/50 bg-muted/10 flex items-center justify-between">
                     <span className="text-sm text-muted-foreground">
                       Hiển thị <span className="font-semibold text-foreground">{filteredProjects.length}</span> dự án
                     </span>
-                    <Button variant="outline" size="sm" className="h-9 rounded-full text-sm">
-                      <Download className="w-4 h-4 mr-1.5" />
+                    <Button variant="outline" size="sm" className="h-8 rounded-md text-xs">
+                      <Download className="w-3.5 h-3.5 mr-1.5" />
                       Xuất Excel
                     </Button>
                   </div>

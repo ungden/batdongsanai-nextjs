@@ -37,10 +37,12 @@ import ProjectTimeline from "@/components/project/ProjectTimeline";
 import RiskAnalysis from "@/components/project/RiskAnalysis";
 import LocationAnalysis from "@/components/project/LocationAnalysis";
 import ProjectReviews from "@/components/project/ProjectReviews";
-import { ProjectInterestCard } from "@/components/project/ProjectInterestCard"; // Changed import
+import { ProjectInterestCard } from "@/components/project/ProjectInterestCard"; 
 import BottomNavigation from "@/components/layout/BottomNavigation";
 import { ProjectHero } from "@/components/project/detail/ProjectHero";
 import { formatCurrency } from "@/utils/formatCurrency";
+import PremiumCatalystRadar from "@/components/project/PremiumCatalystRadar"; // New Import
+import { useMarketCatalysts } from "@/hooks/useMarketData"; // New Import
 
 const ProjectDetail = () => {
   const { id } = useParams();
@@ -51,6 +53,7 @@ const ProjectDetail = () => {
   const [activeTab, setActiveTab] = useState("overview");
 
   const { project, loading } = useProjectDetail(id);
+  const { catalysts } = useMarketCatalysts({ projectId: id }); // Fetch catalysts
 
   useEffect(() => {
     if (project) {
@@ -233,7 +236,11 @@ const ProjectDetail = () => {
                         projectId={project.id}
                         projectName={project.name}
                         currentPrice={project.pricePerSqm}
+                        catalysts={catalysts} // Pass real catalysts
                       />
+                       {/* PREMIUM RADAR FEATURE */}
+                       <PremiumCatalystRadar projectId={project.id} catalysts={catalysts} />
+                       
                        <PriceHistoryChart
                         priceHistory={project.priceHistory || []}
                         launchPrice={project.launchPrice}

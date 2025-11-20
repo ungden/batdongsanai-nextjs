@@ -14,11 +14,12 @@ import ProjectCard from "@/components/project/ProjectCard";
 import BreadcrumbSchema from "@/components/seo/BreadcrumbSchema";
 import { DeveloperAnalytics } from "@/components/developer/DeveloperAnalytics";
 import { RecentProjectsTable } from "@/components/developer/RecentProjectsTable";
+import CorporateAnalysis from "@/components/developer/CorporateAnalysis"; // New Import
 import { useAnalytics } from "@/hooks/useAnalytics";
 import { getDeveloperByName } from "@/data/developersData";
 import { useProjects } from "@/hooks/useProjects";
 import { calculateROI, getROICategory } from "@/utils/roiCalculations";
-import { Building2, MapPin, Phone, Mail, Globe, Calendar, TrendingUp, Award, BarChart3, ArrowLeft, Home, Users } from "lucide-react";
+import { Building2, MapPin, Phone, Mail, Globe, Calendar, TrendingUp, Award, BarChart3, ArrowLeft, Home, Users, Briefcase } from "lucide-react";
 
 const DeveloperDetail = () => {
   const { developerId } = useParams();
@@ -301,9 +302,13 @@ const DeveloperDetail = () => {
 
       {/* Analytics & Projects Section with Tabs */}
       <Tabs defaultValue="analytics" className="space-y-4 md:space-y-6">
-        <TabsList className="grid w-full grid-cols-3 h-12 bg-muted/30 p-1">
+        <TabsList className="grid w-full grid-cols-4 h-12 bg-muted/30 p-1">
           <TabsTrigger value="analytics" className="font-semibold data-[state=active]:shadow-lg">
             📊 Phân tích & Thống kê
+          </TabsTrigger>
+          <TabsTrigger value="corporate" className="font-semibold data-[state=active]:shadow-lg flex gap-2">
+            <Briefcase className="w-4 h-4" /> Hồ sơ Doanh nghiệp
+            <Badge className="bg-amber-500 text-white h-4 px-1 text-[9px]">VIP</Badge>
           </TabsTrigger>
           <TabsTrigger value="table" className="font-semibold data-[state=active]:shadow-lg">
             📋 Bảng dự án chi tiết
@@ -313,15 +318,19 @@ const DeveloperDetail = () => {
           </TabsTrigger>
         </TabsList>
 
-        <TabsContent value="analytics" className="space-y-4 md:space-y-6">
+        <TabsContent value="analytics" className="space-y-4 md:space-y-6 animate-in fade-in-50">
           <DeveloperAnalytics developer={developer} projects={developerProjects} />
         </TabsContent>
 
-        <TabsContent value="table" className="space-y-4 md:space-y-6">
+        <TabsContent value="corporate" className="space-y-4 md:space-y-6 animate-in fade-in-50">
+          <CorporateAnalysis developer={developer} />
+        </TabsContent>
+
+        <TabsContent value="table" className="space-y-4 md:space-y-6 animate-in fade-in-50">
           <RecentProjectsTable projects={sortedProjects} onProjectClick={handleProjectClick} />
         </TabsContent>
 
-        <TabsContent value="cards" className="space-y-4 md:space-y-6">
+        <TabsContent value="cards" className="space-y-4 md:space-y-6 animate-in fade-in-50">
           <Card className="card-elevated">
             <CardHeader className="pb-6">
               <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">

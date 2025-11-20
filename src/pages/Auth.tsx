@@ -20,7 +20,7 @@ const Auth = () => {
   const [fullName, setFullName] = useState('');
   const [loading, setLoading] = useState(false);
   
-  const { signUp, signIn, user } = useAuth();
+  const { signUp, signIn, signInWithGoogle, user } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
   const location = useLocation();
@@ -102,6 +102,22 @@ const Auth = () => {
     }
   };
 
+  const handleGoogleLogin = async () => {
+    try {
+      setLoading(true);
+      const { error } = await signInWithGoogle();
+      if (error) throw error;
+      // Supabase will handle the redirect
+    } catch (error: any) {
+      toast({
+        title: "Lỗi đăng nhập Google",
+        description: error.message,
+        variant: "destructive"
+      });
+      setLoading(false);
+    }
+  };
+
   const handleForgotPassword = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -132,120 +148,168 @@ const Auth = () => {
     switch (view) {
       case 'login':
         return (
-          <form onSubmit={handleLogin} className="space-y-5">
-            <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
-              <div className="relative">
-                <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-                <Input
-                  id="email"
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  required
-                  className="pl-11 h-12 rounded-xl border-border bg-background focus:border-primary"
-                  placeholder="email@example.com"
-                />
+          <div className="space-y-5">
+            <form onSubmit={handleLogin} className="space-y-5">
+              <div className="space-y-2">
+                <Label htmlFor="email">Email</Label>
+                <div className="relative">
+                  <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+                  <Input
+                    id="email"
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    required
+                    className="pl-11 h-12 rounded-xl border-border bg-background focus:border-primary"
+                    placeholder="email@example.com"
+                  />
+                </div>
+              </div>
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="password">Mật khẩu</Label>
+                  <button 
+                    type="button"
+                    onClick={() => setView('forgot_password')}
+                    className="text-xs text-primary font-medium hover:underline"
+                  >
+                    Quên mật khẩu?
+                  </button>
+                </div>
+                <div className="relative">
+                  <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+                  <Input
+                    id="password"
+                    type="password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    required
+                    className="pl-11 h-12 rounded-xl border-border bg-background focus:border-primary"
+                    placeholder="••••••••"
+                  />
+                </div>
+              </div>
+              <Button 
+                type="submit" 
+                className="w-full h-12 text-base font-bold rounded-xl shadow-lg hover:shadow-xl transition-all" 
+                disabled={loading}
+              >
+                {loading ? 'Đang xử lý...' : (
+                  <span className="flex items-center gap-2">
+                    <LogIn className="w-5 h-5" /> Đăng nhập
+                  </span>
+                )}
+              </Button>
+            </form>
+
+            <div className="relative">
+              <div className="absolute inset-0 flex items-center">
+                <span className="w-full border-t border-border" />
+              </div>
+              <div className="relative flex justify-center text-xs uppercase">
+                <span className="bg-background px-2 text-muted-foreground">
+                  Hoặc tiếp tục với
+                </span>
               </div>
             </div>
-            <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <Label htmlFor="password">Mật khẩu</Label>
-                <button 
-                  type="button"
-                  onClick={() => setView('forgot_password')}
-                  className="text-xs text-primary font-medium hover:underline"
-                >
-                  Quên mật khẩu?
-                </button>
-              </div>
-              <div className="relative">
-                <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-                <Input
-                  id="password"
-                  type="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  required
-                  className="pl-11 h-12 rounded-xl border-border bg-background focus:border-primary"
-                  placeholder="••••••••"
-                />
-              </div>
-            </div>
-            <Button 
-              type="submit" 
-              className="w-full h-12 text-base font-bold rounded-xl shadow-lg hover:shadow-xl transition-all" 
+
+            <Button
+              variant="outline"
+              type="button"
+              className="w-full h-12 rounded-xl border-border"
+              onClick={handleGoogleLogin}
               disabled={loading}
             >
-              {loading ? 'Đang xử lý...' : (
-                <span className="flex items-center gap-2">
-                  <LogIn className="w-5 h-5" /> Đăng nhập
-                </span>
-              )}
+              <svg className="mr-2 h-5 w-5" aria-hidden="true" focusable="false" data-prefix="fab" data-icon="google" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 488 512"><path fill="currentColor" d="M488 261.8C488 403.3 391.1 504 248 504 110.8 504 0 393.2 0 256S110.8 8 248 8c66.8 0 123 24.5 166.3 64.9l-67.5 64.9C258.5 52.6 94.3 116.6 94.3 256c0 86.5 69.1 156.6 153.7 156.6 98.2 0 135-70.4 140.8-106.9H248v-85.3h236.1c2.3 12.7 3.9 24.9 3.9 41.4z"></path></svg>
+              Google
             </Button>
-          </form>
+          </div>
         );
       
       case 'register':
         return (
-          <form onSubmit={handleRegister} className="space-y-5">
-            <div className="space-y-2">
-              <Label htmlFor="fullName">Họ và tên</Label>
-              <div className="relative">
-                <User className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-                <Input
-                  id="fullName"
-                  type="text"
-                  value={fullName}
-                  onChange={(e) => setFullName(e.target.value)}
-                  required
-                  className="pl-11 h-12 rounded-xl border-border bg-background focus:border-primary"
-                  placeholder="Nguyễn Văn A"
-                />
+          <div className="space-y-5">
+            <form onSubmit={handleRegister} className="space-y-5">
+              <div className="space-y-2">
+                <Label htmlFor="fullName">Họ và tên</Label>
+                <div className="relative">
+                  <User className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+                  <Input
+                    id="fullName"
+                    type="text"
+                    value={fullName}
+                    onChange={(e) => setFullName(e.target.value)}
+                    required
+                    className="pl-11 h-12 rounded-xl border-border bg-background focus:border-primary"
+                    placeholder="Nguyễn Văn A"
+                  />
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="email">Email</Label>
+                <div className="relative">
+                  <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+                  <Input
+                    id="email"
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    required
+                    className="pl-11 h-12 rounded-xl border-border bg-background focus:border-primary"
+                    placeholder="email@example.com"
+                  />
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="password">Mật khẩu</Label>
+                <div className="relative">
+                  <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+                  <Input
+                    id="password"
+                    type="password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    required
+                    className="pl-11 h-12 rounded-xl border-border bg-background focus:border-primary"
+                    placeholder="••••••••"
+                  />
+                </div>
+              </div>
+              <Button 
+                type="submit" 
+                className="w-full h-12 text-base font-bold rounded-xl shadow-lg hover:shadow-xl transition-all" 
+                disabled={loading}
+              >
+                {loading ? 'Đang xử lý...' : (
+                  <span className="flex items-center gap-2">
+                    <UserPlus className="w-5 h-5" /> Đăng ký
+                  </span>
+                )}
+              </Button>
+            </form>
+
+            <div className="relative">
+              <div className="absolute inset-0 flex items-center">
+                <span className="w-full border-t border-border" />
+              </div>
+              <div className="relative flex justify-center text-xs uppercase">
+                <span className="bg-background px-2 text-muted-foreground">
+                  Hoặc tiếp tục với
+                </span>
               </div>
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
-              <div className="relative">
-                <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-                <Input
-                  id="email"
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  required
-                  className="pl-11 h-12 rounded-xl border-border bg-background focus:border-primary"
-                  placeholder="email@example.com"
-                />
-              </div>
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="password">Mật khẩu</Label>
-              <div className="relative">
-                <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-                <Input
-                  id="password"
-                  type="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  required
-                  className="pl-11 h-12 rounded-xl border-border bg-background focus:border-primary"
-                  placeholder="••••••••"
-                />
-              </div>
-            </div>
-            <Button 
-              type="submit" 
-              className="w-full h-12 text-base font-bold rounded-xl shadow-lg hover:shadow-xl transition-all" 
+
+            <Button
+              variant="outline"
+              type="button"
+              className="w-full h-12 rounded-xl border-border"
+              onClick={handleGoogleLogin}
               disabled={loading}
             >
-              {loading ? 'Đang xử lý...' : (
-                <span className="flex items-center gap-2">
-                  <UserPlus className="w-5 h-5" /> Đăng ký
-                </span>
-              )}
+              <svg className="mr-2 h-5 w-5" aria-hidden="true" focusable="false" data-prefix="fab" data-icon="google" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 488 512"><path fill="currentColor" d="M488 261.8C488 403.3 391.1 504 248 504 110.8 504 0 393.2 0 256S110.8 8 248 8c66.8 0 123 24.5 166.3 64.9l-67.5 64.9C258.5 52.6 94.3 116.6 94.3 256c0 86.5 69.1 156.6 153.7 156.6 98.2 0 135-70.4 140.8-106.9H248v-85.3h236.1c2.3 12.7 3.9 24.9 3.9 41.4z"></path></svg>
+              Google
             </Button>
-          </form>
+          </div>
         );
 
       case 'forgot_password':

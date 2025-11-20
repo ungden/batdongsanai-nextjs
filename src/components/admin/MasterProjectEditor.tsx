@@ -149,7 +149,7 @@ export default function MasterProjectEditor({ projectId, onSave }: MasterEditorP
     setData((prev: any) => ({ ...prev, [field]: value }));
   };
 
-  const handleSave = async (silent = false, dataToSave = data) => {
+  const handleSave = async (silent = false, dataToSave = data, triggerCallback = false) => {
     if (!silent) setSaving(true);
     let cleanPayload: any = {};
 
@@ -174,7 +174,9 @@ export default function MasterProjectEditor({ projectId, onSave }: MasterEditorP
       if (error) throw error;
       
       if (!silent) toast.success("Đã lưu dữ liệu thành công");
-      if (onSave) onSave();
+      
+      // FIX: Only trigger parent callback if explicitly requested (default false to prevent auto-nav)
+      if (onSave && triggerCallback) onSave();
       
       if (!silent) setLogs(prev => [...prev, `✅ SAVE SUCCESS`]);
 
@@ -231,7 +233,8 @@ export default function MasterProjectEditor({ projectId, onSave }: MasterEditorP
       const newData = mapAiDataToFields(structData.data, section, currentDataState);
       setData(newData);
       
-      await handleSave(true, newData);
+      // Pass false to prevent triggering parent navigation
+      await handleSave(true, newData, false);
 
       if (!isAuto) {
         setAuditStatus('idle');
@@ -360,7 +363,7 @@ export default function MasterProjectEditor({ projectId, onSave }: MasterEditorP
              </div>
           )}
         </div>
-        <Button onClick={() => handleSave()} disabled={saving} className="bg-green-600 hover:bg-green-700 text-white font-bold shadow-md w-full md:w-auto">
+        <Button onClick={() => handleSave(false, data, false)} disabled={saving} className="bg-green-600 hover:bg-green-700 text-white font-bold shadow-md w-full md:w-auto">
           {saving ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Save className="w-4 h-4 mr-2" />}
           Lưu thủ công
         </Button>

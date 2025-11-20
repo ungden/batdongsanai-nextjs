@@ -6,6 +6,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Card, CardContent } from "@/components/ui/card";
 import { TrendingUp, Sparkles, Calculator, DollarSign } from "lucide-react";
 import { formatCurrency } from "@/utils/formatCurrency";
+import { ShareResultButton } from "@/components/calculator/ShareResultButton";
+import { useRef } from "react";
 
 interface PaymentCalculatorProps {
   projectPrice: string;
@@ -31,6 +33,7 @@ const formatNumberInput = (value: number): string => {
 
 const PaymentCalculator = ({ projectPrice }: PaymentCalculatorProps) => {
   const parsedPrice = parseVietnamesePrice(projectPrice);
+  const resultsRef = useRef<HTMLDivElement>(null);
   
   const [formData, setFormData] = useState({
     propertyPrice: formatNumberInput(parsedPrice),
@@ -298,95 +301,104 @@ const PaymentCalculator = ({ projectPrice }: PaymentCalculatorProps) => {
 
       {/* Results - Soft Rounded Cards */}
       {results && (
-        <div className="space-y-5">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-            <Card className="rounded-2xl shadow-lg border-0 bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-950/40 dark:to-indigo-950/40">
-              <CardContent className="p-6">
-                <div className="text-center">
-                  <div className="text-sm text-muted-foreground mb-2 font-medium">Trả hàng tháng</div>
-                  <div className="text-2xl md:text-3xl font-bold text-primary">
-                    {formatCurrency(results.monthlyPayment)}
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
+        <div className="space-y-5" ref={resultsRef}>
+          {/* Wrapper div for capture to include everything relevant */}
+          <div className="p-1"> 
+             <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mb-5">
+                <Card className="rounded-2xl shadow-lg border-0 bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-950/40 dark:to-indigo-950/40">
+                  <CardContent className="p-6">
+                    <div className="text-center">
+                      <div className="text-sm text-muted-foreground mb-2 font-medium">Trả hàng tháng</div>
+                      <div className="text-2xl md:text-3xl font-bold text-primary">
+                        {formatCurrency(results.monthlyPayment)}
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
 
-            <Card className="rounded-2xl shadow-lg border-0 bg-gradient-to-br from-emerald-50 to-teal-50 dark:from-emerald-950/40 dark:to-teal-950/40">
-              <CardContent className="p-6">
-                <div className="text-center">
-                  <div className="text-sm text-muted-foreground mb-2 font-medium">Trả trước</div>
-                  <div className="text-2xl md:text-3xl font-bold text-emerald-600 dark:text-emerald-400">
-                    {formatCurrency(results.downPaymentAmount)}
+                <Card className="rounded-2xl shadow-lg border-0 bg-gradient-to-br from-emerald-50 to-teal-50 dark:from-emerald-950/40 dark:to-teal-950/40">
+                  <CardContent className="p-6">
+                    <div className="text-center">
+                      <div className="text-sm text-muted-foreground mb-2 font-medium">Trả trước</div>
+                      <div className="text-2xl md:text-3xl font-bold text-emerald-600 dark:text-emerald-400">
+                        {formatCurrency(results.downPaymentAmount)}
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+
+              <Card className="rounded-2xl shadow-lg border-0 bg-card">
+                <CardContent className="p-6 space-y-4">
+                  <div className="flex justify-between text-base">
+                    <span className="text-muted-foreground">Số tiền vay:</span>
+                    <span className="font-bold text-foreground">{formatCurrency(results.loanAmount)}</span>
                   </div>
-                </div>
-              </CardContent>
-            </Card>
+                  <div className="flex justify-between text-base">
+                    <span className="text-muted-foreground">Tổng tiền phải trả:</span>
+                    <span className="font-bold text-foreground">{formatCurrency(results.totalPayment)}</span>
+                  </div>
+                  <div className="flex justify-between text-base">
+                    <span className="text-muted-foreground">Tổng tiền lãi:</span>
+                    <span className="font-bold text-amber-600 dark:text-amber-500">{formatCurrency(results.totalInterest)}</span>
+                  </div>
+                  
+                  {formData.monthlyIncome && (
+                    <div className="mt-4 p-4 bg-gradient-to-br from-slate-50 to-blue-50 dark:from-slate-900/50 dark:to-blue-900/20 rounded-xl">
+                      <div className="flex justify-between text-base mb-2">
+                        <span className="text-foreground font-medium">Tỷ lệ trả nợ/thu nhập:</span>
+                        <span className={`font-bold ${
+                          (results.monthlyPayment / parseFloat(formData.monthlyIncome)) > 0.5 
+                            ? "text-red-600 dark:text-red-400" 
+                            : "text-emerald-600 dark:text-emerald-400"
+                        }`}>
+                          {((results.monthlyPayment / parseFloat(formData.monthlyIncome)) * 100).toFixed(1)}%
+                        </span>
+                      </div>
+                      <div className="text-sm text-muted-foreground">
+                        Khuyến nghị: Dưới 50% thu nhập
+                      </div>
+                    </div>
+                  )}
+
+                  {formData.expectedRent && (
+                     <div className="mt-4 p-4 bg-gradient-to-br from-emerald-50 to-teal-50 dark:from-emerald-950/30 dark:to-teal-950/30 rounded-xl border-2 border-emerald-200/50 dark:border-emerald-900/50">
+                        {/* Existing rent calculation logic */}
+                        <div className="flex justify-between text-base mb-2">
+                            <span className="text-foreground font-medium">Chênh lệch hàng tháng:</span>
+                            <span className={`font-bold ${
+                            parseFloat(formData.expectedRent) >= results.monthlyPayment
+                                ? "text-emerald-600 dark:text-emerald-400" 
+                                : "text-red-600 dark:text-red-400"
+                            }`}>
+                            {formatCurrency(parseFloat(formData.expectedRent) - results.monthlyPayment)}
+                            </span>
+                        </div>
+                        <div className="text-sm text-foreground font-medium mb-3">
+                            {parseFloat(formData.expectedRent) >= results.monthlyPayment 
+                            ? "✓ Tiền thuê đủ trang trải" 
+                            : "⚠ Cần bù thêm từ thu nhập"}
+                        </div>
+                        <div className="space-y-2">
+                            <div className="flex justify-between text-sm">
+                            <span className="text-muted-foreground">Tiền thuê/tháng:</span>
+                            <span className="font-semibold text-foreground">{formatCurrency(parseFloat(formData.expectedRent))}</span>
+                            </div>
+                            <div className="flex justify-between text-sm">
+                            <span className="text-muted-foreground">Trả vay/tháng:</span>
+                            <span className="font-semibold text-foreground">{formatCurrency(results.monthlyPayment)}</span>
+                            </div>
+                        </div>
+                     </div>
+                  )}
+                </CardContent>
+              </Card>
           </div>
-
-          <Card className="rounded-2xl shadow-lg border-0 bg-card">
-            <CardContent className="p-6 space-y-4">
-              <div className="flex justify-between text-base">
-                <span className="text-muted-foreground">Số tiền vay:</span>
-                <span className="font-bold text-foreground">{formatCurrency(results.loanAmount)}</span>
-              </div>
-              <div className="flex justify-between text-base">
-                <span className="text-muted-foreground">Tổng tiền phải trả:</span>
-                <span className="font-bold text-foreground">{formatCurrency(results.totalPayment)}</span>
-              </div>
-              <div className="flex justify-between text-base">
-                <span className="text-muted-foreground">Tổng tiền lãi:</span>
-                <span className="font-bold text-amber-600 dark:text-amber-500">{formatCurrency(results.totalInterest)}</span>
-              </div>
-              
-              {formData.monthlyIncome && (
-                <div className="mt-4 p-4 bg-gradient-to-br from-slate-50 to-blue-50 dark:from-slate-900/50 dark:to-blue-900/20 rounded-xl">
-                  <div className="flex justify-between text-base mb-2">
-                    <span className="text-foreground font-medium">Tỷ lệ trả nợ/thu nhập:</span>
-                    <span className={`font-bold ${
-                      (results.monthlyPayment / parseFloat(formData.monthlyIncome)) > 0.5 
-                        ? "text-red-600 dark:text-red-400" 
-                        : "text-emerald-600 dark:text-emerald-400"
-                    }`}>
-                      {((results.monthlyPayment / parseFloat(formData.monthlyIncome)) * 100).toFixed(1)}%
-                    </span>
-                  </div>
-                  <div className="text-sm text-muted-foreground">
-                    Khuyến nghị: Dưới 50% thu nhập
-                  </div>
-                </div>
-              )}
-
-              {formData.expectedRent && (
-                <div className="mt-4 p-4 bg-gradient-to-br from-emerald-50 to-teal-50 dark:from-emerald-950/30 dark:to-teal-950/30 rounded-xl border-2 border-emerald-200/50 dark:border-emerald-900/50">
-                  <div className="flex justify-between text-base mb-2">
-                    <span className="text-foreground font-medium">Chênh lệch hàng tháng:</span>
-                    <span className={`font-bold ${
-                      parseFloat(formData.expectedRent) >= results.monthlyPayment
-                        ? "text-emerald-600 dark:text-emerald-400" 
-                        : "text-red-600 dark:text-red-400"
-                    }`}>
-                      {formatCurrency(parseFloat(formData.expectedRent) - results.monthlyPayment)}
-                    </span>
-                  </div>
-                  <div className="text-sm text-foreground font-medium mb-3">
-                    {parseFloat(formData.expectedRent) >= results.monthlyPayment 
-                      ? "✓ Tiền thuê đủ trang trải" 
-                      : "⚠ Cần bù thêm từ thu nhập"}
-                  </div>
-                  <div className="space-y-2">
-                    <div className="flex justify-between text-sm">
-                      <span className="text-muted-foreground">Tiền thuê/tháng:</span>
-                      <span className="font-semibold text-foreground">{formatCurrency(parseFloat(formData.expectedRent))}</span>
-                    </div>
-                    <div className="flex justify-between text-sm">
-                      <span className="text-muted-foreground">Trả vay/tháng:</span>
-                      <span className="font-semibold text-foreground">{formatCurrency(results.monthlyPayment)}</span>
-                    </div>
-                  </div>
-                </div>
-              )}
-            </CardContent>
-          </Card>
+          
+          {/* Share Button outside the capture ref */}
+          <div className="flex justify-end">
+             <ShareResultButton targetRef={resultsRef} />
+          </div>
         </div>
       )}
     </div>

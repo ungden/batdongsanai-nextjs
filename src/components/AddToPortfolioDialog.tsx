@@ -16,6 +16,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { usePortfolio } from '@/hooks/usePortfolio';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
+import { useNavigate } from 'react-router-dom';
 
 interface AddToPortfolioDialogProps {
   projectId: string;
@@ -31,6 +32,7 @@ export const AddToPortfolioDialog = ({
   triggerButton
 }: AddToPortfolioDialogProps) => {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const { addToPortfolio } = usePortfolio();
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -42,9 +44,19 @@ export const AddToPortfolioDialog = ({
     notes: ''
   });
 
+  const handleOpenChange = (newOpen: boolean) => {
+    if (newOpen && !user) {
+      toast.error('Vui lòng đăng nhập để sử dụng tính năng này');
+      navigate('/auth');
+      return;
+    }
+    setOpen(newOpen);
+  };
+
   const handleSubmit = async () => {
     if (!user) {
       toast.error('Vui lòng đăng nhập để thêm vào danh mục');
+      navigate('/auth');
       return;
     }
 
@@ -83,7 +95,7 @@ export const AddToPortfolioDialog = ({
   };
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogTrigger asChild>
         {triggerButton || (
           <Button variant="outline">

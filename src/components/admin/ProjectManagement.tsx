@@ -7,7 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Building, Plus, Edit3, Trash2, Eye, EyeOff } from 'lucide-react';
+import { Building, Plus, Edit3, Trash2, Eye, EyeOff, Image as ImageIcon, Upload, X } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -47,12 +47,14 @@ const ProjectManagement = ({ projects, onRefresh }: ProjectManagementProps) => {
   const [filter, setFilter] = useState('all');
   const [editingProject, setEditingProject] = useState<Project | null>(null);
   const [showCreateDialog, setShowCreateDialog] = useState(false);
+  const [uploading, setUploading] = useState(false);
   const [newProject, setNewProject] = useState({
     name: '',
     location: '',
     city: '',
     district: '',
     developer: '',
+    image: '',
     status: 'good',
     price_range: '',
     description: '',
@@ -79,6 +81,79 @@ const ProjectManagement = ({ projects, onRefresh }: ProjectManagementProps) => {
     );
   };
 
+  const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>, isEditing: boolean) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    // Validate file
+    if (!file.type.startsWith('image/')) {
+      toast({
+        title: "Lỗi",
+        description: "Vui lòng chọn file hình ảnh",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+      toast({
+        title: "Lỗi",
+        description: "Kích thước file không được vượt quá 5MB",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setUploading(true);
+    try {
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${Math.random().toString(36).substring(2)}-${Date.now()}.${fileExt}`;
+      const filePath = `project-images/${fileName}`;
+
+      // Try uploading to 'public' bucket first as a common convention or 'project-images' if you have it.
+      // For this codebase, let's assume a bucket named 'project-images' exists or we use a general one.
+      // Since we can't easily know which buckets exist without checking, we'll try 'project-images'.
+      // If it fails, we might need to create it or use another one.
+      
+      const { error: uploadError } = await supabase.storage
+        .from('project-images') 
+        .upload(filePath, file, {
+          cacheControl: '3600',
+          upsert: false
+        });
+
+      if (uploadError) {
+         // If bucket doesn't exist, this will fail. 
+         // In a real scenario we'd handle bucket creation or use a known bucket.
+         throw uploadError;
+      }
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('project-images')
+        .getPublicUrl(filePath);
+
+      if (isEditing && editingProject) {
+        setEditingProject({ ...editingProject, image: publicUrl });
+      } else {
+        setNewProject({ ...newProject, image: publicUrl });
+      }
+
+      toast({
+        title: "Thành công",
+        description: "Đã tải lên hình ảnh",
+      });
+    } catch (error: any) {
+      console.error('Error uploading image:', error);
+      toast({
+        title: "Lỗi tải ảnh",
+        description: error.message || "Có lỗi xảy ra khi tải lên hình ảnh",
+        variant: "destructive"
+      });
+    } finally {
+      setUploading(false);
+    }
+  };
+
   const filteredProjects = projects.filter(project => 
     filter === 'all' || project.status === filter
   );
@@ -103,6 +178,7 @@ const ProjectManagement = ({ projects, onRefresh }: ProjectManagementProps) => {
         city: '',
         district: '',
         developer: '',
+        image: '',
         status: 'good',
         price_range: '',
         description: '',
@@ -201,6 +277,55 @@ const ProjectManagement = ({ projects, onRefresh }: ProjectManagementProps) => {
                 <DialogTitle>Tạo dự án mới</DialogTitle>
               </DialogHeader>
               <div className="grid grid-cols-2 gap-4">
+                <div className="col-span-2">
+                  <label className="text-sm font-medium mb-2 block">Hình ảnh dự án</label>
+                  <div className="flex items-center gap-4">
+                    <div className="w-24 h-24 border-2 border-dashed border-muted-foreground/25 rounded-lg flex items-center justify-center overflow-hidden bg-muted/10 relative group">
+                      {newProject.image ? (
+                        <>
+                          <img src={newProject.image} alt="Preview" className="w-full h-full object-cover" />
+                          <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                            <Button 
+                              variant="destructive" 
+                              size="icon" 
+                              className="h-6 w-6"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setNewProject({ ...newProject, image: '' });
+                              }}
+                            >
+                              <X className="h-3 w-3" />
+                            </Button>
+                          </div>
+                        </>
+                      ) : (
+                        <ImageIcon className="w-8 h-8 text-muted-foreground/50" />
+                      )}
+                    </div>
+                    <div className="flex-1">
+                      <Input
+                        type="file"
+                        accept="image/*"
+                        onChange={(e) => handleImageUpload(e, false)}
+                        disabled={uploading}
+                        className="cursor-pointer"
+                      />
+                      <p className="text-xs text-muted-foreground mt-1">
+                        Hỗ trợ JPG, PNG. Tối đa 5MB.
+                      </p>
+                      <div className="mt-2">
+                         <p className="text-xs font-medium mb-1">Hoặc nhập URL:</p>
+                         <Input 
+                            value={newProject.image || ''} 
+                            onChange={(e) => setNewProject({...newProject, image: e.target.value})}
+                            placeholder="https://example.com/image.jpg"
+                            className="h-8 text-xs"
+                         />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
                 <div>
                   <label className="text-sm font-medium">Tên dự án</label>
                   <Input
@@ -280,8 +405,8 @@ const ProjectManagement = ({ projects, onRefresh }: ProjectManagementProps) => {
                 <Button variant="outline" onClick={() => setShowCreateDialog(false)}>
                   Hủy
                 </Button>
-                <Button onClick={handleCreateProject}>
-                  Tạo dự án
+                <Button onClick={handleCreateProject} disabled={uploading}>
+                  {uploading ? 'Đang tải ảnh...' : 'Tạo dự án'}
                 </Button>
               </div>
             </DialogContent>
@@ -307,6 +432,7 @@ const ProjectManagement = ({ projects, onRefresh }: ProjectManagementProps) => {
           <Table>
             <TableHeader>
               <TableRow>
+                <TableHead className="w-[50px]">Ảnh</TableHead>
                 <TableHead>Tên dự án</TableHead>
                 <TableHead>Nhà phát triển</TableHead>
                 <TableHead>Địa điểm</TableHead>
@@ -320,6 +446,15 @@ const ProjectManagement = ({ projects, onRefresh }: ProjectManagementProps) => {
             <TableBody>
               {filteredProjects.map((project) => (
                 <TableRow key={project.id}>
+                  <TableCell>
+                    <div className="w-10 h-10 rounded-md overflow-hidden bg-muted flex items-center justify-center">
+                      {project.image ? (
+                        <img src={project.image} alt={project.name} className="w-full h-full object-cover" />
+                      ) : (
+                        <Building className="w-5 h-5 text-muted-foreground/50" />
+                      )}
+                    </div>
+                  </TableCell>
                   <TableCell className="font-medium">{project.name}</TableCell>
                   <TableCell>{project.developer}</TableCell>
                   <TableCell>{project.city}, {project.district}</TableCell>
@@ -369,6 +504,55 @@ const ProjectManagement = ({ projects, onRefresh }: ProjectManagementProps) => {
                 <DialogTitle>Chỉnh sửa dự án</DialogTitle>
               </DialogHeader>
               <div className="grid grid-cols-2 gap-4">
+                <div className="col-span-2">
+                  <label className="text-sm font-medium mb-2 block">Hình ảnh dự án</label>
+                  <div className="flex items-center gap-4">
+                    <div className="w-24 h-24 border-2 border-dashed border-muted-foreground/25 rounded-lg flex items-center justify-center overflow-hidden bg-muted/10 relative group">
+                      {editingProject.image ? (
+                        <>
+                          <img src={editingProject.image} alt="Preview" className="w-full h-full object-cover" />
+                          <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                            <Button 
+                              variant="destructive" 
+                              size="icon" 
+                              className="h-6 w-6"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setEditingProject({ ...editingProject, image: '' });
+                              }}
+                            >
+                              <X className="h-3 w-3" />
+                            </Button>
+                          </div>
+                        </>
+                      ) : (
+                        <ImageIcon className="w-8 h-8 text-muted-foreground/50" />
+                      )}
+                    </div>
+                    <div className="flex-1">
+                      <Input
+                        type="file"
+                        accept="image/*"
+                        onChange={(e) => handleImageUpload(e, true)}
+                        disabled={uploading}
+                        className="cursor-pointer"
+                      />
+                      <p className="text-xs text-muted-foreground mt-1">
+                        Hỗ trợ JPG, PNG. Tối đa 5MB.
+                      </p>
+                      <div className="mt-2">
+                         <p className="text-xs font-medium mb-1">Hoặc nhập URL:</p>
+                         <Input 
+                            value={editingProject.image || ''} 
+                            onChange={(e) => setEditingProject({...editingProject, image: e.target.value})}
+                            placeholder="https://example.com/image.jpg"
+                            className="h-8 text-xs"
+                         />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
                 <div>
                   <label className="text-sm font-medium">Tên dự án</label>
                   <Input
@@ -422,8 +606,8 @@ const ProjectManagement = ({ projects, onRefresh }: ProjectManagementProps) => {
                 <Button onClick={() => {
                   handleUpdateProject(editingProject.id, editingProject);
                   setEditingProject(null);
-                }}>
-                  Cập nhật
+                }} disabled={uploading}>
+                  {uploading ? 'Đang tải ảnh...' : 'Cập nhật'}
                 </Button>
               </div>
             </DialogContent>

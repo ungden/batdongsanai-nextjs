@@ -161,6 +161,17 @@ export function AppSidebar() {
             </SidebarGroupContent>
           </SidebarGroup>
         )}
+
+        {/* Titanlabs Footer Info */}
+        {!collapsed && (
+          <div className="px-6 py-4 text-[10px] text-sidebar-foreground/40 text-center leading-relaxed border-t border-sidebar-border/50">
+            <p className="font-medium hover:text-sidebar-foreground/60 transition-colors">1 sản phẩm của Titanlabs.vn</p>
+            <p>by Alex Le</p>
+            <p className="mt-1 hover:text-primary cursor-pointer transition-colors">
+              <a href="mailto:alexle@titanlabs.vn">alexle@titanlabs.vn</a>
+            </p>
+          </div>
+        )}
       </SidebarContent>
 
       {/* User Footer */}

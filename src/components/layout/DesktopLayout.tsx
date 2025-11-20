@@ -67,9 +67,19 @@ const DesktopLayout: React.FC<DesktopLayoutProps> = ({ children, title, subtitle
           )}
           
           <main className="flex-1 overflow-y-auto overflow-x-hidden p-4 md:p-6 lg:p-8 animate-fade-in">
-            <div className="mx-auto max-w-7xl w-full space-y-6">
+            <div className="mx-auto max-w-7xl w-full space-y-6 min-h-[calc(100vh-10rem)]">
               {children}
             </div>
+
+            <footer className="mt-12 py-6 text-center text-xs text-muted-foreground border-t border-border/40">
+              <div className="flex flex-col gap-1.5 opacity-70 hover:opacity-100 transition-opacity">
+                <p className="font-semibold">1 sản phẩm của Titanlabs.vn</p>
+                <p>by Alex Le</p>
+                <a href="mailto:alexle@titanlabs.vn" className="hover:text-primary transition-colors">
+                  alexle@titanlabs.vn
+                </a>
+              </div>
+            </footer>
           </main>
         </div>
       </div>

@@ -1,32 +1,24 @@
 "use client";
 
-import { Home, TrendingUp, Heart, User, Grid } from "lucide-react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
+import { MOBILE_BOTTOM_NAV } from "@/config/navigation";
 
 const BottomNavigation = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
-  const navItems = [
-    { icon: Home, label: "Home", path: "/" },
-    { icon: TrendingUp, label: "Market", path: "/market-overview" },
-    { icon: Grid, label: "Dự án", path: "/projects" },
-    { icon: Heart, label: "Saved", path: "/favorites" },
-    { icon: User, label: "Profile", path: "/profile" },
-  ];
-
   return (
     <div className="fixed bottom-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-xl border-t border-border pb-safe">
       <div className="flex items-center justify-around h-16 px-2">
-        {navItems.map((item) => {
+        {MOBILE_BOTTOM_NAV.map((item) => {
           const Icon = item.icon;
-          const isActive = location.pathname === item.path;
+          const isActive = location.pathname === item.url;
           
           return (
             <button
-              key={item.path}
-              onClick={() => navigate(item.path)}
+              key={item.url}
+              onClick={() => navigate(item.url)}
               className={cn(
                 "flex flex-col items-center justify-center w-full h-full gap-1 transition-all duration-200",
                 isActive
@@ -41,7 +33,7 @@ const BottomNavigation = () => {
                 <Icon className={cn("h-5 w-5", isActive && "fill-current")} />
               </div>
               <span className="text-[10px] font-medium">
-                {item.label}
+                {item.title}
               </span>
             </button>
           );

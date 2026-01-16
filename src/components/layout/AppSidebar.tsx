@@ -1,11 +1,7 @@
 "use client";
 
-import { NavLink, useLocation } from "react-router-dom";
-import {
-  Home, TrendingUp, Calculator, Heart, Users, Newspaper,
-  Shield, Briefcase, Calendar, Sparkles, GitCompare, Store,
-  Settings, LogOut, User as UserIcon, ChevronRight
-} from "lucide-react";
+import { NavLink, useLocation, useNavigate } from "react-router-dom";
+import { Shield, LogOut, User as UserIcon, Sparkles } from "lucide-react";
 import {
   Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent,
   SidebarGroupLabel, SidebarMenu, SidebarMenuButton, SidebarMenuItem,
@@ -17,42 +13,7 @@ import { usePermissions } from "@/hooks/usePermissions";
 import { useCompareStore } from "@/stores/compareStore";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { cn } from "@/lib/utils";
-import { useNavigate } from "react-router-dom";
-
-// Grouped Navigation Items
-const navGroups = [
-  {
-    label: "Tổng quan",
-    items: [
-      { title: "Trang chủ", url: "/", icon: Home },
-      { title: "Thị trường", url: "/market-overview", icon: TrendingUp },
-      { title: "Market Intelligence", url: "/market-intelligence", icon: Sparkles },
-    ]
-  },
-  {
-    label: "Công cụ",
-    items: [
-      { title: "Chợ BĐS", url: "/marketplace", icon: Store },
-      { title: "So sánh dự án", url: "/compare", icon: GitCompare, badge: "compare" },
-      { title: "Tính toán vay", url: "/calculator", icon: Calculator },
-    ]
-  },
-  {
-    label: "Cá nhân",
-    items: [
-      { title: "Danh mục đầu tư", url: "/portfolio", icon: Briefcase },
-      { title: "Lịch hẹn", url: "/appointments", icon: Calendar },
-      { title: "Yêu thích", url: "/favorites", icon: Heart },
-    ]
-  },
-  {
-    label: "Thông tin",
-    items: [
-      { title: "Chủ đầu tư", url: "/developers", icon: Users },
-      { title: "Tin tức", url: "/news", icon: Newspaper },
-    ]
-  }
-];
+import { USER_NAV_GROUPS } from "@/config/navigation";
 
 export function AppSidebar() {
   const { state } = useSidebar();
@@ -92,7 +53,7 @@ export function AppSidebar() {
 
       {/* Main Navigation */}
       <SidebarContent className="px-3 py-4">
-        {navGroups.map((group, index) => (
+        {USER_NAV_GROUPS.map((group, index) => (
           <SidebarGroup key={index} className="mb-6 last:mb-0">
             {!collapsed && (
               <SidebarGroupLabel className="text-[11px] font-bold uppercase tracking-wider text-sidebar-foreground/50 px-3 mb-2">
@@ -103,6 +64,7 @@ export function AppSidebar() {
               <SidebarMenu className="space-y-1">
                 {group.items.map((item) => {
                   const active = isActive(item.url);
+                  const Icon = item.icon;
                   return (
                     <SidebarMenuItem key={item.url}>
                       <SidebarMenuButton
@@ -111,18 +73,18 @@ export function AppSidebar() {
                         isActive={active}
                         className={cn(
                           "h-11 rounded-md transition-all duration-200 group",
-                          active 
-                            ? "bg-primary/10 text-primary font-semibold shadow-sm hover:bg-primary/15 hover:text-primary" 
+                          active
+                            ? "bg-primary/10 text-primary font-semibold shadow-sm hover:bg-primary/15 hover:text-primary"
                             : "text-sidebar-foreground/80 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
                         )}
                       >
                         <NavLink to={item.url} className="flex items-center gap-3 w-full px-3">
-                          <item.icon className={cn(
-                            "h-5 w-5 transition-colors", 
+                          <Icon className={cn(
+                            "h-5 w-5 transition-colors",
                             active ? "text-primary" : "text-sidebar-foreground/60 group-hover:text-sidebar-accent-foreground"
                           )} />
                           <span className="flex-1 truncate text-sm">{item.title}</span>
-                          
+
                           {/* Badges */}
                           {item.badge === "compare" && compareList.length > 0 && (
                             <Badge variant="secondary" className="ml-auto h-5 min-w-5 px-1.5 flex items-center justify-center bg-primary text-primary-foreground text-[10px] font-bold shadow-sm">

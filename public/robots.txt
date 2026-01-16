@@ -1,3 +1,5 @@
+# Robots.txt for Realprofit.vn
+
 User-agent: Googlebot
 Allow: /
 
@@ -12,3 +14,30 @@ Allow: /
 
 User-agent: *
 Allow: /
+
+# Disallow admin and private pages
+Disallow: /admin/
+Disallow: /profile
+Disallow: /auth
+Disallow: /api/
+
+# Allow important pages
+Allow: /
+Allow: /projects
+Allow: /projects/*
+Allow: /explore
+Allow: /calculator
+Allow: /marketplace
+Allow: /market-overview
+Allow: /market-intelligence
+Allow: /legal-matrix
+Allow: /developers
+Allow: /developers/*
+Allow: /news
+Allow: /compare
+
+# Sitemap location
+Sitemap: https://realprofit.vn/sitemap.xml
+
+# Crawl delay for general bots
+Crawl-delay: 1

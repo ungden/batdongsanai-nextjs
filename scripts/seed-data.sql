@@ -3,6 +3,28 @@
 -- Run this in Supabase SQL Editor
 -- =============================================
 
+-- Step 1: Add unique constraints (if not exists)
+DO $$
+BEGIN
+  -- Add unique constraint to developers.name if not exists
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_constraint WHERE conname = 'developers_name_key'
+  ) THEN
+    ALTER TABLE developers ADD CONSTRAINT developers_name_key UNIQUE (name);
+  END IF;
+
+  -- Add unique constraint to projects.name if not exists
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_constraint WHERE conname = 'projects_name_key'
+  ) THEN
+    ALTER TABLE projects ADD CONSTRAINT projects_name_key UNIQUE (name);
+  END IF;
+END $$;
+
+-- Step 2: Clear existing data (optional - comment out if you want to keep existing)
+-- DELETE FROM projects;
+-- DELETE FROM developers;
+
 -- ============ DEVELOPERS ============
 INSERT INTO developers (name, logo, description, established_year, website, hotline, email, address, total_projects, completed_projects, avg_legal_score, avg_rating, specialties)
 VALUES

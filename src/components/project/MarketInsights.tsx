@@ -1,5 +1,4 @@
 "use client";
-
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { 
@@ -132,7 +131,7 @@ const MarketInsights = ({ city, district, pricePerSqm }: MarketInsightsProps) =>
                 <YAxis stroke="#64748b" style={{ fontSize: '12px' }} />
                 <Tooltip 
                   contentStyle={{ borderRadius: '12px', border: '2px solid #e2e8f0' }}
-                  formatter={(value: number, name: string) => {
+                  formatter={(value: any, name: any) => {
                     if (name === 'avgPrice') return [`${value}M VNĐ/m²`, 'Giá TB'];
                     return [value, name];
                   }}

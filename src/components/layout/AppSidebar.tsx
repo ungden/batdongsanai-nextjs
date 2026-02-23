@@ -1,6 +1,9 @@
 "use client";
+import { NavLink } from '@/components/NavLink';
+import { useRouter } from 'next/navigation';
+import { usePathname, useSearchParams } from 'next/navigation';
 
-import { NavLink, useLocation, useNavigate } from "react-router-dom";
+
 import { Shield, LogOut, User as UserIcon, Sparkles } from "lucide-react";
 import {
   Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent,
@@ -17,21 +20,21 @@ import { USER_NAV_GROUPS } from "@/config/navigation";
 
 export function AppSidebar() {
   const { state } = useSidebar();
-  const location = useLocation();
-  const navigate = useNavigate();
+  const pathname = usePathname();
+  const navigate = useRouter();
   const { user, signOut } = useAuth();
   const { isAdmin } = usePermissions();
   const { compareList } = useCompareStore();
   const collapsed = state === "collapsed";
 
   const isActive = (path: string) => {
-    if (path === "/" && location.pathname !== "/") return false;
-    return location.pathname.startsWith(path);
+    if (path === "/" && pathname !== "/") return false;
+    return pathname.startsWith(path);
   };
 
   const handleSignOut = async () => {
     await signOut();
-    navigate("/auth");
+    navigate.push("/auth");
   };
 
   return (
@@ -78,7 +81,7 @@ export function AppSidebar() {
                             : "text-sidebar-foreground/80 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
                         )}
                       >
-                        <NavLink to={item.url} className="flex items-center gap-3 w-full px-3">
+                        <NavLink href={item.url} className="flex items-center gap-3 w-full px-3">
                           <Icon className={cn(
                             "h-5 w-5 transition-colors",
                             active ? "text-primary" : "text-sidebar-foreground/60 group-hover:text-sidebar-accent-foreground"
@@ -113,7 +116,7 @@ export function AppSidebar() {
               <SidebarMenu>
                 <SidebarMenuItem>
                   <SidebarMenuButton asChild isActive={isActive("/admin")} className="h-11 hover:bg-destructive/10 hover:text-destructive text-destructive/80">
-                    <NavLink to="/admin" className="flex items-center gap-3 w-full px-3">
+                    <NavLink href="/admin" className="flex items-center gap-3 w-full px-3">
                       <Shield className="h-5 w-5" />
                       <span className="font-semibold">Admin System</span>
                     </NavLink>
@@ -140,7 +143,7 @@ export function AppSidebar() {
       <SidebarFooter className="border-t border-sidebar-border p-4 bg-sidebar-background">
         {user ? (
           <div className={cn("flex items-center gap-3", collapsed ? "justify-center" : "")}>
-            <Avatar className="h-10 w-10 rounded-lg border border-sidebar-border shadow-sm cursor-pointer hover:ring-2 hover:ring-primary/20 transition-all" onClick={() => navigate('/profile')}>
+            <Avatar className="h-10 w-10 rounded-lg border border-sidebar-border shadow-sm cursor-pointer hover:ring-2 hover:ring-primary/20 transition-all" onClick={() => navigate.push('/profile')}>
               <AvatarImage src={user.user_metadata?.avatar_url} />
               <AvatarFallback className="rounded-lg bg-primary/10 text-primary font-bold">
                 {user.email?.charAt(0).toUpperCase()}
@@ -168,7 +171,7 @@ export function AppSidebar() {
           </div>
         ) : (
           <SidebarMenuButton asChild className="w-full h-11 justify-center bg-primary text-primary-foreground hover:bg-primary/90 shadow-md font-semibold transition-all">
-            <NavLink to="/auth" className="flex items-center gap-2">
+            <NavLink href="/auth" className="flex items-center gap-2">
               <UserIcon className="h-5 w-5" />
               {!collapsed && "Đăng nhập ngay"}
             </NavLink>

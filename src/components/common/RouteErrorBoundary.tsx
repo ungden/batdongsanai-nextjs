@@ -1,11 +1,16 @@
-import { useRouteError, isRouteErrorResponse, useNavigate } from 'react-router-dom';
+"use client";
+import { useRouter } from 'next/navigation';
+
+const useRouteError = () => new Error("Lỗi ứng dụng");
+const isRouteErrorResponse = (e: any): e is { status: number } => false;
+
 import { AlertTriangle, FileQuestion, RefreshCw, Home } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 
 export default function RouteErrorBoundary() {
   const error = useRouteError();
-  const navigate = useNavigate();
+  const navigate = useRouter();
 
   let title = 'Đã xảy ra lỗi';
   let description = 'Xin lỗi, đã có lỗi xảy ra khi tải trang này.';
@@ -44,7 +49,7 @@ export default function RouteErrorBoundary() {
               <RefreshCw className="h-4 w-4 mr-2" />
               Thử lại
             </Button>
-            <Button onClick={() => navigate('/')}>
+            <Button onClick={() => navigate.push('/')}>
               <Home className="h-4 w-4 mr-2" />
               Về trang chủ
             </Button>

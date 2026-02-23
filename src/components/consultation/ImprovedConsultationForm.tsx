@@ -89,7 +89,7 @@ const ImprovedConsultationForm = ({ project, onClose }: ImprovedConsultationForm
           <Card className="bg-gradient-to-r from-primary/5 to-primary/10 border-primary/20">
             <CardContent className="p-4">
               <div className="flex items-start gap-4">
-                <img 
+                <img loading="lazy" decoding="async" 
                   src={project.image} 
                   alt={project.name}
                   className="w-16 h-16 rounded-lg object-cover shrink-0"

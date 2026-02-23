@@ -123,7 +123,7 @@ export const PricingInsights = ({ projectId, currentPrice = 0 }: PricingInsights
                         tick={{ fill: 'hsl(var(--muted-foreground))' }}
                       />
                       <Tooltip
-                        formatter={(value: number) => formatCurrency(value)}
+                        formatter={(value: any) => formatCurrency(value || 0)}
                         contentStyle={{ 
                           backgroundColor: 'hsl(var(--card))',
                           borderColor: 'hsl(var(--border))',

@@ -243,7 +243,7 @@ export const DeveloperAnalytics = ({ developer, projects }: DeveloperAnalyticsPr
                   <YAxis className="text-xs" />
                   <ChartTooltip 
                     content={<ChartTooltipContent />}
-                    formatter={(value: number) => [`${value.toFixed(1)}%`, "ROI"]}
+                    formatter={(value: any) => [`${(value || 0).toFixed(1)}%`, "ROI"]}
                   />
                   <Line 
                     type="monotone" 
@@ -277,7 +277,7 @@ export const DeveloperAnalytics = ({ developer, projects }: DeveloperAnalyticsPr
                     outerRadius={80}
                     fill="#8884d8"
                     dataKey="value"
-                    label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                    label={({ name, percent }) => `${name} ${((percent || 0) * 100).toFixed(0)}%`}
                   >
                     {statusData.map((entry, index) => (
                       <Cell key={`cell-${index}`} fill={entry.color} />
@@ -319,8 +319,8 @@ export const DeveloperAnalytics = ({ developer, projects }: DeveloperAnalyticsPr
                   />
                   <ChartTooltip 
                     content={<ChartTooltipContent />}
-                    formatter={(value: number, name: string) => [
-                      `${value.toFixed(1)}M VNĐ/m²`, 
+                    formatter={(value: any, name: any) => [
+                      `${(value || 0).toFixed(1)}M VNĐ/m²`, 
                       name === "launch" ? "Giá mở bán" : "Giá hiện tại"
                     ]}
                   />

@@ -1,5 +1,4 @@
 "use client";
-
 import { Badge } from "@/components/ui/badge";
 import { Crown, Star, Sparkles } from "lucide-react";
 import { SubscriptionType } from "@/hooks/usePermissions";

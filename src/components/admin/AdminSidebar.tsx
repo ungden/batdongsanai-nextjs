@@ -1,6 +1,6 @@
 "use client";
-
-import { NavLink, useLocation } from "react-router-dom";
+import { NavLink } from '@/components/NavLink';
+import { usePathname } from 'next/navigation';
 import {
   LayoutDashboard,
   FileText,
@@ -68,10 +68,10 @@ const aiTools: MenuItem[] = [
 
 export function AdminSidebar() {
   const { state } = useSidebar();
-  const location = useLocation();
+  const pathname = usePathname();
   const collapsed = state === "collapsed";
 
-  const isActive = (path: string) => location.pathname.startsWith(path);
+  const isActive = (path: string) => pathname.startsWith(path);
 
   const getNavClassName = (path: string) => {
     return isActive(path)
@@ -110,7 +110,7 @@ export function AdminSidebar() {
                 <SidebarMenuItem>
                   <SidebarMenuButton asChild tooltip="Về trang chủ">
                     <NavLink 
-                      to="/" 
+                      href="/" 
                       className={({ isActive }) => cn(
                         "flex w-full items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors",
                         "text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
@@ -134,7 +134,7 @@ export function AdminSidebar() {
                   <SidebarMenuItem key={item.title}>
                     <SidebarMenuButton asChild tooltip={item.title}>
                       <NavLink 
-                        to={item.url} 
+                        href={item.url} 
                         className={getNavClassName(item.url) + " flex w-full items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors relative group"}
                       >
                         <item.icon className="h-5 w-5 flex-shrink-0" />
@@ -171,7 +171,7 @@ export function AdminSidebar() {
                   <SidebarMenuItem key={item.title}>
                     <SidebarMenuButton asChild tooltip={item.title}>
                       <NavLink 
-                        to={item.url} 
+                        href={item.url} 
                         className={getNavClassName(item.url) + " flex w-full items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors relative"}
                       >
                         <item.icon className="h-5 w-5 flex-shrink-0" />

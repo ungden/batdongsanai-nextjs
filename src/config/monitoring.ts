@@ -34,7 +34,7 @@ export const MONITORING_CONFIG: MonitoringConfig = {
 
   // Sentry configuration (add DSN from environment)
   sentry: {
-    dsn: import.meta.env.VITE_SENTRY_DSN || '',
+    dsn: process.env.NEXT_PUBLIC_SENTRY_DSN || '',
     environment: getEnvironment(),
     tracesSampleRate: getEnvironment() === 'production' ? 0.1 : 1.0,
     replaysSessionSampleRate: 0.1,
@@ -43,12 +43,12 @@ export const MONITORING_CONFIG: MonitoringConfig = {
 
   // LogRocket configuration (add app ID from environment)
   logRocket: {
-    appId: import.meta.env.VITE_LOGROCKET_APP_ID || '',
+    appId: process.env.NEXT_PUBLIC_LOGROCKET_APP_ID || '',
   },
 
   // Google Analytics
   analytics: {
-    googleAnalyticsId: import.meta.env.VITE_GA_TRACKING_ID || '',
+    googleAnalyticsId: process.env.NEXT_PUBLIC_GA_TRACKING_ID || '',
   },
 };
 

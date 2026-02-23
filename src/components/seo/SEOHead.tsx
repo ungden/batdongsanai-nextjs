@@ -1,5 +1,7 @@
+import { usePathname } from 'next/navigation';
+
 import { Helmet } from 'react-helmet-async';
-import { useLocation } from 'react-router-dom';
+
 
 interface SEOProps {
   title?: string;
@@ -20,8 +22,8 @@ const SEOHead = ({
   schema,
   noIndex = false
 }: SEOProps) => {
-  const location = useLocation();
-  const currentUrl = `${window.location.origin}${location.pathname}`;
+  const pathname = usePathname();
+  const currentUrl = `${typeof window !== 'undefined' ? window.location.origin : ''}${pathname}`;
 
   return (
     <Helmet>

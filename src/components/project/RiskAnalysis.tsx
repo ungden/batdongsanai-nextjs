@@ -1,5 +1,4 @@
 "use client";
-
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
@@ -146,7 +145,7 @@ const RiskAnalysis = ({ project }: RiskAnalysisProps) => {
                 />
                 <Tooltip 
                   contentStyle={{ borderRadius: '12px', border: '1px solid var(--border)', backgroundColor: 'var(--card)' }}
-                  formatter={(value: number) => [`${value.toFixed(0)}%`, 'Điểm an toàn']}
+                  formatter={(value: any) => [`${(value || 0).toFixed(0)}%`, 'Điểm an toàn']}
                 />
                 <Radar
                   name="Điểm an toàn"

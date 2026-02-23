@@ -1,5 +1,4 @@
 "use client";
-
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { TrendingUp, TrendingDown, Building2, DollarSign, BarChart3, Users } from "lucide-react";

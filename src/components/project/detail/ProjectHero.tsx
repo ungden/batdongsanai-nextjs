@@ -1,10 +1,12 @@
+import { useRouter } from 'next/navigation';
+
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { 
   ArrowLeft, MapPin, Building2, Shield, CheckCircle, 
   Calendar, Briefcase, DollarSign, Home, Star, Share2
 } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+
 import { SocialShare } from "@/components/SocialShare";
 import { PriceAlertDialog } from "@/components/PriceAlertDialog";
 import { AppointmentBookingDialog } from "@/components/AppointmentBookingDialog";
@@ -18,7 +20,7 @@ interface ProjectHeroProps {
 }
 
 export const ProjectHero = ({ project }: ProjectHeroProps) => {
-  const navigate = useNavigate();
+  const navigate = useRouter();
 
   return (
     <div className="bg-card border-b border-border shadow-sm transition-colors duration-300">
@@ -28,7 +30,7 @@ export const ProjectHero = ({ project }: ProjectHeroProps) => {
           <Button
             variant="ghost"
             size="sm"
-            onClick={() => navigate('/projects')}
+            onClick={() => navigate.push('/projects')}
             className="text-muted-foreground hover:text-foreground -ml-2 hover:bg-accent"
           >
             <ArrowLeft className="w-4 h-4 mr-2" />
@@ -71,7 +73,7 @@ export const ProjectHero = ({ project }: ProjectHeroProps) => {
                 <Building2 className="w-4 h-4 opacity-70" />
                 <span 
                   className="font-medium text-primary cursor-pointer hover:underline"
-                  onClick={() => navigate(`/developers/${project.developer.toLowerCase().replace(/\s+/g, '-')}`)}
+                  onClick={() => navigate.push(`/developers/${project.developer.toLowerCase().replace(/\s+/g, '-')}`)}
                 >
                   {project.developer}
                 </span>

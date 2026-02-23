@@ -1,10 +1,12 @@
+"use client";
 import { useState, useCallback, useMemo } from 'react';
+import { useRouter } from 'next/navigation';
 import { GoogleMap, useJsApiLoader, Marker, InfoWindow } from '@react-google-maps/api';
 import { Project } from '@/types/project';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { useNavigate } from 'react-router-dom';
+
 import { formatCurrency } from '@/utils/formatCurrency';
 import { MapPin, ArrowRight, Loader2 } from 'lucide-react';
 
@@ -47,7 +49,7 @@ const getProjectCoordinates = (project: Project) => {
 };
 
 export default function GoogleMapViewer({ projects, className }: GoogleMapViewerProps) {
-  const navigate = useNavigate();
+  const navigate = useRouter();
   const { isLoaded } = useJsApiLoader({
     id: 'google-map-script',
     googleMapsApiKey: GOOGLE_MAPS_API_KEY
@@ -121,7 +123,7 @@ export default function GoogleMapViewer({ projects, className }: GoogleMapViewer
           >
             <Card className="w-[280px] border-0 shadow-none p-0">
               <div className="relative h-32 w-full rounded-t-lg overflow-hidden">
-                <img 
+                <img loading="lazy" decoding="async" 
                   src={selectedProject.image} 
                   alt={selectedProject.name}
                   className="w-full h-full object-cover"
@@ -140,7 +142,7 @@ export default function GoogleMapViewer({ projects, className }: GoogleMapViewer
                   <span className="text-xs font-bold text-primary">
                     {formatCurrency(selectedProject.pricePerSqm)}/m²
                   </span>
-                  <Button size="sm" className="h-7 text-xs" onClick={() => navigate(`/projects/${selectedProject.id}`)}>
+                  <Button size="sm" className="h-7 text-xs" onClick={() => navigate.push(`/projects/${selectedProject.id}`)}>
                     Chi tiết <ArrowRight className="w-3 h-3 ml-1" />
                   </Button>
                 </div>

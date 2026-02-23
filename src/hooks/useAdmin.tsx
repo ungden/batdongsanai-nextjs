@@ -138,7 +138,7 @@ export const useAdmin = () => {
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      setConsultationRequests(data || []);
+      setConsultationRequests((data as any) || []);
     } catch (error) {
       console.error('Error fetching consultation requests:', error);
     }

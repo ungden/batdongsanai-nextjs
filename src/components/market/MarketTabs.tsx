@@ -1,5 +1,4 @@
 "use client";
-
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Building2, TrendingUp, Clock, RefreshCw, BarChart3 } from "lucide-react";

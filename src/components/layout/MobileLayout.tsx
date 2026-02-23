@@ -1,10 +1,12 @@
+
 import { ReactNode } from "react";
+import { useRouter } from 'next/navigation';
 import BottomNavigation from "./BottomNavigation";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { NotificationBell } from "@/components/NotificationBell";
 import { ArrowLeft, Menu } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useNavigate } from "react-router-dom";
+
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 
 interface MobileLayoutProps {
@@ -26,7 +28,7 @@ const MobileLayout = ({
   headerActions,
   fullScreen = false,
 }: MobileLayoutProps) => {
-  const navigate = useNavigate();
+  const navigate = useRouter();
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
@@ -40,7 +42,7 @@ const MobileLayout = ({
                   variant="ghost"
                   size="icon"
                   className="h-9 w-9 -ml-2"
-                  onClick={() => navigate(-1)}
+                  onClick={() => navigate.back()}
                 >
                   <ArrowLeft className="h-5 w-5" />
                 </Button>

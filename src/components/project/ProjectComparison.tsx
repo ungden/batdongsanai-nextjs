@@ -1,11 +1,11 @@
 "use client";
-
+import { useRouter } from 'next/navigation';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Project } from "@/types/project";
 import { projectsData } from "@/data/projectsData";
-import { useNavigate } from "react-router-dom";
+
 import { 
   GitCompare, 
   MapPin, 
@@ -38,7 +38,7 @@ interface ProjectComparisonProps {
 }
 
 const ProjectComparison = ({ currentProject }: ProjectComparisonProps) => {
-  const navigate = useNavigate();
+  const navigate = useRouter();
 
   // Find similar projects (same city, similar price range)
   const similarProjects = projectsData
@@ -324,7 +324,7 @@ const ProjectComparison = ({ currentProject }: ProjectComparisonProps) => {
                   <Card 
                     key={project.id}
                     className="rounded-xl shadow-sm border border-border hover:shadow-md transition-all cursor-pointer overflow-hidden group"
-                    onClick={() => navigate(`/projects/${project.id}`)}
+                    onClick={() => navigate.push(`/projects/${project.id}`)}
                   >
                     <div 
                       className="h-28 bg-cover bg-center relative"

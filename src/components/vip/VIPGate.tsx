@@ -1,11 +1,11 @@
 "use client";
-
 import { ReactNode } from 'react';
+import { useRouter } from 'next/navigation';
 import { usePermissions } from '@/hooks/usePermissions';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Crown, Lock, Sparkles, ArrowRight } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+
 
 interface VIPGateProps {
   children: ReactNode;
@@ -21,7 +21,7 @@ const VIPGate = ({
   showPreview = true 
 }: VIPGateProps) => {
   const { isVIP, isPro } = usePermissions();
-  const navigate = useNavigate();
+  const navigate = useRouter();
 
   // Check access
   const hasAccess = requiredLevel === 'premium' ? isVIP : isPro;
@@ -69,7 +69,7 @@ const VIPGate = ({
 
           <div className="space-y-3">
             <Button 
-              onClick={() => navigate('/profile?tab=subscription')}
+              onClick={() => navigate.push('/profile?tab=subscription')}
               className="w-full h-12 text-base font-bold rounded-xl shadow-lg hover:shadow-xl transition-all bg-gradient-to-r from-amber-500 to-purple-600 text-white"
             >
               <Sparkles className="w-5 h-5 mr-2" />
@@ -79,7 +79,7 @@ const VIPGate = ({
             
             <Button 
               variant="outline"
-              onClick={() => navigate('/profile?tab=subscription')}
+              onClick={() => navigate.push('/profile?tab=subscription')}
               className="w-full h-12 rounded-xl border-2 hover:bg-slate-50"
             >
               Xem các gói VIP

@@ -1,5 +1,4 @@
 "use client";
-
 import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
@@ -306,7 +305,7 @@ const ROICalculator = ({
                   <XAxis dataKey="year" stroke="#64748b" style={{ fontSize: '12px' }} />
                   <YAxis stroke="#64748b" style={{ fontSize: '12px' }} />
                   <Tooltip 
-                    formatter={(value: number) => `${value.toFixed(1)}M`}
+                    formatter={(value: any) => `${(value || 0).toFixed(1)}M`}
                     contentStyle={{ borderRadius: '12px', border: '1px solid var(--border)', backgroundColor: 'var(--card)' }}
                   />
                   <Legend />
@@ -329,7 +328,7 @@ const ROICalculator = ({
                 <XAxis type="number" stroke="#64748b" style={{ fontSize: '12px' }} />
                 <YAxis dataKey="name" type="category" stroke="#64748b" style={{ fontSize: '12px' }} width={80} />
                 <Tooltip 
-                  formatter={(value: number) => `${value.toFixed(2)} tỷ`}
+                  formatter={(value: any) => `${(value || 0).toFixed(2)} tỷ`}
                   contentStyle={{ borderRadius: '12px', border: '1px solid var(--border)', backgroundColor: 'var(--card)' }}
                 />
                 <Bar dataKey="value" radius={[0, 4, 4, 0]}>

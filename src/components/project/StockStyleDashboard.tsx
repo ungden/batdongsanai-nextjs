@@ -220,7 +220,7 @@ export const StockStyleDashboard = ({
                   borderRadius: '8px',
                   boxShadow: '0 4px 12px rgba(0,0,0,0.1)' 
                 }}
-                formatter={(value: number) => [formatCurrency(value * 1000000), 'Giá']}
+                formatter={(value: any) => [formatCurrency((value || 0) * 1000000), 'Giá']}
                 labelFormatter={(label) => `Tháng: ${label}`}
               />
               <ReferenceLine

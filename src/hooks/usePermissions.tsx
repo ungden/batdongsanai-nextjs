@@ -1,5 +1,4 @@
 "use client";
-
 import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
@@ -120,7 +119,9 @@ export const usePermissions = () => {
           ...subscriptionRes.data,
           subscription_type: subscriptionRes.data.subscription_type as SubscriptionType,
           auto_renew: subscriptionRes.data.auto_renew ?? false,
-          is_active: subscriptionRes.data.is_active ?? true
+          is_active: subscriptionRes.data.is_active ?? true,
+          start_date: subscriptionRes.data.start_date || new Date().toISOString(),
+          end_date: subscriptionRes.data.end_date || new Date().toISOString()
         };
       }
 

@@ -1,5 +1,4 @@
 "use client";
-
 import FormattedAnalysisRenderer from "@/components/analysis/FormattedAnalysisRenderer";
 import { Card } from "@/components/ui/card";
 import { FormattedAnalysis } from "@/types/analysis";

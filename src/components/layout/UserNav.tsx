@@ -1,7 +1,7 @@
 "use client";
-
+import { useRouter } from 'next/navigation';
 import { useAuth } from "@/hooks/useAuth";
-import { useNavigate } from "react-router-dom";
+
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -19,11 +19,11 @@ import { useAdmin } from "@/hooks/useAdmin";
 const UserNav = () => {
   const { user, signOut, loading } = useAuth();
   const { isAdmin } = useAdmin();
-  const navigate = useNavigate();
+  const navigate = useRouter();
 
   const handleSignOut = async () => {
     await signOut();
-    navigate("/");
+    navigate.push("/");
   };
 
   if (loading) {
@@ -32,7 +32,7 @@ const UserNav = () => {
 
   if (!user) {
     return (
-      <Button onClick={() => navigate("/auth")} variant="outline" className="font-semibold">
+      <Button onClick={() => navigate.push("/auth")} variant="outline" className="font-semibold">
         <LogIn className="mr-2 h-4 w-4" />
         Đăng nhập
       </Button>
@@ -63,12 +63,12 @@ const UserNav = () => {
           </div>
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
-        <DropdownMenuItem onClick={() => navigate("/profile")}>
+        <DropdownMenuItem onClick={() => navigate.push("/profile")}>
           <User className="mr-2 h-4 w-4" />
           <span>Hồ sơ</span>
         </DropdownMenuItem>
         {isAdmin && (
-          <DropdownMenuItem onClick={() => navigate("/admin")}>
+          <DropdownMenuItem onClick={() => navigate.push("/admin")}>
             <LayoutDashboard className="mr-2 h-4 w-4" />
             <span>Trang quản trị</span>
           </DropdownMenuItem>

@@ -1,5 +1,4 @@
 "use client";
-
 import { Badge } from "@/components/ui/badge";
 import { X } from "lucide-react";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";

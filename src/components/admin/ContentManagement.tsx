@@ -326,7 +326,7 @@ const ContentManagement = ({ className }: ContentManagementProps) => {
                   mediaFiles.map((file) => (
                     <div key={file.id} className="aspect-square bg-muted rounded-lg relative group">
                       {file.mime_type.startsWith('image/') ? (
-                        <img 
+                        <img loading="lazy" decoding="async" 
                           src={file.file_path} 
                           alt={file.alt_text || file.original_name}
                           className="w-full h-full object-cover rounded-lg"

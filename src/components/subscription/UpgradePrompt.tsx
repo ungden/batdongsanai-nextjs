@@ -1,8 +1,10 @@
+import { useRouter } from 'next/navigation';
+
 import { Lock, Sparkles, ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { SubscriptionTier, getPlanById, formatPrice } from '@/config/subscription';
-import { useNavigate } from 'react-router-dom';
+
 import { cn } from '@/lib/utils';
 
 interface UpgradePromptProps {
@@ -18,11 +20,11 @@ const UpgradePrompt = ({
   variant = 'card',
   className,
 }: UpgradePromptProps) => {
-  const navigate = useNavigate();
+  const navigate = useRouter();
   const plan = getPlanById(requiredTier);
 
   const handleUpgrade = () => {
-    navigate('/profile?tab=subscription');
+    navigate.push('/profile?tab=subscription');
   };
 
   if (variant === 'inline') {

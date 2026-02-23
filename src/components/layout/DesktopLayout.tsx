@@ -1,3 +1,5 @@
+import { usePathname } from 'next/navigation';
+
 import { ReactNode } from "react";
 import { AppSidebar } from '@/components/layout/AppSidebar';
 import UserNav from '@/components/layout/UserNav';
@@ -6,7 +8,7 @@ import { NotificationBell } from '@/components/NotificationBell';
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { Separator } from "@/components/ui/separator";
 import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator } from "@/components/ui/breadcrumb";
-import { useLocation } from "react-router-dom";
+
 
 interface DesktopLayoutProps {
   children: ReactNode;
@@ -16,10 +18,10 @@ interface DesktopLayoutProps {
 }
 
 const DesktopLayout: React.FC<DesktopLayoutProps> = ({ children, title, subtitle, showHeader = true }) => {
-  const location = useLocation();
+  const pathname = usePathname();
   
   // Simple breadcrumb logic
-  const pathSegments = location.pathname.split('/').filter(Boolean);
+  const pathSegments = pathname.split('/').filter(Boolean);
   
   return (
     <SidebarProvider>

@@ -1,6 +1,7 @@
-
+"use client";
+import { usePathname } from 'next/navigation';
 import { useEffect } from 'react';
-import { useLocation } from 'react-router-dom';
+
 
 interface AnalyticsEvent {
   action: string;
@@ -10,7 +11,7 @@ interface AnalyticsEvent {
 }
 
 export const useAnalytics = (trackingId?: string) => {
-  const location = useLocation();
+  const pathname = usePathname();
 
   useEffect(() => {
     if (trackingId && window.gtag) {
@@ -18,10 +19,10 @@ export const useAnalytics = (trackingId?: string) => {
       window.gtag('config', trackingId, {
         page_title: document.title,
         page_location: window.location.href,
-        page_path: location.pathname,
+        page_path: pathname,
       });
     }
-  }, [location, trackingId]);
+  }, [pathname, trackingId]);
 
   const trackEvent = ({ action, category, label, value }: AnalyticsEvent) => {
     if (window.gtag) {

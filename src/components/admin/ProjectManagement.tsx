@@ -283,7 +283,7 @@ const ProjectManagement = ({ projects, onRefresh }: ProjectManagementProps) => {
                     <div className="w-24 h-24 border-2 border-dashed border-muted-foreground/25 rounded-lg flex items-center justify-center overflow-hidden bg-muted/10 relative group">
                       {newProject.image ? (
                         <>
-                          <img src={newProject.image} alt="Preview" className="w-full h-full object-cover" />
+                          <img loading="lazy" decoding="async" src={newProject.image} alt="Preview" className="w-full h-full object-cover" />
                           <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                             <Button 
                               variant="destructive" 
@@ -449,7 +449,7 @@ const ProjectManagement = ({ projects, onRefresh }: ProjectManagementProps) => {
                   <TableCell>
                     <div className="w-10 h-10 rounded-md overflow-hidden bg-muted flex items-center justify-center">
                       {project.image ? (
-                        <img src={project.image} alt={project.name} className="w-full h-full object-cover" />
+                        <img loading="lazy" decoding="async" src={project.image} alt={project.name} className="w-full h-full object-cover" />
                       ) : (
                         <Building className="w-5 h-5 text-muted-foreground/50" />
                       )}
@@ -510,7 +510,7 @@ const ProjectManagement = ({ projects, onRefresh }: ProjectManagementProps) => {
                     <div className="w-24 h-24 border-2 border-dashed border-muted-foreground/25 rounded-lg flex items-center justify-center overflow-hidden bg-muted/10 relative group">
                       {editingProject.image ? (
                         <>
-                          <img src={editingProject.image} alt="Preview" className="w-full h-full object-cover" />
+                          <img loading="lazy" decoding="async" src={editingProject.image} alt="Preview" className="w-full h-full object-cover" />
                           <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                             <Button 
                               variant="destructive" 

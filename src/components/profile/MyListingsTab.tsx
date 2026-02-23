@@ -1,4 +1,6 @@
+"use client";
 import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -7,7 +9,7 @@ import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
 import { toast } from 'sonner';
 import { Edit, Trash2, Eye, MapPin, DollarSign, Plus } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+
 import { formatCurrency } from '@/utils/formatCurrency';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 
@@ -27,7 +29,7 @@ interface MyListing {
 
 export default function MyListingsTab() {
   const { user } = useAuth();
-  const navigate = useNavigate();
+  const navigate = useRouter();
   const [listings, setListings] = useState<MyListing[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -103,7 +105,7 @@ export default function MyListingsTab() {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <h2 className="text-xl font-bold">Quản lý tin đăng ({listings.length})</h2>
-        <Button onClick={() => navigate('/marketplace/create')}>
+        <Button onClick={() => navigate.push('/marketplace/create')}>
           <Plus className="w-4 h-4 mr-2" /> Đăng tin mới
         </Button>
       </div>
@@ -112,7 +114,7 @@ export default function MyListingsTab() {
         <Card className="text-center py-12">
           <CardContent>
             <p className="text-muted-foreground mb-4">Bạn chưa có tin đăng nào.</p>
-            <Button variant="outline" onClick={() => navigate('/marketplace/create')}>Đăng tin ngay</Button>
+            <Button variant="outline" onClick={() => navigate.push('/marketplace/create')}>Đăng tin ngay</Button>
           </CardContent>
         </Card>
       ) : (
@@ -121,7 +123,7 @@ export default function MyListingsTab() {
             <Card key={item.id} className="overflow-hidden">
               <div className="flex flex-col md:flex-row">
                 <div className="w-full md:w-48 h-32 md:h-auto bg-muted relative">
-                  <img 
+                  <img loading="lazy" decoding="async" 
                     src={item.images?.[0]?.image_url || '/placeholder.svg'} 
                     alt={item.title}
                     className="w-full h-full object-cover"
@@ -166,7 +168,7 @@ export default function MyListingsTab() {
                     </div>
 
                     <div className="flex gap-2">
-                      <Button variant="outline" size="sm" onClick={() => navigate(`/marketplace/listing/${item.id}`)}>
+                      <Button variant="outline" size="sm" onClick={() => navigate.push(`/marketplace/listing/${item.id}`)}>
                         Xem
                       </Button>
                       <Button variant="outline" size="sm" disabled>

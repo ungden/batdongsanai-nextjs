@@ -1,4 +1,6 @@
+"use client";
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { Bell, Check, CheckCheck, Trash2, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -12,7 +14,7 @@ import { useNotifications } from '@/hooks/useNotifications';
 import { NoNotifications } from '@/components/ui/empty-state';
 import { formatDistanceToNow } from 'date-fns';
 import { vi } from 'date-fns/locale';
-import { useNavigate } from 'react-router-dom';
+
 import { cn } from '@/lib/utils';
 
 export const NotificationBell = () => {
@@ -26,12 +28,12 @@ export const NotificationBell = () => {
     clearAll
   } = useNotifications();
   const [open, setOpen] = useState(false);
-  const navigate = useNavigate();
+  const navigate = useRouter();
 
   const handleNotificationClick = (notification: any) => {
     markAsRead(notification.id);
     if (notification.link) {
-      navigate(notification.link);
+      navigate.push(notification.link);
       setOpen(false);
     }
   };

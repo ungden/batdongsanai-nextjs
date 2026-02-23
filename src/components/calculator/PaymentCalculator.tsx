@@ -397,7 +397,7 @@ const PaymentCalculator = ({ projectPrice }: PaymentCalculatorProps) => {
           
           {/* Share Button outside the capture ref */}
           <div className="flex justify-end">
-             <ShareResultButton targetRef={resultsRef} />
+             <ShareResultButton targetRef={resultsRef as any} />
           </div>
         </div>
       )}

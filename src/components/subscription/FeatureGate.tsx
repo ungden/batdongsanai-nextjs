@@ -16,7 +16,7 @@ const FeatureGate = ({
   fallback,
   showUpgradePrompt = true,
 }: FeatureGateProps) => {
-  const { user, profile } = useAuth();
+  const { user, profile } = useAuth() as any;
 
   // Get user's current tier from profile or default to free
   const userTier: SubscriptionTier = (profile?.subscription_tier as SubscriptionTier) || 'free';

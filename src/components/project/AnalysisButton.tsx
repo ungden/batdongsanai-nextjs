@@ -1,8 +1,8 @@
 "use client";
-
+import { useRouter } from 'next/navigation';
 import { Button } from "@/components/ui/button";
 import { FileText, Crown } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+
 import { usePermissions } from "@/hooks/usePermissions";
 import VIPBadge from "@/components/vip/VIPBadge";
 
@@ -12,12 +12,12 @@ interface AnalysisButtonProps {
 }
 
 const AnalysisButton = ({ projectId, className }: AnalysisButtonProps) => {
-  const navigate = useNavigate();
+  const navigate = useRouter();
   const { isVIP } = usePermissions();
 
   return (
     <Button
-      onClick={() => navigate(`/projects/${projectId}/analysis`)}
+      onClick={() => navigate.push(`/projects/${projectId}/analysis`)}
       className={`rounded-xl shadow-lg hover:shadow-xl transition-all ${className}`}
       variant={isVIP ? "default" : "outline"}
     >

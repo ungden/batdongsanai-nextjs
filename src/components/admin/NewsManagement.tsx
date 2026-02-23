@@ -491,7 +491,7 @@ const NewsManagement = () => {
                     <div className="flex items-center gap-2 mb-2">
                       <h3 className="text-lg font-semibold">{item.title}</h3>
                       {getStatusBadge(item.status)}
-                      {item.priority > 0 && (
+                      {item.priority !== null && item.priority > 0 && (
                         <Badge variant="outline" className="text-orange-600">
                           Ưu tiên: {item.priority}
                         </Badge>
@@ -516,7 +516,7 @@ const NewsManagement = () => {
                   </div>
                   <div className="flex items-center gap-2 ml-4">
                     {item.featured_image && (
-                      <img 
+                      <img loading="lazy" decoding="async" 
                         src={item.featured_image} 
                         alt={item.title}
                         className="w-16 h-16 object-cover rounded"
@@ -573,7 +573,7 @@ const NewsManagement = () => {
         <Card>
           <CardContent className="p-4 text-center">
             <div className="text-2xl font-bold text-blue-600">
-              {newsItems.filter(item => item.priority > 0).length}
+               {newsItems.filter(item => item.priority !== null && item.priority > 0).length}
             </div>
             <p className="text-sm text-muted-foreground">Tin nổi bật</p>
           </CardContent>

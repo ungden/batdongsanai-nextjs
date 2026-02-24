@@ -1,4 +1,6 @@
-import { useState, useEffect } from 'react';
+"use client";
+
+import { useState, useEffect, useMemo } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
@@ -50,6 +52,7 @@ export const useAdminLeads = (filters: LeadFilters = {}) => {
   const [leads, setLeads] = useState<LeadInquiry[]>([]);
   const [loading, setLoading] = useState(true);
   const [totalCount, setTotalCount] = useState(0);
+  const filtersKey = useMemo(() => JSON.stringify(filters), [filters]);
 
   const fetchLeads = async () => {
     try {
@@ -104,7 +107,7 @@ export const useAdminLeads = (filters: LeadFilters = {}) => {
 
   useEffect(() => {
     fetchLeads();
-  }, [JSON.stringify(filters)]);
+  }, [filtersKey]);
 
   const assignLead = async (inquiryId: string, agentId: string) => {
     try {

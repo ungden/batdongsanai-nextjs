@@ -1,3 +1,5 @@
+"use client";
+
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
@@ -156,7 +158,7 @@ export const useAdmin = () => {
         old_data: oldData || null,
         new_data: newData || null,
         ip_address: null, // Could be implemented with additional detection
-        user_agent: navigator.userAgent
+        user_agent: typeof navigator !== 'undefined' ? navigator.userAgent : null
       });
     } catch (error) {
       console.error('Error logging admin action:', error);

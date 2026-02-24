@@ -1,3 +1,5 @@
+"use client";
+
 import { useState } from 'react';
 import { Share2, Facebook, Twitter, MessageCircle, Link, Check } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -18,16 +20,18 @@ interface SocialShareProps {
 }
 
 export const SocialShare = ({
-  url = window.location.href,
-  title = document.title,
+  url,
+  title,
   description = '',
   variant = 'outline',
   size = 'default'
 }: SocialShareProps) => {
+  const resolvedUrl: string = url ?? (typeof window !== 'undefined' ? window.location.href : '');
+  const resolvedTitle: string = title ?? (typeof document !== 'undefined' ? document.title : '');
   const [copied, setCopied] = useState(false);
 
-  const encodedUrl = encodeURIComponent(url);
-  const encodedTitle = encodeURIComponent(title);
+  const encodedUrl = encodeURIComponent(resolvedUrl);
+  const encodedTitle = encodeURIComponent(resolvedTitle);
   const encodedDescription = encodeURIComponent(description);
 
   const shareLinks = {
@@ -46,7 +50,7 @@ export const SocialShare = ({
 
   const handleCopyLink = async () => {
     try {
-      await navigator.clipboard.writeText(url);
+      await navigator.clipboard.writeText(resolvedUrl);
       setCopied(true);
       toast.success('Đã sao chép link');
       setTimeout(() => setCopied(false), 2000);
@@ -59,9 +63,9 @@ export const SocialShare = ({
     if (navigator.share) {
       try {
         await navigator.share({
-          title,
+          title: resolvedTitle,
           text: description,
-          url
+          url: resolvedUrl
         });
       } catch (error) {
         // User cancelled share
@@ -112,20 +116,23 @@ export const SocialShare = ({
 
 // Simple share button for mobile
 export const ShareButton = ({ url, title, description }: SocialShareProps) => {
+  const currentUrl = url || (typeof window !== 'undefined' ? window.location.href : '');
+  const currentTitle = title || (typeof document !== 'undefined' ? document.title : '');
+
   const handleShare = async () => {
-    if (navigator.share) {
+    if (typeof navigator !== 'undefined' && navigator.share) {
       try {
         await navigator.share({
-          title: title || document.title,
+          title: currentTitle,
           text: description,
-          url: url || window.location.href
+          url: currentUrl
         });
       } catch (error) {
         // User cancelled
       }
     } else {
       try {
-        await navigator.clipboard.writeText(url || window.location.href);
+        await navigator.clipboard.writeText(currentUrl);
         toast.success('Đã sao chép link');
       } catch (error) {
         toast.error('Không thể chia sẻ');

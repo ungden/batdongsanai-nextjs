@@ -1,3 +1,5 @@
+"use client";
+
 import { useAdmin } from "@/hooks/useAdmin";
 import SystemSettings from "@/components/admin/SystemSettings";
 

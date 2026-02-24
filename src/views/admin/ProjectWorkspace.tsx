@@ -25,7 +25,7 @@ const STEPS = [
 ];
 
 export default function ProjectWorkspace() {
-  const { id } = useParams();
+  const { id } = useParams<{ id: string }>();
   const navigate = useRouter();
   const searchParams = useSearchParams();
   

@@ -1,3 +1,5 @@
+"use client";
+
 import { useCallback, useEffect } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { getErrorTracker, ErrorSeverity } from '@/config/monitoring';

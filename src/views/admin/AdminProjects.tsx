@@ -1,3 +1,5 @@
+"use client";
+
 import { useAdmin } from "@/hooks/useAdmin";
 import ProjectManagement from "@/components/admin/ProjectManagement";
 

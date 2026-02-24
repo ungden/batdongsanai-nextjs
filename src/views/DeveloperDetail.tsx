@@ -24,7 +24,7 @@ import { calculateROI, getROICategory } from "@/utils/roiCalculations";
 import { Building2, MapPin, Phone, Mail, Globe, Calendar, TrendingUp, Award, BarChart3, ArrowLeft, Home, Users, Briefcase } from "lucide-react";
 
 const DeveloperDetail = () => {
-  const { developerId } = useParams();
+  const { developerId } = useParams<{ developerId: string }>();
   const navigate = useRouter();
   const isMobile = useIsMobile();
   const { trackProjectView } = useAnalytics();

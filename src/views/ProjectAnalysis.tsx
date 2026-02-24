@@ -34,7 +34,7 @@ type ReportRow = {
 };
 
 const ProjectAnalysis = () => {
-  const { id } = useParams();
+  const { id } = useParams<{ id: string }>();
   const navigate = useRouter();
   const isMobile = useIsMobile();
   const { isAdmin, isVIP } = usePermissions();

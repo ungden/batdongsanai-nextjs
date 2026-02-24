@@ -1,4 +1,6 @@
-import { useState } from 'react';
+"use client";
+
+import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
@@ -105,7 +107,7 @@ export const useProjectInquiries = () => {
       const { data: { user } } = await supabase.auth.getUser();
 
       // Get UTM parameters from URL if available
-      const urlParams = new URLSearchParams(window.location.search);
+      const urlParams = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : new URLSearchParams();
       const utmSource = urlParams.get('utm_source') || undefined;
       const utmMedium = urlParams.get('utm_medium') || undefined;
       const utmCampaign = urlParams.get('utm_campaign') || undefined;
@@ -130,7 +132,7 @@ export const useProjectInquiries = () => {
           how_did_you_hear: formData.how_did_you_hear || null,
           preferred_contact_time: formData.preferred_contact_time || null,
           source: 'web',
-          referrer_url: document.referrer || null,
+          referrer_url: (typeof document !== 'undefined' ? document.referrer : null) || null,
           utm_source: utmSource,
           utm_medium: utmMedium,
           utm_campaign: utmCampaign,
@@ -232,11 +234,11 @@ export const useProjectAgents = (projectId: string) => {
   };
 
   // Fetch on mount
-  useState(() => {
+  useEffect(() => {
     if (projectId) {
       fetchAgents();
     }
-  });
+  }, [projectId]);
 
   return {
     agents,

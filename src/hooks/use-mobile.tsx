@@ -1,3 +1,5 @@
+"use client";
+
 import * as React from "react"
 
 // Breakpoints matching Tailwind defaults

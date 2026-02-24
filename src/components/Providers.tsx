@@ -1,6 +1,6 @@
 "use client";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { ThemeProvider } from "@/contexts/ThemeContext";
 import { AuthProvider } from "@/hooks/useAuth";
@@ -9,8 +9,16 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import GoogleAnalytics from "@/components/analytics/GoogleAnalytics";
 import { ANALYTICS_CONFIG, isAnalyticsEnabled } from "@/config/analytics";
 import SEOProvider from "@/components/seo/SEOProvider";
+import { useCompareStore } from "@/stores/compareStore";
+import { useAdminStore } from "@/stores/adminStore";
 
 export default function Providers({ children }: { children: React.ReactNode }) {
+  // Hydrate Zustand persisted stores on mount (SSR-safe)
+  useEffect(() => {
+    useCompareStore.persist.rehydrate();
+    useAdminStore.persist.rehydrate();
+  }, []);
+
   const [queryClient] = useState(
     () =>
       new QueryClient({

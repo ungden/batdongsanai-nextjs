@@ -1,3 +1,4 @@
+"use client";
 
 import { useEffect } from 'react';
 import { useAuth } from '@/hooks/useAuth';
@@ -14,7 +15,7 @@ export const useProjectViews = () => {
           project_id: projectId,
           user_id: user?.id || null,
           ip_address: null, // We can't get IP on client side
-          user_agent: navigator.userAgent
+          user_agent: typeof navigator !== 'undefined' ? navigator.userAgent : null
         });
 
       if (error) {

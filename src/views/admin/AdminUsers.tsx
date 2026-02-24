@@ -1,3 +1,5 @@
+"use client";
+
 import { useAdmin } from "@/hooks/useAdmin";
 import UserManagement from "@/components/admin/UserManagement";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";

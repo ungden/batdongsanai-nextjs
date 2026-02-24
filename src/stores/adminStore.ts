@@ -64,6 +64,7 @@ export const useAdminStore = create<AdminState>()(
       })),
       {
         name: 'propertyhub-admin-storage',
+        skipHydration: true,
         partialize: (state) => ({
           research: {
             projectId: state.research.projectId,

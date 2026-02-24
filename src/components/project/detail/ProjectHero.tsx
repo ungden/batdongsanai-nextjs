@@ -1,3 +1,5 @@
+"use client";
+
 import { useRouter } from 'next/navigation';
 
 import { Button } from "@/components/ui/button";
@@ -38,7 +40,7 @@ export const ProjectHero = ({ project }: ProjectHeroProps) => {
           </Button>
           
           <div className="flex gap-2">
-            <SocialShare url={window.location.href} title={project.name} variant="ghost" size="sm" />
+            <SocialShare url={typeof window !== 'undefined' ? window.location.href : ''} title={project.name} variant="ghost" size="sm" />
             <FavoriteButton projectId={project.id} projectName={project.name} />
           </div>
         </div>

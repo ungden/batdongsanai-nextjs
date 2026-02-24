@@ -1,44 +1,27 @@
 "use client";
+
 import { useRouter } from 'next/navigation';
-
-const useRouteError = () => new Error("Lỗi ứng dụng");
-const isRouteErrorResponse = (e: any): e is { status: number } => false;
-
-import { AlertTriangle, FileQuestion, RefreshCw, Home } from 'lucide-react';
+import { AlertTriangle, RefreshCw, Home } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 
-export default function RouteErrorBoundary() {
-  const error = useRouteError();
-  const navigate = useRouter();
+interface RouteErrorBoundaryProps {
+  title?: string;
+  description?: string;
+}
 
-  let title = 'Đã xảy ra lỗi';
-  let description = 'Xin lỗi, đã có lỗi xảy ra khi tải trang này.';
-  let Icon = AlertTriangle;
-
-  if (isRouteErrorResponse(error)) {
-    if (error.status === 404) {
-      title = 'Không tìm thấy trang';
-      description = 'Trang bạn đang tìm kiếm không tồn tại hoặc đã được di chuyển.';
-      Icon = FileQuestion;
-    } else if (error.status === 401) {
-      title = 'Không có quyền truy cập';
-      description = 'Bạn cần đăng nhập để xem trang này.';
-    } else if (error.status === 403) {
-      title = 'Truy cập bị từ chối';
-      description = 'Bạn không có quyền truy cập trang này.';
-    } else if (error.status === 500) {
-      title = 'Lỗi máy chủ';
-      description = 'Đã xảy ra lỗi từ phía máy chủ. Vui lòng thử lại sau.';
-    }
-  }
+export default function RouteErrorBoundary({
+  title = 'Đã xảy ra lỗi',
+  description = 'Xin lỗi, đã có lỗi xảy ra khi tải trang này.'
+}: RouteErrorBoundaryProps) {
+  const router = useRouter();
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-background p-4">
       <Card className="max-w-lg w-full">
         <CardHeader className="text-center">
           <div className="mx-auto mb-4 h-16 w-16 rounded-full bg-destructive/10 flex items-center justify-center">
-            <Icon className="h-8 w-8 text-destructive" />
+            <AlertTriangle className="h-8 w-8 text-destructive" />
           </div>
           <CardTitle className="text-xl">{title}</CardTitle>
           <CardDescription>{description}</CardDescription>
@@ -49,7 +32,7 @@ export default function RouteErrorBoundary() {
               <RefreshCw className="h-4 w-4 mr-2" />
               Thử lại
             </Button>
-            <Button onClick={() => navigate.push('/')}>
+            <Button onClick={() => router.push('/')}>
               <Home className="h-4 w-4 mr-2" />
               Về trang chủ
             </Button>

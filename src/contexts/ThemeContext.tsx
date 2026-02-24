@@ -1,3 +1,5 @@
+"use client";
+
 import React, { createContext, useContext, useEffect, useState } from 'react';
 
 type Theme = 'light' | 'dark' | 'system';
@@ -11,15 +13,18 @@ interface ThemeContextType {
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
 export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [theme, setTheme] = useState<Theme>(() => {
-    if (typeof window !== 'undefined') {
-      const stored = localStorage.getItem('theme') as Theme;
-      return stored || 'system';
-    }
-    return 'system';
-  });
-
+  const [theme, setTheme] = useState<Theme>('system');
   const [actualTheme, setActualTheme] = useState<'light' | 'dark'>('light');
+  const [mounted, setMounted] = useState(false);
+
+  // Read from localStorage only after mount to avoid hydration mismatch
+  useEffect(() => {
+    const stored = localStorage.getItem('theme') as Theme;
+    if (stored) {
+      setTheme(stored);
+    }
+    setMounted(true);
+  }, []);
 
   useEffect(() => {
     const root = window.document.documentElement;

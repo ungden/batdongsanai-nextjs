@@ -1,3 +1,5 @@
+"use client";
+
 import { Button } from '@/components/ui/button';
 import { useCompareStore } from '@/stores/compareStore';
 import { GitCompare, Check } from 'lucide-react';

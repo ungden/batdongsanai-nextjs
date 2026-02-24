@@ -1,3 +1,5 @@
+"use client";
+
 import { useAdmin } from "@/hooks/useAdmin";
 import AdminLogsComponent from "@/components/admin/AdminLogs";
 

@@ -1,3 +1,5 @@
+"use client";
+
 import { useRouter } from 'next/navigation';
 
 import { Lock, Sparkles, ArrowRight } from 'lucide-react';

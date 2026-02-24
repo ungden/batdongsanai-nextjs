@@ -1,7 +1,6 @@
 "use client";
 import { NavLink } from '@/components/NavLink';
-import { useRouter } from 'next/navigation';
-import { usePathname, useSearchParams } from 'next/navigation';
+import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 
 
 import { Shield, LogOut, User as UserIcon, Sparkles } from "lucide-react";

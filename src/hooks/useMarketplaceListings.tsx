@@ -1,4 +1,6 @@
-import { useState, useEffect } from 'react';
+"use client";
+
+import { useState, useEffect, useMemo } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
@@ -168,10 +170,11 @@ export const useMarketplaceListings = (filters: ListingFilters = {}) => {
   const [listings, setListings] = useState<PropertyListing[]>([]);
   const [loading, setLoading] = useState(true);
   const [totalCount, setTotalCount] = useState(0);
+  const filtersKey = useMemo(() => JSON.stringify(filters), [filters]);
 
   useEffect(() => {
     fetchListings();
-  }, [JSON.stringify(filters)]);
+  }, [filtersKey]);
 
   const fetchListings = async () => {
     try {

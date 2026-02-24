@@ -1,3 +1,5 @@
+"use client";
+
 import { useState, useEffect, createContext, useContext, ReactNode } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
@@ -52,7 +54,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       email,
       password,
       options: {
-        emailRedirectTo: `${window.location.origin}/auth`,
+        emailRedirectTo: `${typeof window !== 'undefined' ? window.location.origin : ''}/auth`,
         data: {
           full_name: fullName,
         }
@@ -73,7 +75,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const { data, error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
-        redirectTo: `${window.location.origin}/auth`,
+        redirectTo: `${typeof window !== 'undefined' ? window.location.origin : ''}/auth`,
         queryParams: {
           access_type: 'offline',
           prompt: 'consent',

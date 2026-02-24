@@ -1,3 +1,5 @@
+"use client";
+
 import { useEffect } from 'react';
 import { useProjectAgents } from '@/hooks/useProjectInquiries';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';

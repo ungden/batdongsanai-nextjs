@@ -1,6 +1,7 @@
+"use client";
+
 import { NavLink } from '@/components/NavLink';
 import { usePathname } from 'next/navigation';
-"use client";
 import {
   LayoutDashboard,
   FileText,

@@ -1,3 +1,5 @@
+"use client";
+
 import { useAdmin } from "@/hooks/useAdmin";
 import DeveloperManagement from "@/components/admin/DeveloperManagement";
 

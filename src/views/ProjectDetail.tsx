@@ -44,7 +44,7 @@ import PremiumCatalystRadar from "@/components/project/PremiumCatalystRadar"; //
 import { useMarketCatalysts } from "@/hooks/useMarketData"; // New Import
 
 const ProjectDetail = () => {
-  const { id } = useParams();
+  const { id } = useParams<{ id: string }>();
   const navigate = useRouter();
   const { trackView } = useProjectViews();
   const { isVIP } = usePermissions();

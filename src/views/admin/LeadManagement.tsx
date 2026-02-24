@@ -1,3 +1,5 @@
+"use client";
+
 import { useState } from 'react';
 import { useAdminLeads, useLeadStats, LeadFilters, LeadInquiry } from '@/hooks/useAdminLeads';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';

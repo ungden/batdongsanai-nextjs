@@ -1,5 +1,6 @@
-import { usePathname } from 'next/navigation';
 "use client";
+
+import { usePathname } from 'next/navigation';
 import { useEffect } from "react";
 
 const NotFound = () => {
